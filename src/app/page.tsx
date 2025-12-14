@@ -1,8 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+// Company Logo component that fetches from Brandfetch API
+function CompanyLogo({ domain }: { domain: string }) {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const response = await fetch(`/api/logo/${domain}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLogoUrl(data.logoUrl);
+        }
+      } catch (error) {
+        console.error("Failed to fetch logo:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogo();
+  }, [domain]);
+
+  if (loading || !logoUrl) {
+    return null;
+  }
+
+  return (
+    <div className="absolute bottom-3 right-3">
+      <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center p-1">
+        <img
+          src={logoUrl}
+          alt=""
+          width={40}
+          height={40}
+          className="w-10 h-10 object-contain rounded-full"
+          onError={(e) => {
+            (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 // Dummy news data with images for all items
 const newsData = [
@@ -394,22 +439,7 @@ function NewsCard({ news }: { news: typeof newsData[0] }) {
           </span>
         </div>
         {/* Company Logo */}
-        {news.companyDomain && (
-          <div className="absolute bottom-3 right-3">
-            <div className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center p-[3px]">
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${news.companyDomain}&sz=128`}
-                alt=""
-                width={36}
-                height={36}
-                className="w-9 h-9 object-contain rounded-full"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).parentElement!.style.display = 'none';
-                }}
-              />
-            </div>
-          </div>
-        )}
+        {news.companyDomain && <CompanyLogo domain={news.companyDomain} />}
       </div>
 
       {/* Content */}
