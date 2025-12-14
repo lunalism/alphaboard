@@ -2,6 +2,7 @@ export interface NewsItem {
   id: number;
   category: string;
   categoryIcon: string;
+  countryFlag: string;
   source: string;
   time: string;
   title: string;

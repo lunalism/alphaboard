@@ -41,7 +41,7 @@ export function NewsCard({ news }: NewsCardProps) {
       <div className="flex-1 p-4 flex flex-col">
         {/* Meta */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs text-gray-400">{news.time} · {news.source}</span>
+          <span className="text-xs text-gray-400">{news.time} · {news.countryFlag} {news.source}</span>
         </div>
 
         {/* Title */}
