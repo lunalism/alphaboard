@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.brandfetch.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'asset.brandfetch.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'logos.brandfetch.com',
+      },
     ],
   },
 };

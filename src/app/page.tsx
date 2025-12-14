@@ -7,7 +7,7 @@ import Image from "next/image";
 // Company Logo component that fetches from Brandfetch API
 function CompanyLogo({ domain }: { domain: string }) {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -15,33 +15,39 @@ function CompanyLogo({ domain }: { domain: string }) {
         const response = await fetch(`/api/logo/${domain}`);
         if (response.ok) {
           const data = await response.json();
+          console.log(`[Logo] ${domain}:`, data.logoUrl);
           setLogoUrl(data.logoUrl);
+        } else {
+          console.error(`[Logo] ${domain}: API error`, response.status);
+          setError(true);
         }
-      } catch (error) {
-        console.error("Failed to fetch logo:", error);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error(`[Logo] ${domain}: Fetch error`, err);
+        setError(true);
       }
     };
 
     fetchLogo();
   }, [domain]);
 
-  if (loading || !logoUrl) {
+  // Don't render if no URL or error occurred
+  if (!logoUrl || error) {
     return null;
   }
 
   return (
     <div className="absolute bottom-3 right-3">
       <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center p-1">
-        <img
+        <Image
           src={logoUrl}
           alt=""
           width={40}
           height={40}
-          className="w-10 h-10 object-contain rounded-full"
-          onError={(e) => {
-            (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+          className="w-10 h-10 object-contain"
+          unoptimized
+          onError={() => {
+            console.error(`[Logo] ${domain}: Image load error`);
+            setError(true);
           }}
         />
       </div>
