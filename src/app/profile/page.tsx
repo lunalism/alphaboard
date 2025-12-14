@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserSettings } from '@/types';
 import { Sidebar, BottomNav } from '@/components/layout';
 import {
@@ -17,12 +18,39 @@ import {
 import { useAuthStore } from '@/stores';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [activeMenu, setActiveMenu] = useState('profile');
   const { isLoggedIn, toggleLogin, login, logout } = useAuthStore();
   const [settings, setSettings] = useState<UserSettings>(defaultUserSettings);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleEditProfile = () => {
     alert('프로필 수정 기능은 준비 중입니다.');
+  };
+
+  const handleTestToggle = () => {
+    if (isLoggedIn) {
+      // 로그인 상태에서 토글 OFF → 즉시 로그아웃 후 홈으로 이동
+      toggleLogin();
+      router.push('/');
+    } else {
+      // 비로그인 상태에서 토글 ON
+      toggleLogin();
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setShowLogoutModal(false);
+    router.push('/');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -47,7 +75,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500">로그인 테스트</span>
               <button
-                onClick={toggleLogin}
+                onClick={handleTestToggle}
                 className={`relative w-12 h-6 rounded-full transition-colors ${
                   isLoggedIn ? 'bg-blue-600' : 'bg-gray-300'
                 }`}
@@ -75,12 +103,43 @@ export default function ProfilePage() {
               <SettingsSection
                 settings={settings}
                 onSettingsChange={setSettings}
-                onLogout={logout}
+                onLogout={handleLogoutClick}
               />
             </div>
           )}
         </div>
       </main>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={handleLogoutCancel}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">로그아웃</h3>
+            <p className="text-gray-600 mb-6">정말 로그아웃하시겠습니까?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleLogoutCancel}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="flex-1 px-4 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
