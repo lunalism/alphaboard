@@ -4,3 +4,4 @@ export * from './community';
 export * from './watchlist';
 export * from './profile';
 export * from './notification';
+export * from './calendar';
