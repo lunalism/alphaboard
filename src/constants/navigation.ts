@@ -16,6 +16,7 @@ export const categories: Category[] = [
 export const menuItems: MenuItem[] = [
   { id: "news", icon: "news", label: "뉴스", emoji: "📰", href: "/" },
   { id: "market", icon: "chart", label: "시세", emoji: "📊", href: "/market" },
+  { id: "calendar", icon: "calendar", label: "캘린더", emoji: "📅", href: "/calendar" },
   { id: "community", icon: "chat", label: "커뮤니티", emoji: "💬", href: "/community" },
   { id: "watchlist", icon: "checklist", label: "관심종목", emoji: "⭐", href: "/watchlist" },
   { id: "profile", icon: "profile", label: "프로필", emoji: "👤", href: "/profile" },
