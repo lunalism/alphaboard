@@ -15,6 +15,10 @@ export function NewsCard({ news }: NewsCardProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
+  const getFlagUrl = (countryCode: string) => {
+    return `https://hatscripts.github.io/circle-flags/flags/${countryCode}.svg`;
+  };
+
   return (
     <article className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
       {/* Thumbnail Image */}
@@ -34,13 +38,22 @@ export function NewsCard({ news }: NewsCardProps) {
           </span>
         </div>
         {/* Badge: Flag for institution, Logo for company */}
-        {news.type === 'institution' ? (
-          <div className="absolute bottom-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-xl">{news.countryFlag}</span>
+        {news.type === 'institution' && news.countryCode ? (
+          <div className="absolute bottom-3 right-3">
+            <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center overflow-hidden">
+              <Image
+                src={getFlagUrl(news.countryCode)}
+                alt={news.countryFlag}
+                width={48}
+                height={48}
+                className="w-12 h-12 object-cover"
+                unoptimized
+              />
+            </div>
           </div>
-        ) : (
-          news.companyDomain && <CompanyLogo domain={news.companyDomain} />
-        )}
+        ) : news.type === 'company' && news.companyDomain ? (
+          <CompanyLogo domain={news.companyDomain} />
+        ) : null}
       </div>
 
       {/* Content */}

@@ -6,6 +6,7 @@ export interface NewsItem {
   categoryIcon: string;
   type: NewsType;
   countryFlag: string;
+  countryCode?: string;
   source: string;
   time: string;
   title: string;

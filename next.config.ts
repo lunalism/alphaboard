@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'logos.brandfetch.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'hatscripts.github.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'logo.clearbit.com',
+      },
     ],
   },
 };

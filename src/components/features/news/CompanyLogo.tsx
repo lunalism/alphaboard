@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 interface CompanyLogoProps {
@@ -8,46 +8,25 @@ interface CompanyLogoProps {
 }
 
 export function CompanyLogo({ domain }: CompanyLogoProps) {
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const logoUrl = `https://logo.clearbit.com/${domain}`;
 
-  useEffect(() => {
-    const fetchLogo = async () => {
-      try {
-        const response = await fetch(`/api/logo/${domain}`);
-        if (response.ok) {
-          const data = await response.json();
-          setLogoUrl(data.logoUrl);
-        } else {
-          setError(true);
-        }
-      } catch (err) {
-        console.error(`[Logo] ${domain}: Fetch error`, err);
-        setError(true);
-      }
-    };
-
-    fetchLogo();
-  }, [domain]);
-
-  if (!logoUrl || error) {
+  if (error) {
     return null;
   }
 
   return (
     <div className="absolute bottom-3 right-3">
-      <div className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center p-1.5">
+      <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center p-1.5">
         <Image
           src={logoUrl}
-          alt=""
-          width={28}
-          height={28}
-          sizes="28px"
-          className="w-7 h-7 object-contain"
+          alt={domain}
+          width={36}
+          height={36}
+          sizes="36px"
+          className="w-9 h-9 object-contain rounded-full"
           unoptimized
-          onError={() => {
-            setError(true);
-          }}
+          onError={() => setError(true)}
         />
       </div>
     </div>
