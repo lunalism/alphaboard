@@ -398,7 +398,7 @@ function NewsCard({ news }: { news: typeof newsData[0] }) {
           <div className="absolute bottom-3 right-3">
             <div className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center p-[3px]">
               <img
-                src={`https://cdn.brandfetch.io/${news.companyDomain}/w/72/h/72?c=1id_3YbzdFp6G-fzrgd`}
+                src={`https://www.google.com/s2/favicons?domain=${news.companyDomain}&sz=128`}
                 alt=""
                 width={36}
                 height={36}
