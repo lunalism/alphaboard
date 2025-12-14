@@ -36,12 +36,19 @@ export async function GET(
 
     const data = await response.json();
 
-    // Find the best logo (prefer symbol > icon > logo for small circular display)
+    // Find the best logo (prefer dark theme, then symbol > icon > logo)
     let logoUrl: string | null = null;
 
-    const symbols = data.logos?.filter((logo: { type: string }) => logo.type === "symbol") || [];
-    const icons = data.logos?.filter((logo: { type: string }) => logo.type === "icon") || [];
-    const logos = data.logos?.filter((logo: { type: string }) => logo.type === "logo") || [];
+    // Filter by type and prefer dark theme (visible on white background)
+    const filterByTypeAndTheme = (type: string) => {
+      const allOfType = data.logos?.filter((logo: { type: string }) => logo.type === type) || [];
+      const darkTheme = allOfType.filter((logo: { theme: string }) => logo.theme === "dark");
+      return darkTheme.length > 0 ? darkTheme : allOfType;
+    };
+
+    const symbols = filterByTypeAndTheme("symbol");
+    const icons = filterByTypeAndTheme("icon");
+    const logos = filterByTypeAndTheme("logo");
 
     // Get the first available format (prefer PNG > SVG > others)
     const findBestFormat = (logoArray: { formats: { src: string; format: string }[] }[]) => {
