@@ -6,7 +6,7 @@ import { MenuIcon } from '@/components/common';
 
 interface SidebarProps {
   activeMenu: string;
-  onMenuChange: (id: string) => void;
+  onMenuChange?: (id: string) => void;
 }
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
@@ -14,20 +14,20 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
     <aside className="fixed left-0 top-0 h-screen bg-white border-r border-gray-100 hidden md:flex flex-col py-4 z-50 transition-all duration-300 w-[72px] lg:w-60">
       {/* Logo */}
       <div className="px-4 mb-6">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-lg">A</span>
           </div>
           <span className="text-xl font-bold text-gray-900 hidden lg:block">AlphaBoard</span>
-        </div>
+        </Link>
       </div>
 
       {/* Menu Items */}
       <nav className="flex-1 flex flex-col gap-1 px-3">
         {menuItems.map((item) => (
-          <button
+          <Link
             key={item.id}
-            onClick={() => onMenuChange(item.id)}
+            href={item.href}
             className={`group relative w-full h-12 rounded-xl flex items-center transition-all duration-200 ${
               activeMenu === item.id
                 ? "bg-blue-50 text-blue-600"
@@ -46,7 +46,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
               {item.label}
             </div>
-          </button>
+          </Link>
         ))}
       </nav>
 
