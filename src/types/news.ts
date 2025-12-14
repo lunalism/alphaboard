@@ -1,7 +1,10 @@
+export type NewsType = 'institution' | 'company';
+
 export interface NewsItem {
   id: number;
   category: string;
   categoryIcon: string;
+  type: NewsType;
   countryFlag: string;
   source: string;
   time: string;

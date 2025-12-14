@@ -5,6 +5,7 @@ import Image from "next/image";
 import { NewsItem } from '@/types';
 import { getCategoryColor } from '@/utils';
 import { CategoryIcon } from '@/components/common';
+import { CompanyLogo } from './CompanyLogo';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -32,10 +33,14 @@ export function NewsCard({ news }: NewsCardProps) {
             {news.category}
           </span>
         </div>
-        {/* Country Flag */}
-        <div className="absolute bottom-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-xl">{news.countryFlag}</span>
-        </div>
+        {/* Badge: Flag for institution, Logo for company */}
+        {news.type === 'institution' ? (
+          <div className="absolute bottom-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+            <span className="text-xl">{news.countryFlag}</span>
+          </div>
+        ) : (
+          news.companyDomain && <CompanyLogo domain={news.companyDomain} />
+        )}
       </div>
 
       {/* Content */}
