@@ -21,7 +21,7 @@ const newsData = [
     downvotes: 35,
     views: 1247,
     imageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=338&fit=crop",
-    company: { name: "FED", color: "bg-blue-600" },
+    companyDomain: "federalreserve.gov",
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ const newsData = [
     downvotes: 23,
     views: 3892,
     imageUrl: "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=600&h=338&fit=crop",
-    company: { name: "TSLA", color: "bg-red-600" },
+    companyDomain: "tesla.com",
   },
   {
     id: 3,
@@ -55,7 +55,7 @@ const newsData = [
     downvotes: 45,
     views: 8234,
     imageUrl: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=600&h=338&fit=crop",
-    company: { name: "NVDA", color: "bg-green-600" },
+    companyDomain: "nvidia.com",
   },
   {
     id: 4,
@@ -72,7 +72,7 @@ const newsData = [
     downvotes: 67,
     views: 12453,
     imageUrl: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=338&fit=crop",
-    company: { name: "BLK", color: "bg-gray-900" },
+    companyDomain: "blackrock.com",
   },
   {
     id: 5,
@@ -89,7 +89,7 @@ const newsData = [
     downvotes: 28,
     views: 4521,
     imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=338&fit=crop",
-    company: { name: "DOL", color: "bg-blue-800" },
+    companyDomain: "dol.gov",
   },
   {
     id: 6,
@@ -106,7 +106,7 @@ const newsData = [
     downvotes: 34,
     views: 9823,
     imageUrl: "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=600&h=338&fit=crop",
-    company: { name: "AAPL", color: "bg-gray-800" },
+    companyDomain: "apple.com",
   },
   {
     id: 7,
@@ -123,7 +123,7 @@ const newsData = [
     downvotes: 23,
     views: 6721,
     imageUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=338&fit=crop",
-    company: { name: "IMF", color: "bg-blue-700" },
+    companyDomain: "imf.org",
   },
   {
     id: 8,
@@ -140,7 +140,7 @@ const newsData = [
     downvotes: 56,
     views: 15678,
     imageUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&h=338&fit=crop",
-    company: { name: "ETH", color: "bg-purple-600" },
+    companyDomain: "ethereum.org",
   },
 ];
 
@@ -393,13 +393,20 @@ function NewsCard({ news }: { news: typeof newsData[0] }) {
             {news.category}
           </span>
         </div>
-        {/* Company Ticker Badge */}
-        {news.company && (
+        {/* Company Logo */}
+        {news.companyDomain && (
           <div className="absolute bottom-3 right-3">
-            <div className={`px-2.5 py-1.5 rounded-lg ${news.company.color} shadow-lg ring-2 ring-white/30`}>
-              <span className="text-white text-xs font-bold tracking-wide">
-                {news.company.name}
-              </span>
+            <div className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center p-[3px]">
+              <img
+                src={`https://cdn.brandfetch.io/${news.companyDomain}/w/72/h/72?c=1id_3YbzdFp6G-fzrgd`}
+                alt=""
+                width={36}
+                height={36}
+                className="w-9 h-9 object-contain rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                }}
+              />
             </div>
           </div>
         )}
