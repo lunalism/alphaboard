@@ -35,7 +35,7 @@ export function PostList({ posts }: PostListProps) {
                 </div>
                 {post.stock && (
                   <span className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-full transition-colors">
-                    {post.stock.name} {post.stock.ticker}
+                    {post.stock.name}
                   </span>
                 )}
               </div>
