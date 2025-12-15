@@ -1,0 +1,219 @@
+'use client';
+
+import { useMemo } from 'react';
+import { CalendarEvent, EventCategory } from '@/types';
+import { CompanyLogo, FlagLogo } from '@/components/common';
+
+/**
+ * 주간 뷰 캘린더 컴포넌트 (태블릿용)
+ *
+ * Props:
+ * - currentDate: 현재 표시 중인 주의 기준 날짜
+ * - events: 이벤트 목록
+ * - selectedDate: 선택된 날짜
+ * - onSelectDate: 날짜 선택 핸들러
+ */
+interface WeeklyCalendarProps {
+  currentDate: Date;
+  events: CalendarEvent[];
+  selectedDate: string | null;
+  onSelectDate: (date: string) => void;
+}
+
+export function WeeklyCalendar({
+  currentDate,
+  events,
+  selectedDate,
+  onSelectDate,
+}: WeeklyCalendarProps) {
+  // 해당 주의 날짜 배열 생성 (일요일 ~ 토요일)
+  const weekDays = useMemo(() => {
+    const days: { date: string; day: number; weekday: string; month: number }[] = [];
+
+    // 현재 날짜의 주 시작일 (일요일) 계산
+    const startOfWeek = new Date(currentDate);
+    const dayOfWeek = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+
+    const weekdayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(date.getDate() + i);
+      days.push({
+        date: date.toISOString().split('T')[0],
+        day: date.getDate(),
+        weekday: weekdayNames[i],
+        month: date.getMonth() + 1,
+      });
+    }
+
+    return days;
+  }, [currentDate]);
+
+  // 날짜별 이벤트 맵 생성
+  const eventsByDate = useMemo(() => {
+    const map: Record<string, CalendarEvent[]> = {};
+    events.forEach((event) => {
+      if (!map[event.date]) map[event.date] = [];
+      map[event.date].push(event);
+    });
+    return map;
+  }, [events]);
+
+  // 오늘 날짜 문자열
+  const today = new Date().toISOString().split('T')[0];
+
+  // 카테고리 이모지
+  const getCategoryEmoji = (category: EventCategory) => {
+    switch (category) {
+      case 'institution':
+        return '🏛️';
+      case 'earnings':
+        return '📊';
+      case 'corporate':
+        return '🎉';
+      case 'crypto':
+        return '🪙';
+    }
+  };
+
+  // 중요도 색상
+  const getImportanceColor = (importance: string) => {
+    switch (importance) {
+      case 'high':
+        return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+      case 'medium':
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400';
+      case 'low':
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+      default:
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 주간 날짜 헤더 */}
+      <div className="grid grid-cols-7 gap-2">
+        {weekDays.map((dayInfo, index) => {
+          const isSelected = selectedDate === dayInfo.date;
+          const isToday = dayInfo.date === today;
+          const hasEvents = (eventsByDate[dayInfo.date] || []).length > 0;
+
+          return (
+            <button
+              key={dayInfo.date}
+              onClick={() => onSelectDate(dayInfo.date)}
+              className={`
+                flex flex-col items-center py-3 rounded-xl transition-all
+                ${isSelected ? 'bg-blue-600 text-white' : ''}
+                ${isToday && !isSelected ? 'bg-blue-100 dark:bg-blue-900/30' : ''}
+                ${!isSelected && !isToday ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
+                border ${isSelected ? 'border-blue-600' : 'border-gray-100 dark:border-gray-700'}
+              `}
+            >
+              {/* 요일 */}
+              <span
+                className={`text-xs font-medium mb-1 ${
+                  isSelected
+                    ? 'text-white'
+                    : index === 0
+                    ? 'text-red-500 dark:text-red-400'
+                    : index === 6
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {dayInfo.weekday}
+              </span>
+              {/* 날짜 */}
+              <span
+                className={`text-lg font-bold ${
+                  isSelected ? 'text-white' : 'text-gray-900 dark:text-white'
+                }`}
+              >
+                {dayInfo.day}
+              </span>
+              {/* 이벤트 표시 점 */}
+              {hasEvents && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                    isSelected ? 'bg-white' : 'bg-blue-500'
+                  }`}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 선택된 날짜의 이벤트 목록 */}
+      <div className="space-y-3">
+        {selectedDate &&
+          (eventsByDate[selectedDate] || []).map((event) => (
+            <div
+              key={event.id}
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow"
+            >
+              <div className="flex items-start gap-3">
+                {/* 로고/국기 */}
+                {event.countryCode ? (
+                  <FlagLogo countryCode={event.countryCode} size="md" />
+                ) : event.companyDomain ? (
+                  <CompanyLogo domain={event.companyDomain} size="md" />
+                ) : (
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                    <span className="text-xl">{getCategoryEmoji(event.category)}</span>
+                  </div>
+                )}
+
+                {/* 내용 */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                      {event.title}
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${getImportanceColor(
+                        event.importance
+                      )}`}
+                    >
+                      {event.importance === 'high'
+                        ? '중요'
+                        : event.importance === 'medium'
+                        ? '보통'
+                        : '낮음'}
+                    </span>
+                  </div>
+                  {event.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {event.description}
+                    </p>
+                  )}
+                  {event.time && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      🕐 {event.time} (한국시간)
+                    </p>
+                  )}
+                </div>
+
+                {/* 카테고리 이모지 */}
+                <span className="text-lg flex-shrink-0">{getCategoryEmoji(event.category)}</span>
+              </div>
+            </div>
+          ))}
+
+        {/* 이벤트 없음 */}
+        {selectedDate && (eventsByDate[selectedDate] || []).length === 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-8 text-center">
+            <div className="text-3xl mb-2">📅</div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              이 날짜에 예정된 이벤트가 없습니다
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
