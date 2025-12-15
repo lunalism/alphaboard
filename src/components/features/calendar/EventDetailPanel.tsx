@@ -1,7 +1,58 @@
 'use client';
 
 import { CalendarEvent, EventCategory } from '@/types';
-import { CompanyLogo, FlagLogo } from '@/components/common';
+import { CompanyLogo, FlagLogo, GlossaryTooltip } from '@/components/common';
+import { glossaryTerms } from '@/constants';
+
+/**
+ * 텍스트에서 용어사전 용어를 찾아 툴팁으로 감싸는 헬퍼 함수
+ *
+ * @param text - 원본 텍스트
+ * @returns 용어가 GlossaryTooltip으로 감싸진 React 노드 배열
+ */
+function parseTextWithGlossary(text: string): React.ReactNode {
+  // 모든 용어의 약어를 추출 (길이 순으로 정렬하여 긴 것부터 매칭)
+  const abbreviations = glossaryTerms
+    .map((term) => term.abbreviation)
+    .sort((a, b) => b.length - a.length);
+
+  // 용어가 없으면 원본 텍스트 반환
+  if (abbreviations.length === 0) {
+    return text;
+  }
+
+  // 정규식 패턴 생성 (단어 경계 사용)
+  const pattern = new RegExp(`\\b(${abbreviations.join('|')})\\b`, 'g');
+
+  // 텍스트를 분할하여 용어를 찾음
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    // 매칭 전 텍스트 추가
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    // 매칭된 용어를 툴팁으로 감쌈
+    const term = match[1];
+    parts.push(
+      <GlossaryTooltip key={`${term}-${match.index}`} term={term}>
+        {term}
+      </GlossaryTooltip>
+    );
+
+    lastIndex = pattern.lastIndex;
+  }
+
+  // 남은 텍스트 추가
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
 
 /**
  * 이벤트 상세 패널 컴포넌트 (데스크톱 오른쪽 사이드바용)
@@ -9,6 +60,9 @@ import { CompanyLogo, FlagLogo } from '@/components/common';
  * Props:
  * - selectedDate: 선택된 날짜
  * - events: 해당 날짜의 이벤트 목록
+ *
+ * 기능:
+ * - 용어사전 연동: 알려진 용어에 툴팁 표시
  */
 interface EventDetailPanelProps {
   selectedDate: string | null;
@@ -104,9 +158,10 @@ export function EventDetailPanel({ selectedDate, events }: EventDetailPanelProps
 
               {/* 내용 */}
               <div className="flex-1 min-w-0">
+                {/* 이벤트 제목 (용어사전 툴팁 적용) */}
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <h4 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">
-                    {event.title}
+                    {parseTextWithGlossary(event.title)}
                   </h4>
                   <span className="text-lg flex-shrink-0">{getCategoryEmoji(event.category)}</span>
                 </div>
@@ -124,10 +179,10 @@ export function EventDetailPanel({ selectedDate, events }: EventDetailPanelProps
                     : '낮음'}
                 </span>
 
-                {/* 설명 */}
+                {/* 설명 (용어사전 툴팁 적용) */}
                 {event.description && (
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                    {event.description}
+                    {parseTextWithGlossary(event.description)}
                   </p>
                 )}
 

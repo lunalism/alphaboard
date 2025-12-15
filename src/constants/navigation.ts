@@ -21,6 +21,7 @@ export const menuItems: MenuItem[] = [
   { id: "watchlist", icon: "checklist", label: "관심종목", emoji: "⭐", href: "/watchlist" },
   { id: "profile", icon: "profile", label: "프로필", emoji: "👤", href: "/profile" },
   { id: "notification", icon: "notification", label: "알림", emoji: "🔔", href: "/notifications" },
+  { id: "glossary", icon: "book", label: "용어사전", emoji: "📖", href: "/glossary" },
 ];
 
 export const CATEGORY_COLORS: Record<string, string> = {
