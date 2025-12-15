@@ -20,7 +20,7 @@ export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
     .filter(Boolean);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] md:hidden z-50">
       <div className="flex items-center justify-around h-full px-2">
         {bottomMenuItems.map((item) => (
           <Link
@@ -28,10 +28,10 @@ export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
             href={item!.href}
             className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
           >
-            <div className={`transition-colors ${activeMenu === item!.id ? "text-blue-500" : "text-gray-400"}`}>
+            <div className={`transition-colors ${activeMenu === item!.id ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`}>
               <MenuIcon icon={item!.icon} active={activeMenu === item!.id} />
             </div>
-            <span className={`text-xs mt-1 ${activeMenu === item!.id ? "text-blue-500" : "text-gray-500"}`}>
+            <span className={`text-xs mt-1 ${activeMenu === item!.id ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>
               {item!.label}
             </span>
           </Link>
@@ -42,10 +42,10 @@ export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
           href={isLoggedIn ? "/profile" : "/login"}
           className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
         >
-          <div className={`transition-colors ${activeMenu === 'profile' ? "text-blue-500" : "text-gray-400"}`}>
+          <div className={`transition-colors ${activeMenu === 'profile' ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`}>
             <MenuIcon icon="profile" active={activeMenu === 'profile'} />
           </div>
-          <span className={`text-xs mt-1 ${activeMenu === 'profile' ? "text-blue-500" : "text-gray-500"}`}>
+          <span className={`text-xs mt-1 ${activeMenu === 'profile' ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>
             {isLoggedIn ? "프로필" : "로그인"}
           </span>
         </Link>

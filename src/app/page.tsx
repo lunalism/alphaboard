@@ -11,7 +11,7 @@ export default function Home() {
   const [activeMenu, setActiveMenu] = useState("news");
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - hidden on mobile */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -40,7 +40,7 @@ export default function Home() {
 
           {/* Load More */}
           <div className="mt-8 text-center">
-            <button className="px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            <button className="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               더 보기
             </button>
           </div>

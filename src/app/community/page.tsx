@@ -15,7 +15,7 @@ export default function CommunityPage() {
     : posts.filter(post => post.category === activeTab);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - hidden on mobile */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -27,8 +27,8 @@ export default function CommunityPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">커뮤니티</h1>
-            <p className="text-gray-500 text-sm">투자자들과 정보를 나누고 토론하세요</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">커뮤니티</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">투자자들과 정보를 나누고 토론하세요</p>
           </div>
 
           {/* Category Tabs */}
@@ -44,7 +44,7 @@ export default function CommunityPage() {
 
               {/* Load More */}
               <div className="mt-6 text-center">
-                <button className="px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                <button className="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   더 보기
                 </button>
               </div>

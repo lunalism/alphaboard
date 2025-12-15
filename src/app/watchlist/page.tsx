@@ -22,7 +22,7 @@ export default function WatchlistPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - hidden on mobile */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -34,8 +34,8 @@ export default function WatchlistPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">관심종목</h1>
-            <p className="text-gray-500 text-sm">나만의 관심종목을 관리하세요</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">관심종목</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">나만의 관심종목을 관리하세요</p>
           </div>
 
           {!isLoggedIn ? (

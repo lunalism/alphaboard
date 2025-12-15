@@ -56,13 +56,13 @@ export default function NewsDetailPage() {
   // 뉴스가 없는 경우 처리
   if (!news) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">📰</div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
             기사를 찾을 수 없습니다
           </h1>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             요청하신 기사가 존재하지 않거나 삭제되었습니다.
           </p>
           <button
@@ -80,7 +80,7 @@ export default function NewsDetailPage() {
   const articleContent = news.content || `${news.summary}\n\n${generateDummyContent(news)}`;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* 사이드바 - 데스크톱에서만 표시 */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -94,7 +94,7 @@ export default function NewsDetailPage() {
           {/* 뒤로 가기 버튼 */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+            className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -103,7 +103,7 @@ export default function NewsDetailPage() {
           </button>
 
           {/* 기사 카드 */}
-          <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <article className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
 
             {/* 썸네일 이미지 */}
             {news.imageUrl && (
@@ -144,15 +144,15 @@ export default function NewsDetailPage() {
                 {news.countryCode && (
                   <FlagLogo countryCode={news.countryCode} size="xs" />
                 )}
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {news.countryFlag} {news.source}
                 </span>
-                <span className="text-gray-300">·</span>
-                <span className="text-sm text-gray-400">{news.time}</span>
+                <span className="text-gray-300 dark:text-gray-600">·</span>
+                <span className="text-sm text-gray-400 dark:text-gray-500">{news.time}</span>
               </div>
 
               {/* 제목 - 사용자 폰트 크기 설정 적용 */}
-              <h1 className={`${FONT_SIZE_MAP.article.title[titleSize]} font-bold text-gray-900 mb-4 leading-tight`}>
+              <h1 className={`${FONT_SIZE_MAP.article.title[titleSize]} font-bold text-gray-900 dark:text-white mb-4 leading-tight`}>
                 {news.title}
               </h1>
 
@@ -161,7 +161,7 @@ export default function NewsDetailPage() {
                 {news.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer transition-colors"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors"
                   >
                     {tag}
                   </span>
@@ -169,15 +169,15 @@ export default function NewsDetailPage() {
               </div>
 
               {/* 구분선 */}
-              <hr className="border-gray-100 mb-6" />
+              <hr className="border-gray-100 dark:border-gray-700 mb-6" />
 
               {/* 본문 내용 - 사용자 폰트 크기 설정 적용 */}
-              <div className={`${FONT_SIZE_MAP.article.body[bodySize]} text-gray-700 leading-relaxed whitespace-pre-line`}>
+              <div className={`${FONT_SIZE_MAP.article.body[bodySize]} text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line`}>
                 {articleContent}
               </div>
 
               {/* 구분선 */}
-              <hr className="border-gray-100 my-6" />
+              <hr className="border-gray-100 dark:border-gray-700 my-6" />
 
               {/* 하단 액션 영역 */}
               <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ export default function NewsDetailPage() {
                   <button
                     onClick={() => setLiked(!liked)}
                     className={`flex items-center gap-1.5 text-sm ${
-                      liked ? 'text-red-500' : 'text-gray-500'
+                      liked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
                     } hover:text-red-500 transition-colors`}
                   >
                     <svg className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +197,7 @@ export default function NewsDetailPage() {
                   </button>
 
                   {/* 댓글 수 */}
-                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
@@ -205,7 +205,7 @@ export default function NewsDetailPage() {
                   </span>
 
                   {/* 조회수 */}
-                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -221,8 +221,8 @@ export default function NewsDetailPage() {
                     onClick={() => setBookmarked(!bookmarked)}
                     className={`p-2 rounded-lg transition-colors ${
                       bookmarked
-                        ? 'text-blue-500 bg-blue-50'
-                        : 'text-gray-400 hover:text-blue-500 hover:bg-gray-50'
+                        ? 'text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                     title="북마크"
                   >
@@ -237,7 +237,7 @@ export default function NewsDetailPage() {
                       href={news.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                     >
                       <span>원문 보기</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +245,7 @@ export default function NewsDetailPage() {
                       </svg>
                     </a>
                   ) : (
-                    <span className="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg text-sm">
+                    <span className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded-lg text-sm">
                       원문 없음
                     </span>
                   )}
@@ -257,17 +257,17 @@ export default function NewsDetailPage() {
           {/* 관련 뉴스 섹션 */}
           {relatedNews.length > 0 && (
             <section className="mt-8">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">관련 뉴스</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
               <div className="space-y-3">
                 {relatedNews.map((item) => (
                   <Link
                     key={item.id}
                     href={`/news/${item.id}`}
-                    className="block bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow"
+                    className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow"
                   >
                     <div className="flex gap-4">
                       {/* 썸네일 */}
-                      <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                      <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                         <Image
                           src={item.imageUrl}
                           alt={item.title}
@@ -278,10 +278,10 @@ export default function NewsDetailPage() {
                       </div>
                       {/* 내용 */}
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
                           {item.countryFlag} {item.source} · {item.time}
                         </span>
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mt-1">
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mt-1">
                           {item.title}
                         </h3>
                       </div>

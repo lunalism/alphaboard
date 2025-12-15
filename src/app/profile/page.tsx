@@ -54,7 +54,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - hidden on mobile */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -67,17 +67,17 @@ export default function ProfilePage() {
           {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">프로필</h1>
-              <p className="text-gray-500 text-sm">계정 정보와 설정을 관리하세요</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">프로필</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">계정 정보와 설정을 관리하세요</p>
             </div>
 
             {/* Login Test Toggle */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">로그인 테스트</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">로그인 테스트</span>
               <button
                 onClick={handleTestToggle}
                 className={`relative w-12 h-6 rounded-full transition-colors ${
-                  isLoggedIn ? 'bg-blue-600' : 'bg-gray-300'
+                  isLoggedIn ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -120,13 +120,13 @@ export default function ProfilePage() {
           />
 
           {/* Modal */}
-          <div className="relative bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">로그아웃</h3>
-            <p className="text-gray-600 mb-6">정말 로그아웃하시겠습니까?</p>
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 w-[90%] max-w-sm shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">로그아웃</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">정말 로그아웃하시겠습니까?</p>
             <div className="flex gap-3">
               <button
                 onClick={handleLogoutCancel}
-                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 취소
               </button>

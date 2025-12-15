@@ -16,7 +16,7 @@ export default function MarketPage() {
   const currentLosers = topLosers[activeMarket];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - hidden on mobile */}
       <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
@@ -28,8 +28,8 @@ export default function MarketPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">시세</h1>
-            <p className="text-gray-500 text-sm">실시간 글로벌 시장 정보</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">시세</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">실시간 글로벌 시장 정보</p>
           </div>
 
           {/* Market Tabs */}
@@ -39,7 +39,7 @@ export default function MarketPage() {
 
           {/* Index Cards */}
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">주요 지수</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">주요 지수</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentIndices.map((index) => (
                 <IndexCard key={index.id} index={index} />
@@ -49,13 +49,13 @@ export default function MarketPage() {
 
           {/* Popular Stocks */}
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">인기 종목</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">인기 종목</h2>
             <StockTable stocks={currentStocks} market={activeMarket} />
           </section>
 
           {/* Top Movers */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">등락률 TOP</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">등락률 TOP</h2>
             <TopMovers gainers={currentGainers} losers={currentLosers} />
           </section>
         </div>
