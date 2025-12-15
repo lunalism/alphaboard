@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useThemeStore, getEffectiveTheme } from '@/stores';
+import { useEffect, useState, useLayoutEffect } from 'react';
+import { useThemeStore, getEffectiveTheme, ThemeMode } from '@/stores';
 
 /**
  * 테마 프로바이더 컴포넌트
@@ -13,7 +13,7 @@ import { useThemeStore, getEffectiveTheme } from '@/stores';
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Zustand 스토어에서 테마 가져오기
-  const { theme } = useThemeStore();
+  const theme = useThemeStore((state) => state.theme);
 
   // 시스템 다크 모드 설정 상태
   const [prefersDark, setPrefersDark] = useState(false);
@@ -38,20 +38,41 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // 테마 적용
-  useEffect(() => {
-    if (!mounted) return;
-
-    // 실제 적용할 테마 계산
-    const effectiveTheme = getEffectiveTheme(theme, prefersDark);
-
-    // html 태그에 dark 클래스 적용/제거
+  // 테마 적용 함수
+  const applyTheme = (themeMode: ThemeMode, systemPrefersDark: boolean) => {
+    const effectiveTheme = getEffectiveTheme(themeMode, systemPrefersDark);
     const root = document.documentElement;
+
     if (effectiveTheme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
+  };
+
+  // 초기 로드 시 localStorage에서 테마 직접 읽어서 적용 (깜빡임 방지)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const stored = localStorage.getItem('alphaboard-theme');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const storedTheme = parsed.state?.theme as ThemeMode;
+        if (storedTheme) {
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          applyTheme(storedTheme, systemPrefersDark);
+        }
+      }
+    } catch (e) {
+      // localStorage 접근 실패 시 무시
+    }
+  }, []);
+
+  // 테마 변경 시 적용
+  useEffect(() => {
+    if (!mounted) return;
+    applyTheme(theme, prefersDark);
   }, [theme, prefersDark, mounted]);
 
   // SSR에서는 기본 렌더링, 클라이언트에서 테마 적용
