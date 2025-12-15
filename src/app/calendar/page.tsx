@@ -8,6 +8,7 @@ import {
   WeeklyCalendar,
   EventDetailPanel,
   CalendarNavigation,
+  MobileEventCard,
 } from '@/components/features/calendar';
 import { calendarEvents, eventCategoryFilters } from '@/constants';
 import { EventCategory, CalendarEvent } from '@/types';
@@ -241,8 +242,23 @@ export default function CalendarPage() {
           </div>
 
           {/* ========== 모바일 뷰 (767px 이하) ========== */}
-          {/* 월별 리스트 뷰 */}
+          {/* 월별 리스트 뷰 + 아코디언 확장 */}
           <div className="md:hidden">
+            {/* 안내 문구 */}
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
+              <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>이벤트 카드를 터치하면 용어 설명을 볼 수 있어요</span>
+              </div>
+            </div>
+
             <div className="space-y-8">
               {Object.entries(eventsByMonth)
                 .sort(([a], [b]) => a.localeCompare(b))
@@ -253,73 +269,17 @@ export default function CalendarPage() {
                       {formatMonth(month)}
                     </h2>
 
-                    {/* 이벤트 목록 */}
+                    {/* 이벤트 목록 (아코디언 카드) */}
                     <div className="space-y-3">
                       {events.map((event) => {
                         const { day, weekday } = formatDate(event.date);
                         return (
-                          <div
+                          <MobileEventCard
                             key={event.id}
-                            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow"
-                          >
-                            <div className="flex items-start gap-4">
-                              {/* 날짜 */}
-                              <div className="flex-shrink-0 w-14 text-center">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                  {day}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  {weekday}요일
-                                </div>
-                              </div>
-
-                              {/* 로고/국기 */}
-                              {event.countryCode ? (
-                                <FlagLogo countryCode={event.countryCode} size="md" />
-                              ) : event.companyDomain ? (
-                                <CompanyLogo domain={event.companyDomain} size="md" />
-                              ) : (
-                                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                  <span className="text-xl">{getCategoryEmoji(event.category)}</span>
-                                </div>
-                              )}
-
-                              {/* 내용 */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                                    {event.title}
-                                  </h3>
-                                  <span
-                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${getImportanceColor(
-                                      event.importance
-                                    )}`}
-                                  >
-                                    {event.importance === 'high'
-                                      ? '중요'
-                                      : event.importance === 'medium'
-                                      ? '보통'
-                                      : '낮음'}
-                                  </span>
-                                </div>
-                                {event.description && (
-                                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                    {event.description}
-                                  </p>
-                                )}
-                                {event.time && (
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                    🕐 {event.time} (한국시간)
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* 카테고리 뱃지 */}
-                              <div className="flex-shrink-0">
-                                <span className="text-lg">{getCategoryEmoji(event.category)}</span>
-                              </div>
-                            </div>
-                          </div>
+                            event={event}
+                            day={day}
+                            weekday={weekday}
+                          />
                         );
                       })}
                     </div>
