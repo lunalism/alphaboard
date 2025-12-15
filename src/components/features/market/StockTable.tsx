@@ -1,6 +1,7 @@
 'use client';
 
 import { Stock, MarketRegion } from '@/types';
+import { CompanyLogo } from '@/components/common';
 
 interface StockTableProps {
   stocks: Stock[];
@@ -62,7 +63,10 @@ export function StockTable({ stocks, market }: StockTableProps) {
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="font-medium text-gray-900">{stock.name}</span>
+                    <div className="flex items-center gap-3">
+                      <CompanyLogo domain={stock.domain} size="sm" />
+                      <span className="font-medium text-gray-900">{stock.name}</span>
+                    </div>
                   </td>
                   <td className="py-4 px-4">
                     <span className="text-gray-500 text-sm font-mono">{stock.ticker}</span>

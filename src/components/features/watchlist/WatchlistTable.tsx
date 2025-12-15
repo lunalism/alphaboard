@@ -1,6 +1,7 @@
 'use client';
 
 import { WatchlistItem, MarketRegion } from '@/types';
+import { CompanyLogo } from '@/components/common';
 
 interface WatchlistTableProps {
   items: WatchlistItem[];
@@ -70,7 +71,10 @@ export function WatchlistTable({ items, market, onDelete }: WatchlistTableProps)
                   className="border-b border-gray-50 hover:bg-blue-50/50 transition-colors"
                 >
                   <td className="py-4 px-4">
-                    <span className="font-medium text-gray-900">{item.name}</span>
+                    <div className="flex items-center gap-3">
+                      <CompanyLogo domain={item.domain} size="sm" />
+                      <span className="font-medium text-gray-900">{item.name}</span>
+                    </div>
                   </td>
                   <td className="py-4 px-4">
                     <span className="text-gray-500 text-sm font-mono">{item.ticker}</span>

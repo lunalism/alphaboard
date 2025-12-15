@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { NewsItem } from '@/types';
 import { getCategoryColor } from '@/utils';
-import { CategoryIcon } from '@/components/common';
-import { CompanyLogo } from './CompanyLogo';
+import { CategoryIcon, CompanyLogo, FlagLogo } from '@/components/common';
+import { useFontSizeStore, FONT_SIZE_MAP } from '@/stores';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -15,9 +15,8 @@ export function NewsCard({ news }: NewsCardProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  const getFlagUrl = (countryCode: string) => {
-    return `https://hatscripts.github.io/circle-flags/flags/${countryCode}.svg`;
-  };
+  // 사용자 설정 폰트 크기 가져오기
+  const { titleSize, bodySize } = useFontSizeStore();
 
   return (
     <article className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
@@ -40,19 +39,12 @@ export function NewsCard({ news }: NewsCardProps) {
         {/* Badge: Flag for institution, Logo for company */}
         {news.type === 'institution' && news.countryCode ? (
           <div className="absolute bottom-3 right-3">
-            <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center overflow-hidden">
-              <Image
-                src={getFlagUrl(news.countryCode)}
-                alt={news.countryFlag}
-                width={48}
-                height={48}
-                className="w-12 h-12 object-cover"
-                unoptimized
-              />
-            </div>
+            <FlagLogo countryCode={news.countryCode} alt={news.countryFlag} size="lg" />
           </div>
         ) : news.type === 'company' && news.companyDomain ? (
-          <CompanyLogo domain={news.companyDomain} logoType={news.companyLogoType} />
+          <div className="absolute bottom-3 right-3">
+            <CompanyLogo domain={news.companyDomain} size="lg" />
+          </div>
         ) : null}
       </div>
 
@@ -63,8 +55,8 @@ export function NewsCard({ news }: NewsCardProps) {
           <span className="text-xs text-gray-400">{news.time} · {news.countryFlag} {news.source}</span>
         </div>
 
-        {/* Title */}
-        <h2 className="text-base font-bold text-gray-900 mb-2 leading-snug line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors">
+        {/* Title - 사용자 설정 크기 적용 */}
+        <h2 className={`${FONT_SIZE_MAP.card.title[titleSize]} font-bold text-gray-900 mb-2 leading-snug line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors`}>
           {news.title}
         </h2>
 
@@ -77,8 +69,8 @@ export function NewsCard({ news }: NewsCardProps) {
           ))}
         </div>
 
-        {/* Summary */}
-        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 flex-1">
+        {/* Summary - 사용자 설정 크기 적용 */}
+        <p className={`${FONT_SIZE_MAP.card.body[bodySize]} text-gray-600 leading-relaxed line-clamp-3 flex-1`}>
           {news.summary}
         </p>
 

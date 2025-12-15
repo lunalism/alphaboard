@@ -1,6 +1,12 @@
 'use client';
 
 import { UserSettings, ThemeMode, Language } from '@/types';
+import {
+  useFontSizeStore,
+  FONT_SIZE_LEVELS,
+  FONT_SIZE_LABELS,
+  FontSizeLevel,
+} from '@/stores';
 
 interface SettingsSectionProps {
   settings: UserSettings;
@@ -9,6 +15,9 @@ interface SettingsSectionProps {
 }
 
 export function SettingsSection({ settings, onSettingsChange, onLogout }: SettingsSectionProps) {
+  // 폰트 크기 store 연결
+  const { titleSize, bodySize, setTitleSize, setBodySize, resetFontSize } = useFontSizeStore();
+
   const handleNotificationChange = (key: keyof UserSettings['notifications']) => {
     onSettingsChange({
       ...settings,
@@ -113,6 +122,51 @@ export function SettingsSection({ settings, onSettingsChange, onLogout }: Settin
         </select>
       </div>
 
+      {/* Font Size Settings - 글씨 크기 설정 */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+            </svg>
+            글씨 크기
+          </h3>
+          {/* 초기화 버튼 */}
+          <button
+            onClick={resetFontSize}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            기본값으로 초기화
+          </button>
+        </div>
+
+        {/* 제목 크기 설정 */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-700 mb-3">제목 크기</p>
+          <FontSizeSelector
+            currentSize={titleSize}
+            onSizeChange={setTitleSize}
+            previewType="title"
+          />
+        </div>
+
+        {/* 본문 크기 설정 */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-700 mb-3">본문 크기</p>
+          <FontSizeSelector
+            currentSize={bodySize}
+            onSizeChange={setBodySize}
+            previewType="body"
+          />
+        </div>
+
+        {/* 실시간 미리보기 */}
+        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+          <p className="text-xs text-gray-500 mb-3">미리보기</p>
+          <FontSizePreview titleSize={titleSize} bodySize={bodySize} />
+        </div>
+      </div>
+
       {/* Account Actions */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -165,6 +219,94 @@ function ToggleItem({ label, description, checked, onChange }: ToggleItemProps) 
           }`}
         />
       </button>
+    </div>
+  );
+}
+
+/**
+ * 글씨 크기 선택 컴포넌트
+ * 5단계의 크기를 "가" 글자로 표시하여 직관적으로 선택
+ */
+interface FontSizeSelectorProps {
+  currentSize: FontSizeLevel;
+  onSizeChange: (size: FontSizeLevel) => void;
+  previewType: 'title' | 'body';
+}
+
+function FontSizeSelector({ currentSize, onSizeChange, previewType }: FontSizeSelectorProps) {
+  // 각 레벨별 미리보기 글자 크기 (px)
+  const previewSizes: Record<FontSizeLevel, number> = previewType === 'title'
+    ? { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 }
+    : { xs: 10, sm: 12, md: 14, lg: 16, xl: 18 };
+
+  return (
+    <div className="flex items-end gap-2">
+      {FONT_SIZE_LEVELS.map((level) => (
+        <button
+          key={level}
+          onClick={() => onSizeChange(level)}
+          className={`
+            flex flex-col items-center justify-end px-3 py-2 rounded-lg transition-all
+            ${currentSize === level
+              ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-500'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }
+          `}
+          title={FONT_SIZE_LABELS[level]}
+        >
+          {/* 크기별 "가" 미리보기 */}
+          <span
+            className="font-medium leading-none mb-1"
+            style={{ fontSize: `${previewSizes[level]}px` }}
+          >
+            가
+          </span>
+          {/* 레벨 표시 */}
+          <span className="text-[10px] text-gray-400 uppercase">{level}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 실시간 미리보기 컴포넌트
+ * 현재 설정된 글씨 크기를 뉴스 카드 형식으로 미리보기
+ */
+interface FontSizePreviewProps {
+  titleSize: FontSizeLevel;
+  bodySize: FontSizeLevel;
+}
+
+function FontSizePreview({ titleSize, bodySize }: FontSizePreviewProps) {
+  // 제목 크기 매핑 (홈화면 기준)
+  const titleSizeMap: Record<FontSizeLevel, string> = {
+    xs: 'text-xs',      // 12px
+    sm: 'text-sm',      // 14px
+    md: 'text-base',    // 16px
+    lg: 'text-lg',      // 18px
+    xl: 'text-xl',      // 20px
+  };
+
+  // 본문 크기 매핑 (홈화면 기준)
+  const bodySizeMap: Record<FontSizeLevel, string> = {
+    xs: 'text-[10px]',  // 10px
+    sm: 'text-xs',      // 12px
+    md: 'text-sm',      // 14px
+    lg: 'text-base',    // 16px
+    xl: 'text-lg',      // 18px
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* 미리보기 제목 */}
+      <h4 className={`${titleSizeMap[titleSize]} font-bold text-gray-900 leading-snug`}>
+        연준, 금리 인하 시사하며 시장 반등 기대감 고조
+      </h4>
+      {/* 미리보기 본문 */}
+      <p className={`${bodySizeMap[bodySize]} text-gray-600 leading-relaxed`}>
+        연방준비제도가 인플레이션 둔화 신호에 따라 금리 인하를 검토 중이며, 이에 따라 주요 지수들이 상승세를 보이고 있습니다.
+      </p>
     </div>
   );
 }

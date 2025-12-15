@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
 import { Sidebar, BottomNav } from '@/components/layout';
+import { CompanyLogo, FlagLogo } from '@/components/common';
 import { calendarEvents, eventCategoryFilters } from '@/constants';
 import { EventCategory, CalendarEvent } from '@/types';
 
@@ -118,23 +118,16 @@ export default function CalendarPage() {
                             <div className="text-xs text-gray-500">{weekday}요일</div>
                           </div>
 
-                          {/* Icon/Logo */}
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                            {event.countryCode ? (
-                              <Image
-                                src={`https://hatscripts.github.io/circle-flags/flags/${event.countryCode}.svg`}
-                                alt={event.countryCode}
-                                width={40}
-                                height={40}
-                                className="w-10 h-10 object-cover"
-                                unoptimized
-                              />
-                            ) : event.companyDomain ? (
-                              <EventLogo domain={event.companyDomain} />
-                            ) : (
+                          {/* Icon/Logo - 공통 Logo 컴포넌트 사용 */}
+                          {event.countryCode ? (
+                            <FlagLogo countryCode={event.countryCode} size="md" />
+                          ) : event.companyDomain ? (
+                            <CompanyLogo domain={event.companyDomain} size="md" />
+                          ) : (
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
                               <span className="text-xl">{getCategoryEmoji(event.category)}</span>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
                           {/* Content */}
                           <div className="flex-1 min-w-0">
@@ -178,30 +171,5 @@ export default function CalendarPage() {
         </div>
       </main>
     </div>
-  );
-}
-
-// Event Logo Component
-function EventLogo({ domain }: { domain: string }) {
-  const [error, setError] = useState(false);
-  const clientId = process.env.NEXT_PUBLIC_BRANDFETCH_CLIENT_ID;
-  const logoUrl = clientId
-    ? `https://cdn.brandfetch.io/${domain}/symbol?c=${clientId}`
-    : `https://cdn.brandfetch.io/${domain}/symbol`;
-
-  if (error) {
-    return <span className="text-xl">📊</span>;
-  }
-
-  return (
-    <Image
-      src={logoUrl}
-      alt={domain}
-      width={40}
-      height={40}
-      className="w-10 h-10 object-contain"
-      unoptimized
-      onError={() => setError(true)}
-    />
   );
 }

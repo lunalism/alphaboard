@@ -23,6 +23,7 @@ export interface Stock {
   change: number;
   changePercent: number;
   volume: string;
+  domain?: string; // Brandfetch 로고용 도메인 (예: 'apple.com')
 }
 
 export interface TopMover {
