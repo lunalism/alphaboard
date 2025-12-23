@@ -13,8 +13,9 @@ interface BottomNavProps {
 export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
   const { isLoggedIn } = useAuthStore();
 
-  // 하단 네비: 뉴스, 시세, 캘린더, 용어사전 (4개)
-  const bottomMenuIds = ['news', 'market', 'calendar', 'glossary'];
+  // 하단 네비: 뉴스, 시세, 캘린더, 커뮤니티, 용어사전 (5개)
+  // 사이드바 순서와 동일하게 정렬
+  const bottomMenuIds = ['news', 'market', 'calendar', 'community', 'glossary'];
   const bottomMenuItems = bottomMenuIds
     .map(id => menuItems.find(item => item.id === id))
     .filter(Boolean);
