@@ -14,8 +14,8 @@ export { NewsCardSkeleton, NewsCardSkeletonGrid } from './NewsCardSkeleton';
 // 지수 카드 스켈레톤
 export { IndexCardSkeleton, IndexCardSkeletonGrid } from './IndexCardSkeleton';
 
-// 종목 테이블 스켈레톤
-export { StockRowSkeleton, StockTableSkeleton } from './StockRowSkeleton';
+// 종목 테이블 스켈레톤 (모바일 카드 + 데스크톱 테이블)
+export { StockRowSkeleton, StockCardSkeleton, StockTableSkeleton } from './StockRowSkeleton';
 
 // 이벤트 카드 스켈레톤
 export { EventCardSkeleton, EventCardSkeletonList, EventDetailPanelSkeleton } from './EventCardSkeleton';
