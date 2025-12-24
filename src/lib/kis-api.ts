@@ -709,18 +709,22 @@ export async function getFluctuationRanking(
 
   // 등락률순위 API 엔드포인트: /uapi/domestic-stock/v1/ranking/fluctuation
   // 한국투자 HTS [0170] 등락률 순위 화면 API
+  // 참고: 공식 GitHub 문서 (examples_llm/domestic_stock/fluctuation) 참조
   const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/ranking/fluctuation`);
-  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');       // J: 주식/ETF/ETN
-  url.searchParams.append('FID_COND_SCR_DIV_CODE', '20170');    // 등락률순위 화면코드
-  url.searchParams.append('FID_INPUT_ISCD', marketCodeMap[market]);
-  url.searchParams.append('FID_RANK_SORT_CLS_CODE', sortCodeMap[sortOrder]);
-  url.searchParams.append('FID_PRC_CLS_CODE', '0');             // 0: 저가대비
-  url.searchParams.append('FID_DIV_CLS_CODE', '0');             // 0: 전체
-  url.searchParams.append('FID_TRGT_CLS_CODE', '111111111');    // 전체 대상
-  url.searchParams.append('FID_TRGT_EXLS_CLS_CODE', '000000');  // 제외 없음
-  url.searchParams.append('FID_INPUT_PRICE_1', '0');            // 최저가격: 전체
-  url.searchParams.append('FID_INPUT_PRICE_2', '0');            // 최고가격: 전체
-  url.searchParams.append('FID_VOL_CNT', '0');                  // 거래량: 전체
+  url.searchParams.append('fid_cond_mrkt_div_code', 'J');       // J: 주식/ETF/ETN (KRX만 허용)
+  url.searchParams.append('fid_cond_scr_div_code', '20170');    // 등락률순위 화면코드 (고정값)
+  url.searchParams.append('fid_input_iscd', marketCodeMap[market]); // 시장구분
+  url.searchParams.append('fid_rank_sort_cls_code', sortCodeMap[sortOrder]); // 0:상승률, 1:하락률
+  url.searchParams.append('fid_input_cnt_1', '0');              // 조회 종목 수 (0: 전체)
+  url.searchParams.append('fid_prc_cls_code', '0');             // 0: 저가대비
+  url.searchParams.append('fid_input_price_1', '');             // 가격 하한선 (빈값: 전체)
+  url.searchParams.append('fid_input_price_2', '');             // 가격 상한선 (빈값: 전체)
+  url.searchParams.append('fid_vol_cnt', '');                   // 최소 거래량 (빈값: 전체)
+  url.searchParams.append('fid_trgt_cls_code', '0');            // 대상 구분 (0: 전체)
+  url.searchParams.append('fid_trgt_exls_cls_code', '0');       // 대상 제외 구분 (0: 전체)
+  url.searchParams.append('fid_div_cls_code', '0');             // 주식 종류 (0: 전체)
+  url.searchParams.append('fid_rsfl_rate1', '');                // 등락률 하한 (빈값: 전체)
+  url.searchParams.append('fid_rsfl_rate2', '');                // 등락률 상한 (빈값: 전체)
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -795,17 +799,19 @@ export async function getMarketCapRanking(
     kosdaq: '1001',
   };
 
-  // 시가총액순위 API 엔드포인트: /uapi/domestic-stock/v1/quotations/market-cap
-  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/market-cap`);
-  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');       // J: 주식
-  url.searchParams.append('FID_COND_SCR_DIV_CODE', '20174');    // 시가총액상위 화면코드
-  url.searchParams.append('FID_INPUT_ISCD', marketCodeMap[market]);
-  url.searchParams.append('FID_DIV_CLS_CODE', '0');             // 0: 전체
-  url.searchParams.append('FID_TRGT_CLS_CODE', '111111111');    // 전체 대상
-  url.searchParams.append('FID_TRGT_EXLS_CLS_CODE', '000000');  // 제외 없음
-  url.searchParams.append('FID_INPUT_PRICE_1', '0');            // 최저가격: 전체
-  url.searchParams.append('FID_INPUT_PRICE_2', '0');            // 최고가격: 전체
-  url.searchParams.append('FID_VOL_CNT', '0');                  // 거래량: 전체
+  // 시가총액순위 API 엔드포인트: /uapi/domestic-stock/v1/ranking/market-cap
+  // 참고: /quotations/market-cap은 404 에러, /ranking/market-cap이 올바른 경로
+  // 공식 GitHub 문서 (examples_llm/domestic_stock/market_cap) 참조
+  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/ranking/market-cap`);
+  url.searchParams.append('fid_cond_mrkt_div_code', 'J');       // J: 주식 (KRX만 허용)
+  url.searchParams.append('fid_cond_scr_div_code', '20174');    // 시가총액상위 화면코드 (고정값)
+  url.searchParams.append('fid_input_iscd', marketCodeMap[market]); // 시장구분
+  url.searchParams.append('fid_div_cls_code', '0');             // 주식 종류 (0:전체, 1:보통주, 2:우선주)
+  url.searchParams.append('fid_trgt_cls_code', '0');            // 대상 구분 (0: 전체만 허용)
+  url.searchParams.append('fid_trgt_exls_cls_code', '0');       // 대상 제외 구분 (0: 전체만 허용)
+  url.searchParams.append('fid_input_price_1', '');             // 가격 하한선 (빈값: 전체)
+  url.searchParams.append('fid_input_price_2', '');             // 가격 상한선 (빈값: 전체)
+  url.searchParams.append('fid_vol_cnt', '');                   // 최소 거래량 (빈값: 전체)
 
   const response = await fetch(url.toString(), {
     method: 'GET',
