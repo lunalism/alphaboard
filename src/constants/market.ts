@@ -478,3 +478,114 @@ export function getETFsByCategory(category: KoreanETFInfo['category']): KoreanET
 export function getAllETFSymbols(): string[] {
   return koreanETFList.map(etf => etf.symbol);
 }
+
+// ==================== 미국 ETF 종목 리스트 (API 조회용) ====================
+/**
+ * 미국 ETF 종목 정보
+ *
+ * 카테고리:
+ * 1. index: 지수 추종 ETF (S&P500, NASDAQ 등)
+ * 2. sector: 섹터/테마 ETF (기술, 에너지 등)
+ * 3. bond: 채권 ETF
+ * 4. commodity: 원자재 ETF
+ * 5. international: 해외 지수 ETF
+ *
+ * @see https://apiportal.koreainvestment.com - 한국투자증권 해외주식 API
+ */
+export interface USETFInfo {
+  /** 종목코드 (티커) */
+  symbol: string;
+  /** ETF 이름 */
+  name: string;
+  /** 카테고리 */
+  category: 'index' | 'sector' | 'bond' | 'commodity' | 'international';
+  /** 거래소 (NAS: 나스닥, NYS: 뉴욕) */
+  exchange: 'NAS' | 'NYS';
+  /** 운용사 */
+  issuer: string;
+}
+
+/**
+ * 미국 ETF 종목 리스트 (카테고리별)
+ *
+ * 총 30개 종목:
+ * - 지수 추종: 8개
+ * - 섹터/테마: 8개
+ * - 채권: 6개
+ * - 원자재: 4개
+ * - 해외 지수: 4개
+ */
+export const usETFList: USETFInfo[] = [
+  // ========== 지수 추종 ETF ==========
+  // 미국 주요 지수를 추종하는 ETF
+  { symbol: 'SPY', name: 'SPDR S&P 500 ETF', category: 'index', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'QQQ', name: 'Invesco QQQ Trust', category: 'index', exchange: 'NAS', issuer: 'Invesco' },
+  { symbol: 'DIA', name: 'SPDR Dow Jones ETF', category: 'index', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'IWM', name: 'iShares Russell 2000 ETF', category: 'index', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'VOO', name: 'Vanguard S&P 500 ETF', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'VTI', name: 'Vanguard Total Stock Market', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'VIG', name: 'Vanguard Dividend Appreciation', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'SCHD', name: 'Schwab US Dividend Equity', category: 'index', exchange: 'NYS', issuer: 'Schwab' },
+
+  // ========== 섹터/테마 ETF ==========
+  // 특정 산업이나 테마에 집중 투자
+  { symbol: 'XLK', name: 'Technology Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLF', name: 'Financial Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLE', name: 'Energy Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLV', name: 'Health Care Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'ARKK', name: 'ARK Innovation ETF', category: 'sector', exchange: 'NYS', issuer: 'ARK Invest' },
+  { symbol: 'SOXX', name: 'iShares Semiconductor ETF', category: 'sector', exchange: 'NAS', issuer: 'BlackRock' },
+  { symbol: 'SMH', name: 'VanEck Semiconductor ETF', category: 'sector', exchange: 'NAS', issuer: 'VanEck' },
+  { symbol: 'XLI', name: 'Industrial Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+
+  // ========== 채권 ETF ==========
+  { symbol: 'BND', name: 'Vanguard Total Bond Market', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
+  { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond', category: 'bond', exchange: 'NAS', issuer: 'BlackRock' },
+  { symbol: 'LQD', name: 'iShares Investment Grade Corp Bond', category: 'bond', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'HYG', name: 'iShares High Yield Corp Bond', category: 'bond', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'SHY', name: 'iShares 1-3 Year Treasury Bond', category: 'bond', exchange: 'NAS', issuer: 'BlackRock' },
+  { symbol: 'AGG', name: 'iShares Core US Aggregate Bond', category: 'bond', exchange: 'NYS', issuer: 'BlackRock' },
+
+  // ========== 원자재 ETF ==========
+  { symbol: 'GLD', name: 'SPDR Gold Shares', category: 'commodity', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'SLV', name: 'iShares Silver Trust', category: 'commodity', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'USO', name: 'United States Oil Fund', category: 'commodity', exchange: 'NYS', issuer: 'US Commodity Funds' },
+  { symbol: 'DBC', name: 'Invesco DB Commodity Index', category: 'commodity', exchange: 'NYS', issuer: 'Invesco' },
+
+  // ========== 해외 지수 ETF ==========
+  { symbol: 'EFA', name: 'iShares MSCI EAFE ETF', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'EEM', name: 'iShares MSCI Emerging Markets', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'VWO', name: 'Vanguard FTSE Emerging Markets', category: 'international', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'KWEB', name: 'KraneShares China Internet ETF', category: 'international', exchange: 'NYS', issuer: 'KraneShares' },
+];
+
+/**
+ * 미국 ETF 카테고리 라벨 (UI 표시용)
+ */
+export const usETFCategoryLabels: Record<USETFInfo['category'], string> = {
+  index: 'Index Tracking',
+  sector: 'Sector/Theme',
+  bond: 'Bonds',
+  commodity: 'Commodities',
+  international: 'International',
+};
+
+/**
+ * 특정 카테고리의 미국 ETF 목록 반환
+ *
+ * @param category - ETF 카테고리
+ * @returns 해당 카테고리의 ETF 목록
+ */
+export function getUSETFsByCategory(category: USETFInfo['category']): USETFInfo[] {
+  return usETFList.filter(etf => etf.category === category);
+}
+
+/**
+ * 특정 거래소의 미국 ETF 목록 반환
+ *
+ * @param exchange - 거래소 코드 (NAS, NYS)
+ * @returns 해당 거래소의 ETF 목록
+ */
+export function getUSETFsByExchange(exchange: 'NAS' | 'NYS'): USETFInfo[] {
+  return usETFList.filter(etf => etf.exchange === exchange);
+}

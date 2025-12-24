@@ -816,3 +816,357 @@ export function useKoreanETFs(
 
   return { etfs, isLoading, error, refetch: fetchETFs, failedSymbols };
 }
+
+// ==================== 미국 시장 훅 ====================
+
+import type {
+  OverseasIndexData,
+  OverseasVolumeRankingData,
+  OverseasFluctuationRankingData,
+  OverseasMarketCapRankingData,
+  OverseasStockPriceData,
+  OverseasExchangeCode,
+} from '@/types/kis';
+import type { USETFInfo } from '@/constants';
+
+/**
+ * 미국 지수 데이터 훅
+ *
+ * @param autoRefresh 자동 새로고침 여부 (기본: false)
+ * @param refreshInterval 새로고침 간격 (밀리초, 기본: 60초)
+ * @returns 지수 데이터 (S&P500, NASDAQ, DOW JONES), 로딩 상태, 에러, refetch 함수
+ *
+ * @example
+ * ```tsx
+ * const { indices, isLoading, error, refetch } = useUSIndices({ autoRefresh: true });
+ * ```
+ *
+ * @see /api/kis/overseas/indices - API 엔드포인트
+ */
+interface UseUSIndicesResult {
+  indices: OverseasIndexData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  failedIndices: string[];
+}
+
+export function useUSIndices(options?: {
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+}): UseUSIndicesResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [indices, setIndices] = useState<OverseasIndexData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [failedIndices, setFailedIndices] = useState<string[]>([]);
+
+  const fetchIndices = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/kis/overseas/indices');
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setIndices(result.data);
+        setFailedIndices(result.failed || []);
+
+        if (result.data.length === 0) {
+          setError('미국 지수 데이터를 가져올 수 없습니다.');
+        }
+      } else {
+        setError(result.message || '미국 지수 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSIndices] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchIndices();
+  }, [fetchIndices]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchIndices, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchIndices]);
+
+  return { indices, isLoading, error, refetch: fetchIndices, failedIndices };
+}
+
+/**
+ * 미국 주식 거래량순위 데이터 훅
+ *
+ * @param exchange 거래소 코드 (NAS: 나스닥, NYS: 뉴욕, AMS: 아멕스)
+ * @param options 옵션
+ * @returns 거래량순위 데이터, 로딩 상태, 에러, refetch 함수
+ *
+ * @see /api/kis/overseas/ranking/volume - API 엔드포인트
+ */
+interface UseUSVolumeRankingResult {
+  data: OverseasVolumeRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useUSVolumeRanking(
+  exchange: OverseasExchangeCode = 'NAS',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSVolumeRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<OverseasVolumeRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/overseas/ranking/volume?exchange=${exchange}`);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setData(result.data);
+      } else {
+        setError(result.message || '거래량순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSVolumeRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [exchange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
+}
+
+/**
+ * 미국 주식 등락률순위 데이터 훅
+ *
+ * @param exchange 거래소 코드 (NAS: 나스닥, NYS: 뉴욕)
+ * @param sortOrder 정렬순서 ('asc': 상승률순, 'desc': 하락률순)
+ * @param options 옵션
+ * @returns 등락률순위 데이터, 로딩 상태, 에러, refetch 함수
+ *
+ * @see /api/kis/overseas/ranking/fluctuation - API 엔드포인트
+ */
+interface UseUSFluctuationRankingResult {
+  data: OverseasFluctuationRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useUSFluctuationRanking(
+  exchange: OverseasExchangeCode = 'NAS',
+  sortOrder: 'asc' | 'desc' = 'asc',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSFluctuationRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<OverseasFluctuationRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/overseas/ranking/fluctuation?exchange=${exchange}&sort=${sortOrder}`);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setData(result.data);
+      } else {
+        setError(result.message || '등락률순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSFluctuationRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [exchange, sortOrder]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
+}
+
+/**
+ * 미국 주식 시가총액순위 데이터 훅
+ *
+ * @param exchange 거래소 코드 (NAS: 나스닥, NYS: 뉴욕)
+ * @param options 옵션
+ * @returns 시가총액순위 데이터, 로딩 상태, 에러, refetch 함수
+ *
+ * @see /api/kis/overseas/ranking/market-cap - API 엔드포인트
+ */
+interface UseUSMarketCapRankingResult {
+  data: OverseasMarketCapRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useUSMarketCapRanking(
+  exchange: OverseasExchangeCode = 'NAS',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSMarketCapRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<OverseasMarketCapRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/overseas/ranking/market-cap?exchange=${exchange}`);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setData(result.data);
+      } else {
+        setError(result.message || '시가총액순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSMarketCapRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [exchange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
+}
+
+/**
+ * 미국 ETF 시세 데이터 타입
+ */
+export interface USETFPriceData extends OverseasStockPriceData {
+  name: string;
+  category: USETFInfo['category'];
+  issuer: string;
+}
+
+/**
+ * 미국 ETF 시세 데이터 훅
+ *
+ * @param category ETF 카테고리 ('all' | 'index' | 'sector' | 'bond' | 'commodity' | 'international')
+ * @param options 옵션
+ * @returns ETF 시세 데이터, 로딩 상태, 에러, refetch 함수, 실패 종목
+ *
+ * @see /api/kis/overseas/etf/prices - API 엔드포인트
+ */
+interface UseUSETFsResult {
+  etfs: USETFPriceData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  failedSymbols: string[];
+}
+
+export function useUSETFs(
+  category: 'all' | 'index' | 'sector' | 'bond' | 'commodity' | 'international' = 'all',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSETFsResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [etfs, setEtfs] = useState<USETFPriceData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [failedSymbols, setFailedSymbols] = useState<string[]>([]);
+
+  const fetchETFs = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/overseas/etf/prices?category=${category}`);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setEtfs(result.data);
+        setFailedSymbols(result.failed || []);
+
+        if (result.data.length === 0) {
+          setError('미국 ETF 시세 데이터를 가져올 수 없습니다.');
+        }
+      } else {
+        setError(result.message || '미국 ETF 시세 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSETFs] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [category]);
+
+  useEffect(() => {
+    fetchETFs();
+  }, [fetchETFs]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchETFs, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchETFs]);
+
+  return { etfs, isLoading, error, refetch: fetchETFs, failedSymbols };
+}

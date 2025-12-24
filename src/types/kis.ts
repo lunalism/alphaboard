@@ -452,3 +452,310 @@ export interface MarketCapRankingData {
   marketCap: number;        // 시가총액 (억원)
   marketCapRatio: number;   // 시장전체대비비중 (%)
 }
+
+// ==================== 해외주식 API 타입 ====================
+// @see https://apiportal.koreainvestment.com/apiservice/apiservice-overseas-stock
+// @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock
+
+/**
+ * 해외 거래소 코드
+ * - NYS: 뉴욕 (NYSE)
+ * - NAS: 나스닥 (NASDAQ)
+ * - AMS: 아멕스 (AMEX)
+ * - HKS: 홍콩
+ * - TSE: 도쿄
+ * - SHS: 상해
+ * - SZS: 심천
+ * - HSX: 호치민
+ * - HNX: 하노이
+ */
+export type OverseasExchangeCode = 'NYS' | 'NAS' | 'AMS' | 'HKS' | 'TSE' | 'SHS' | 'SZS' | 'HSX' | 'HNX';
+
+/**
+ * 해외지수 코드
+ * - SPX: S&P 500
+ * - CCMP: NASDAQ Composite
+ * - INDU: Dow Jones Industrial
+ */
+export type OverseasIndexCode = 'SPX' | 'CCMP' | 'INDU';
+
+// ==================== 해외주식 현재가 조회 타입 ====================
+
+/**
+ * 해외주식 현재가 조회 API 응답
+ * GET /uapi/overseas-price/v1/quotations/price
+ * tr_id: HHDFS00000300
+ *
+ * @description
+ * 해외주식 시세를 조회합니다.
+ * 거래소 운영시간 외 조회 시 에러가 발생할 수 있습니다.
+ *
+ * 미국 거래소 운영시간 (한국시간):
+ * - 정규장: 23:30 ~ 06:00 (썸머타임: 22:30 ~ 05:00)
+ */
+export interface KISOverseasStockPriceResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISOverseasStockPrice;
+}
+
+/**
+ * 해외주식 현재가 상세 정보
+ */
+export interface KISOverseasStockPrice {
+  rsym: string;       // 실시간 조회 종목코드
+  zdiv: string;       // 소수점 자리수
+  base: string;       // 전일종가
+  pvol: string;       // 전일거래량
+  last: string;       // 현재가
+  sign: string;       // 대비기호 (1:상승, 2:보합, 3:하락, 4:상한, 5:하한)
+  diff: string;       // 대비 (전일대비)
+  rate: string;       // 등락율 (%)
+  tvol: string;       // 거래량
+  tamt: string;       // 거래대금
+  ordy: string;       // 매수가능여부 (Y/N)
+  [key: string]: string;
+}
+
+/**
+ * 클라이언트에 반환할 해외주식 현재가 정보 (정제된 형태)
+ */
+export interface OverseasStockPriceData {
+  symbol: string;           // 종목코드 (예: AAPL)
+  exchange: OverseasExchangeCode;  // 거래소코드
+  currentPrice: number;     // 현재가
+  change: number;           // 전일 대비
+  changePercent: number;    // 전일 대비율 (%)
+  changeSign: string;       // 등락 부호 (up, down, flat)
+  volume: number;           // 거래량
+  tradingValue: number;     // 거래대금
+  previousClose: number;    // 전일종가
+  previousVolume: number;   // 전일거래량
+  timestamp: string;        // 조회 시간
+}
+
+// ==================== 해외지수 차트 가격 조회 타입 ====================
+
+/**
+ * 해외지수 시간별 차트가격 조회 API 응답
+ * GET /uapi/overseas-price/v1/quotations/inquire-time-indexchartprice
+ * tr_id: FHKST03030200
+ *
+ * @description
+ * 해외 주요 지수의 시간별 차트 가격을 조회합니다.
+ * 미국 지수 코드:
+ * - SPX: S&P 500
+ * - CCMP: NASDAQ Composite
+ * - INDU: Dow Jones Industrial Average
+ */
+export interface KISOverseasIndexChartResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output1: KISOverseasIndexInfo;      // 지수 기본 정보
+  output2: KISOverseasIndexChartItem[];  // 시간별 차트 데이터
+}
+
+/**
+ * 해외지수 기본 정보 (output1)
+ */
+export interface KISOverseasIndexInfo {
+  ovrs_nmix_prdy_vrss: string;    // 해외지수 전일대비
+  prdy_vrss_sign: string;          // 전일대비 부호 (1:상승, 2:보합, 3:하락)
+  prdy_ctrt: string;               // 전일대비율 (%)
+  ovrs_nmix_prpr: string;          // 해외지수 현재가
+  [key: string]: string;
+}
+
+/**
+ * 해외지수 시간별 차트 데이터 (output2)
+ */
+export interface KISOverseasIndexChartItem {
+  stck_bsop_date: string;    // 영업일자 (YYYYMMDD)
+  ovrs_nmix_oprc: string;    // 해외지수 시가
+  ovrs_nmix_hgpr: string;    // 해외지수 고가
+  ovrs_nmix_lwpr: string;    // 해외지수 저가
+  ovrs_nmix_prpr: string;    // 해외지수 현재가 (종가)
+  acml_vol: string;          // 누적거래량
+  mod_yn: string;            // 수정여부
+  [key: string]: string;
+}
+
+/**
+ * 클라이언트에 반환할 해외지수 정보 (정제된 형태)
+ */
+export interface OverseasIndexData {
+  indexCode: OverseasIndexCode;  // 지수코드 (SPX, CCMP, INDU)
+  indexName: string;             // 지수명
+  currentValue: number;          // 현재 지수
+  change: number;                // 전일 대비
+  changePercent: number;         // 전일 대비율 (%)
+  changeSign: string;            // 등락 부호 (up, down, flat)
+  openValue?: number;            // 시가
+  highValue?: number;            // 고가
+  lowValue?: number;             // 저가
+  volume?: number;               // 거래량
+  timestamp: string;             // 조회 시간
+}
+
+// ==================== 해외주식 순위 조회 API 타입 ====================
+
+/**
+ * 해외주식 거래량순위 API 응답
+ * GET /uapi/overseas-stock/v1/ranking/trade-vol
+ * tr_id: HHDFS76310010
+ *
+ * @description
+ * 해외주식 거래량 순위를 조회합니다.
+ *
+ * 파라미터:
+ * - EXCD: 거래소코드 (NYS, NAS, AMS 등)
+ * - NDAY: N일자값 (0:당일, 1:2일전 ~ 9:1년)
+ * - VOL_RANG: 거래량조건 (0:전체, 1:1백주이상, 2:1천주이상, 3:1만주이상, 4:10만주이상, 5:100만주이상, 6:1000만주이상)
+ */
+export interface KISOverseasVolumeRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISOverseasVolumeRankingItem[];
+}
+
+/**
+ * 해외주식 거래량순위 개별 종목 데이터
+ */
+export interface KISOverseasVolumeRankingItem {
+  symb: string;       // 종목코드
+  name: string;       // 종목명
+  last: string;       // 현재가
+  sign: string;       // 대비기호
+  diff: string;       // 대비
+  rate: string;       // 등락율 (%)
+  tvol: string;       // 거래량
+  tamt: string;       // 거래대금
+  avol: string;       // 전일거래량
+  prat: string;       // 전일대비거래량비율
+  [key: string]: string;
+}
+
+/**
+ * 해외주식 시가총액순위 API 응답
+ * GET /uapi/overseas-stock/v1/ranking/market-cap
+ * tr_id: HHDFS76350100
+ *
+ * @description
+ * 해외주식 시가총액 순위를 조회합니다.
+ *
+ * 파라미터:
+ * - EXCD: 거래소코드 (NYS, NAS 등)
+ * - VOL_RANG: 거래량조건 (0:전체 ~ 6:1000만주이상)
+ */
+export interface KISOverseasMarketCapRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISOverseasMarketCapRankingItem[];
+}
+
+/**
+ * 해외주식 시가총액순위 개별 종목 데이터
+ */
+export interface KISOverseasMarketCapRankingItem {
+  symb: string;       // 종목코드
+  name: string;       // 종목명
+  last: string;       // 현재가
+  sign: string;       // 대비기호
+  diff: string;       // 대비
+  rate: string;       // 등락율 (%)
+  tvol: string;       // 거래량
+  mcap: string;       // 시가총액
+  [key: string]: string;
+}
+
+/**
+ * 해외주식 등락률순위 API 응답
+ * GET /uapi/overseas-stock/v1/ranking/updown-rate
+ * tr_id: HHDFS76290000
+ *
+ * @description
+ * 해외주식 등락률 순위를 조회합니다.
+ *
+ * 파라미터:
+ * - EXCD: 거래소코드 (NYS, NAS 등)
+ * - NDAY: N일자값 (0:당일 ~ 9:1년)
+ * - GUBN: 상승/하락 구분 (0:하락율순, 1:상승율순)
+ * - VOL_RANG: 거래량조건 (0:전체 ~ 6:1000만주이상)
+ */
+export interface KISOverseasFluctuationRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISOverseasFluctuationRankingItem[];
+}
+
+/**
+ * 해외주식 등락률순위 개별 종목 데이터
+ */
+export interface KISOverseasFluctuationRankingItem {
+  symb: string;       // 종목코드
+  name: string;       // 종목명
+  last: string;       // 현재가
+  sign: string;       // 대비기호
+  diff: string;       // 대비
+  rate: string;       // 등락율 (%)
+  tvol: string;       // 거래량
+  base: string;       // 전일종가
+  [key: string]: string;
+}
+
+// ==================== 클라이언트용 해외주식 순위 데이터 타입 ====================
+
+/**
+ * 클라이언트에 반환할 해외주식 거래량순위 정보 (정제된 형태)
+ */
+export interface OverseasVolumeRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드
+  name: string;             // 종목명
+  exchange: OverseasExchangeCode;  // 거래소코드
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  tradingValue: number;     // 거래대금
+  previousVolume: number;   // 전일거래량
+  volumeChangeRate: number; // 전일대비거래량비율
+}
+
+/**
+ * 클라이언트에 반환할 해외주식 시가총액순위 정보 (정제된 형태)
+ */
+export interface OverseasMarketCapRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드
+  name: string;             // 종목명
+  exchange: OverseasExchangeCode;  // 거래소코드
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  marketCap: number;        // 시가총액
+}
+
+/**
+ * 클라이언트에 반환할 해외주식 등락률순위 정보 (정제된 형태)
+ */
+export interface OverseasFluctuationRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드
+  name: string;             // 종목명
+  exchange: OverseasExchangeCode;  // 거래소코드
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  previousClose: number;    // 전일종가
+}

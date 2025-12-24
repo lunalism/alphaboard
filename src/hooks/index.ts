@@ -3,7 +3,7 @@
  */
 
 export {
-  // 기존 시세 조회 훅
+  // 기존 시세 조회 훅 (한국)
   useKoreanIndices,
   useKoreanStocks,
   useKoreanStockPrice,
@@ -12,11 +12,18 @@ export {
   useVolumeRanking,
   useFluctuationRanking,
   useMarketCapRanking,
-  // ETF 조회 훅
+  // ETF 조회 훅 (한국)
   useKoreanETFs,
+  // 미국 시장 조회 훅
+  useUSIndices,
+  useUSVolumeRanking,
+  useUSFluctuationRanking,
+  useUSMarketCapRanking,
+  useUSETFs,
   // 상수
   KOREAN_INDICES,
   KOREAN_STOCKS,
   // 타입
   type ETFPriceData,
+  type USETFPriceData,
 } from './useKISData';

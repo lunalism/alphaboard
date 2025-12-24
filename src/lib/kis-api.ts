@@ -857,3 +857,404 @@ function transformMarketCapRanking(raw: KISMarketCapRankingItem, defaultRank: nu
     marketCapRatio: parseFloat(raw.mrkt_whol_avls_rlim) || 0,
   };
 }
+
+// ==================== 해외주식 API ====================
+// @see https://apiportal.koreainvestment.com/apiservice/apiservice-overseas-stock
+// @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock
+
+import type {
+  OverseasExchangeCode,
+  OverseasIndexCode,
+  KISOverseasIndexChartResponse,
+  OverseasIndexData,
+  KISOverseasStockPriceResponse,
+  OverseasStockPriceData,
+  KISOverseasVolumeRankingResponse,
+  KISOverseasVolumeRankingItem,
+  OverseasVolumeRankingData,
+  KISOverseasMarketCapRankingResponse,
+  KISOverseasMarketCapRankingItem,
+  OverseasMarketCapRankingData,
+  KISOverseasFluctuationRankingResponse,
+  KISOverseasFluctuationRankingItem,
+  OverseasFluctuationRankingData,
+} from '@/types/kis';
+
+/**
+ * 해외 대비 부호 변환 함수
+ * 해외주식 API의 sign 필드는 국내와 다른 값 체계 사용
+ * 1:상승, 2:보합, 3:하락, 4:상한, 5:하한
+ */
+function getOverseasChangeSign(sign: string): string {
+  const signMap: Record<string, string> = {
+    '1': 'up',
+    '2': 'flat',
+    '3': 'down',
+    '4': 'up',    // 상한 = 상승
+    '5': 'down',  // 하한 = 하락
+  };
+  return signMap[sign] || 'flat';
+}
+
+/**
+ * 미국 지수명 매핑
+ */
+const US_INDEX_NAME_MAP: Record<OverseasIndexCode, string> = {
+  'SPX': 'S&P 500',
+  'CCMP': 'NASDAQ',
+  'INDU': 'DOW JONES',
+};
+
+/**
+ * 해외지수 시세 조회
+ *
+ * @param indexCode 지수코드 (SPX: S&P500, CCMP: NASDAQ, INDU: DOW)
+ * @returns 해외지수 현재가 정보
+ *
+ * @description
+ * GET /uapi/overseas-price/v1/quotations/inquire-time-indexchartprice
+ * tr_id: FHKST03030200
+ *
+ * @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock/inquire_time_indexchartprice
+ */
+export async function getOverseasIndexPrice(indexCode: OverseasIndexCode): Promise<OverseasIndexData> {
+  const accessToken = await getAccessToken();
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/inquire-time-indexchartprice`);
+  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'N');  // N: 해외지수
+  url.searchParams.append('FID_INPUT_ISCD', indexCode);
+  url.searchParams.append('FID_HOUR_CLS_CODE', '0');       // 0: 정규장
+  url.searchParams.append('FID_PW_DATA_INCU_YN', 'Y');     // 과거 데이터 포함
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'FHKST03030200'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외지수 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외지수 조회 실패: ${response.status}`);
+  }
+
+  const data: KISOverseasIndexChartResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // 데이터 정제 및 반환
+  const info = data.output1;
+  const latestChart = data.output2?.[0];
+
+  return {
+    indexCode,
+    indexName: US_INDEX_NAME_MAP[indexCode] || indexCode,
+    currentValue: parseFloat(info.ovrs_nmix_prpr) || 0,
+    change: parseFloat(info.ovrs_nmix_prdy_vrss) || 0,
+    changePercent: parseFloat(info.prdy_ctrt) || 0,
+    changeSign: getOverseasChangeSign(info.prdy_vrss_sign),
+    openValue: latestChart ? parseFloat(latestChart.ovrs_nmix_oprc) || undefined : undefined,
+    highValue: latestChart ? parseFloat(latestChart.ovrs_nmix_hgpr) || undefined : undefined,
+    lowValue: latestChart ? parseFloat(latestChart.ovrs_nmix_lwpr) || undefined : undefined,
+    volume: latestChart ? parseInt(latestChart.acml_vol) || undefined : undefined,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * 해외주식 현재가 조회
+ *
+ * @param exchange 거래소코드 (NAS: 나스닥, NYS: 뉴욕, AMS: 아멕스)
+ * @param symbol 종목코드 (예: AAPL, TSLA, MSFT)
+ * @returns 해외주식 현재가 정보
+ *
+ * @description
+ * GET /uapi/overseas-price/v1/quotations/price
+ * tr_id: HHDFS00000300
+ *
+ * @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock/price
+ */
+export async function getOverseasStockPrice(
+  exchange: OverseasExchangeCode,
+  symbol: string
+): Promise<OverseasStockPriceData> {
+  const accessToken = await getAccessToken();
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price`);
+  url.searchParams.append('AUTH', '');
+  url.searchParams.append('EXCD', exchange);
+  url.searchParams.append('SYMB', symbol);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'HHDFS00000300'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외주식 현재가 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외주식 현재가 조회 실패: ${response.status}`);
+  }
+
+  const data: KISOverseasStockPriceResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  const output = data.output;
+  return {
+    symbol,
+    exchange,
+    currentPrice: parseFloat(output.last) || 0,
+    change: parseFloat(output.diff) || 0,
+    changePercent: parseFloat(output.rate) || 0,
+    changeSign: getOverseasChangeSign(output.sign),
+    volume: parseInt(output.tvol) || 0,
+    tradingValue: parseFloat(output.tamt) || 0,
+    previousClose: parseFloat(output.base) || 0,
+    previousVolume: parseInt(output.pvol) || 0,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * 해외주식 거래량순위 조회
+ *
+ * @param exchange 거래소코드 (NAS: 나스닥, NYS: 뉴욕, AMS: 아멕스)
+ * @returns 거래량순위 데이터 (페이지네이션 지원)
+ *
+ * @description
+ * GET /uapi/overseas-stock/v1/ranking/trade-vol
+ * tr_id: HHDFS76310010
+ *
+ * @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock/trade_vol
+ */
+export async function getOverseasVolumeRanking(
+  exchange: OverseasExchangeCode = 'NAS'
+): Promise<OverseasVolumeRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-stock/v1/ranking/trade-vol`);
+  url.searchParams.append('EXCD', exchange);
+  url.searchParams.append('NDAY', '0');      // 0: 당일
+  url.searchParams.append('VOL_RANG', '0');  // 0: 전체
+  url.searchParams.append('AUTH', '');
+  url.searchParams.append('KEYB', '');
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'HHDFS76310010'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외주식 거래량순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외주식 거래량순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISOverseasVolumeRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  return data.output.map((item, index) => transformOverseasVolumeRanking(item, index + 1, exchange));
+}
+
+/**
+ * 해외주식 거래량순위 데이터 변환
+ */
+function transformOverseasVolumeRanking(
+  raw: KISOverseasVolumeRankingItem,
+  rank: number,
+  exchange: OverseasExchangeCode
+): OverseasVolumeRankingData {
+  return {
+    rank,
+    symbol: raw.symb,
+    name: raw.name,
+    exchange,
+    currentPrice: parseFloat(raw.last) || 0,
+    change: parseFloat(raw.diff) || 0,
+    changePercent: parseFloat(raw.rate) || 0,
+    changeSign: getOverseasChangeSign(raw.sign),
+    volume: parseInt(raw.tvol) || 0,
+    tradingValue: parseFloat(raw.tamt) || 0,
+    previousVolume: parseInt(raw.avol) || 0,
+    volumeChangeRate: parseFloat(raw.prat) || 0,
+  };
+}
+
+/**
+ * 해외주식 시가총액순위 조회
+ *
+ * @param exchange 거래소코드 (NAS: 나스닥, NYS: 뉴욕)
+ * @returns 시가총액순위 데이터
+ *
+ * @description
+ * GET /uapi/overseas-stock/v1/ranking/market-cap
+ * tr_id: HHDFS76350100
+ *
+ * @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock/market_cap
+ */
+export async function getOverseasMarketCapRanking(
+  exchange: OverseasExchangeCode = 'NAS'
+): Promise<OverseasMarketCapRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-stock/v1/ranking/market-cap`);
+  url.searchParams.append('EXCD', exchange);
+  url.searchParams.append('VOL_RANG', '0');  // 0: 전체
+  url.searchParams.append('AUTH', '');
+  url.searchParams.append('KEYB', '');
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'HHDFS76350100'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외주식 시가총액순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외주식 시가총액순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISOverseasMarketCapRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  return data.output.map((item, index) => transformOverseasMarketCapRanking(item, index + 1, exchange));
+}
+
+/**
+ * 해외주식 시가총액순위 데이터 변환
+ */
+function transformOverseasMarketCapRanking(
+  raw: KISOverseasMarketCapRankingItem,
+  rank: number,
+  exchange: OverseasExchangeCode
+): OverseasMarketCapRankingData {
+  return {
+    rank,
+    symbol: raw.symb,
+    name: raw.name,
+    exchange,
+    currentPrice: parseFloat(raw.last) || 0,
+    change: parseFloat(raw.diff) || 0,
+    changePercent: parseFloat(raw.rate) || 0,
+    changeSign: getOverseasChangeSign(raw.sign),
+    volume: parseInt(raw.tvol) || 0,
+    marketCap: parseFloat(raw.mcap) || 0,
+  };
+}
+
+/**
+ * 해외주식 등락률순위 조회
+ *
+ * @param exchange 거래소코드 (NAS: 나스닥, NYS: 뉴욕)
+ * @param sortOrder 정렬순서 ('asc': 상승률순, 'desc': 하락률순)
+ * @returns 등락률순위 데이터
+ *
+ * @description
+ * GET /uapi/overseas-stock/v1/ranking/updown-rate
+ * tr_id: HHDFS76290000
+ *
+ * @see https://github.com/koreainvestment/open-trading-api/tree/main/examples_llm/overseas_stock/updown_rate
+ */
+export async function getOverseasFluctuationRanking(
+  exchange: OverseasExchangeCode = 'NAS',
+  sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<OverseasFluctuationRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  // 정렬코드: 0: 하락률순, 1: 상승률순
+  const sortCode = sortOrder === 'asc' ? '1' : '0';
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-stock/v1/ranking/updown-rate`);
+  url.searchParams.append('EXCD', exchange);
+  url.searchParams.append('NDAY', '0');      // 0: 당일
+  url.searchParams.append('GUBN', sortCode); // 0: 하락, 1: 상승
+  url.searchParams.append('VOL_RANG', '0');  // 0: 전체
+  url.searchParams.append('AUTH', '');
+  url.searchParams.append('KEYB', '');
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'HHDFS76290000'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외주식 등락률순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외주식 등락률순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISOverseasFluctuationRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  return data.output.map((item, index) => transformOverseasFluctuationRanking(item, index + 1, exchange));
+}
+
+/**
+ * 해외주식 등락률순위 데이터 변환
+ */
+function transformOverseasFluctuationRanking(
+  raw: KISOverseasFluctuationRankingItem,
+  rank: number,
+  exchange: OverseasExchangeCode
+): OverseasFluctuationRankingData {
+  return {
+    rank,
+    symbol: raw.symb,
+    name: raw.name,
+    exchange,
+    currentPrice: parseFloat(raw.last) || 0,
+    change: parseFloat(raw.diff) || 0,
+    changePercent: parseFloat(raw.rate) || 0,
+    changeSign: getOverseasChangeSign(raw.sign),
+    volume: parseInt(raw.tvol) || 0,
+    previousClose: parseFloat(raw.base) || 0,
+  };
+}
