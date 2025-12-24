@@ -1119,7 +1119,7 @@ interface UseUSETFsResult {
 }
 
 export function useUSETFs(
-  category: 'all' | 'index' | 'sector' | 'bond' | 'commodity' | 'international' = 'all',
+  category: 'all' | 'index' | 'sector' | 'leveraged' | 'bond' | 'commodity' | 'international' = 'all',
   options?: {
     autoRefresh?: boolean;
     refreshInterval?: number;

@@ -486,9 +486,10 @@ export function getAllETFSymbols(): string[] {
  * 카테고리:
  * 1. index: 지수 추종 ETF (S&P500, NASDAQ 등)
  * 2. sector: 섹터/테마 ETF (기술, 에너지 등)
- * 3. bond: 채권 ETF
- * 4. commodity: 원자재 ETF
- * 5. international: 해외 지수 ETF
+ * 3. leveraged: 레버리지/인버스 ETF (2x, 3x, -1x, -2x, -3x)
+ * 4. bond: 채권 ETF
+ * 5. commodity: 원자재 ETF
+ * 6. international: 해외 지수 ETF
  *
  * @see https://apiportal.koreainvestment.com - 한국투자증권 해외주식 API
  */
@@ -498,7 +499,7 @@ export interface USETFInfo {
   /** ETF 이름 */
   name: string;
   /** 카테고리 */
-  category: 'index' | 'sector' | 'bond' | 'commodity' | 'international';
+  category: 'index' | 'sector' | 'leveraged' | 'bond' | 'commodity' | 'international';
   /** 거래소 (NAS: 나스닥, NYS: 뉴욕) */
   exchange: 'NAS' | 'NYS';
   /** 운용사 */
@@ -508,9 +509,10 @@ export interface USETFInfo {
 /**
  * 미국 ETF 종목 리스트 (카테고리별)
  *
- * 총 56개 종목:
+ * 총 76개 종목:
  * - 지수 추종: 13개
  * - 섹터/테마: 16개
+ * - 레버리지/인버스: 20개
  * - 채권: 10개
  * - 원자재: 7개
  * - 해외 지수: 10개
@@ -550,6 +552,39 @@ export const usETFList: USETFInfo[] = [
   { symbol: 'SMH', name: 'VanEck Semiconductor ETF', category: 'sector', exchange: 'NAS', issuer: 'VanEck' },
   { symbol: 'VGT', name: 'Vanguard Information Tech ETF', category: 'sector', exchange: 'NYS', issuer: 'Vanguard' },
   { symbol: 'SPHD', name: 'Invesco S&P 500 High Dividend', category: 'sector', exchange: 'NYS', issuer: 'Invesco' },
+
+  // ========== 레버리지/인버스 ETF ==========
+  // 지수 대비 2배/3배 수익률 또는 역방향 수익률 추구
+  // 주의: 레버리지 ETF는 단기 투자용이며 장기 보유 시 손실 위험
+
+  // --- NASDAQ 100 레버리지/인버스 ---
+  { symbol: 'TQQQ', name: 'ProShares UltraPro QQQ (3x)', category: 'leveraged', exchange: 'NAS', issuer: 'ProShares' },
+  { symbol: 'SQQQ', name: 'ProShares UltraPro Short QQQ (-3x)', category: 'leveraged', exchange: 'NAS', issuer: 'ProShares' },
+  { symbol: 'QLD', name: 'ProShares Ultra QQQ (2x)', category: 'leveraged', exchange: 'NAS', issuer: 'ProShares' },
+  { symbol: 'QID', name: 'ProShares UltraShort QQQ (-2x)', category: 'leveraged', exchange: 'NAS', issuer: 'ProShares' },
+  { symbol: 'PSQ', name: 'ProShares Short QQQ (-1x)', category: 'leveraged', exchange: 'NAS', issuer: 'ProShares' },
+
+  // --- S&P 500 레버리지/인버스 ---
+  { symbol: 'SPXL', name: 'Direxion Daily S&P 500 Bull (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'SPXS', name: 'Direxion Daily S&P 500 Bear (-3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'UPRO', name: 'ProShares UltraPro S&P500 (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'ProShares' },
+  { symbol: 'SSO', name: 'ProShares Ultra S&P500 (2x)', category: 'leveraged', exchange: 'NYS', issuer: 'ProShares' },
+  { symbol: 'SDS', name: 'ProShares UltraShort S&P500 (-2x)', category: 'leveraged', exchange: 'NYS', issuer: 'ProShares' },
+  { symbol: 'SH', name: 'ProShares Short S&P500 (-1x)', category: 'leveraged', exchange: 'NYS', issuer: 'ProShares' },
+
+  // --- 반도체 레버리지/인버스 ---
+  { symbol: 'SOXL', name: 'Direxion Daily Semiconductor Bull (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'SOXS', name: 'Direxion Daily Semiconductor Bear (-3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+
+  // --- Russell 2000 (소형주) 레버리지/인버스 ---
+  { symbol: 'TNA', name: 'Direxion Daily Small Cap Bull (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'TZA', name: 'Direxion Daily Small Cap Bear (-3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+
+  // --- 섹터별 레버리지/인버스 ---
+  { symbol: 'LABU', name: 'Direxion Daily Biotech Bull (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'LABD', name: 'Direxion Daily Biotech Bear (-3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'TECL', name: 'Direxion Daily Technology Bull (3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
+  { symbol: 'TECS', name: 'Direxion Daily Technology Bear (-3x)', category: 'leveraged', exchange: 'NYS', issuer: 'Direxion' },
 
   // ========== 채권 ETF ==========
   { symbol: 'BND', name: 'Vanguard Total Bond Market', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
@@ -591,6 +626,7 @@ export const usETFList: USETFInfo[] = [
 export const usETFCategoryLabels: Record<USETFInfo['category'], string> = {
   index: 'Index Tracking',
   sector: 'Sector/Theme',
+  leveraged: 'Leveraged/Inverse',
   bond: 'Bonds',
   commodity: 'Commodities',
   international: 'International',

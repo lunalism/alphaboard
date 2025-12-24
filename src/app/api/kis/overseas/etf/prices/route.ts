@@ -2,7 +2,7 @@
  * 미국 ETF 시세 일괄 조회 API Route
  *
  * @route GET /api/kis/overseas/etf/prices
- * @query category - ETF 카테고리 (선택: index, sector, bond, commodity, international, all)
+ * @query category - ETF 카테고리 (선택: index, sector, leveraged, bond, commodity, international, all)
  *
  * @description
  * 한국투자증권 Open API를 통해 여러 미국 ETF의 현재가를 일괄 조회합니다.
@@ -11,6 +11,7 @@
  * - GET /api/kis/overseas/etf/prices (전체 ETF 조회)
  * - GET /api/kis/overseas/etf/prices?category=index (지수 추종 ETF만 조회)
  * - GET /api/kis/overseas/etf/prices?category=sector (섹터/테마 ETF만 조회)
+ * - GET /api/kis/overseas/etf/prices?category=leveraged (레버리지/인버스 ETF만 조회)
  *
  * Rate Limit 고려사항:
  * - 한국투자증권 API는 초당 20회 제한이 있음
@@ -105,7 +106,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<USETFPrice
     if (category === 'all') {
       targetETFs = usETFList;
     } else {
-      const validCategories = ['index', 'sector', 'bond', 'commodity', 'international'];
+      // 레버리지/인버스 ETF 카테고리 추가
+      const validCategories = ['index', 'sector', 'leveraged', 'bond', 'commodity', 'international'];
       if (!validCategories.includes(category)) {
         return NextResponse.json(
           {
