@@ -133,21 +133,34 @@ export async function GET(request: NextRequest): Promise<NextResponse<USStockPri
     }
 
     // 성공한 결과와 실패한 종목 분리
+    // 중요: currentPrice가 0인 경우 유효하지 않은 데이터로 간주하여 제외
+    // 한국투자증권 API가 일부 종목에 대해 0을 반환하는 경우가 있음 (휴장/데이터 없음)
     const successfulData: USStockPriceData[] = [];
     const failedSymbols: string[] = [];
+    const zeroValueSymbols: string[] = []; // 0값 반환 종목 (로깅용)
 
     results.forEach((result, index) => {
       if (result) {
-        successfulData.push(result);
+        // 가격이 0인 경우 유효하지 않은 데이터로 처리
+        if (result.currentPrice === 0) {
+          zeroValueSymbols.push(targetStocks[index].symbol);
+        } else {
+          successfulData.push(result);
+        }
       } else {
         failedSymbols.push(targetStocks[index].symbol);
       }
     });
 
+    // 0값 종목 로깅 (디버깅용)
+    if (zeroValueSymbols.length > 0) {
+      console.log(`[US Stock API] 0값 반환 종목 (제외됨): ${zeroValueSymbols.join(', ')}`);
+    }
+
     // 가격 기준으로 정렬 (시가총액 순 대용)
     successfulData.sort((a, b) => b.currentPrice - a.currentPrice);
 
-    console.log(`[US Stock API] 조회 완료: 성공 ${successfulData.length}개, 실패 ${failedSymbols.length}개`);
+    console.log(`[US Stock API] 조회 완료: 성공 ${successfulData.length}개, 0값 ${zeroValueSymbols.length}개, 실패 ${failedSymbols.length}개`);
 
     return NextResponse.json({
       data: successfulData,

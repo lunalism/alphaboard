@@ -4,6 +4,7 @@ export { IndexCard } from './IndexCard';
 export { StockTable } from './StockTable';
 export { TopMovers } from './TopMovers';
 export { VolumeMovers } from './VolumeMovers';
+export { MarketStatusBanner, MarketStatusBadge } from './MarketStatusBanner';
 
 // 1차 탭 (국가별/글로벌)
 export { MarketTypeTabs } from './MarketTypeTabs';

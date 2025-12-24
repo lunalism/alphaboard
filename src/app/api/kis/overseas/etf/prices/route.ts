@@ -143,18 +143,31 @@ export async function GET(request: NextRequest): Promise<NextResponse<USETFPrice
     }
 
     // 성공한 결과와 실패한 종목 분리
+    // 중요: currentPrice가 0인 경우 유효하지 않은 데이터로 간주하여 제외
+    // 한국투자증권 API가 일부 종목에 대해 0을 반환하는 경우가 있음
     const successfulData: USETFPriceData[] = [];
     const failedSymbols: string[] = [];
+    const zeroValueSymbols: string[] = []; // 0값 반환 종목 (로깅용)
 
     results.forEach((result, index) => {
       if (result) {
-        successfulData.push(result);
+        // 가격이 0인 경우 유효하지 않은 데이터로 처리
+        if (result.currentPrice === 0) {
+          zeroValueSymbols.push(targetETFs[index].symbol);
+        } else {
+          successfulData.push(result);
+        }
       } else {
         failedSymbols.push(targetETFs[index].symbol);
       }
     });
 
-    console.log(`[US ETF API] 조회 완료: 성공 ${successfulData.length}개, 실패 ${failedSymbols.length}개`);
+    // 0값 종목 로깅 (디버깅용)
+    if (zeroValueSymbols.length > 0) {
+      console.log(`[US ETF API] 0값 반환 종목 (제외됨): ${zeroValueSymbols.join(', ')}`);
+    }
+
+    console.log(`[US ETF API] 조회 완료: 성공 ${successfulData.length}개, 0값 ${zeroValueSymbols.length}개, 실패 ${failedSymbols.length}개`);
 
     return NextResponse.json({
       data: successfulData,

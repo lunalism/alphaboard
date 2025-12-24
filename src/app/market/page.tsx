@@ -32,6 +32,7 @@ import {
   StockTable,
   TopMovers,
   VolumeMovers,
+  MarketStatusBanner,
   IndicesContent,
   StocksContent,
   ETFContent,
@@ -529,6 +530,12 @@ function MarketContent() {
 
         return (
           <>
+            {/* ========== 시장 상태 배너 (휴장/프리마켓/애프터마켓 시 표시) ========== */}
+            {/* 한국/미국 시장의 현재 상태를 상단에 표시 */}
+            {(activeMarket === 'kr' || activeMarket === 'us') && (
+              <MarketStatusBanner market={activeMarket} className="mb-6" />
+            )}
+
             {/* ========== 주요 지수 섹션 ========== */}
             {/* 한국/미국: 한국투자증권 API 실시간 데이터, 기타: 목업 데이터 */}
             <section className="mb-8">
