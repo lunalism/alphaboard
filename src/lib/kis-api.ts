@@ -375,3 +375,299 @@ export function getAccountInfo(): { cano: string; acntPrdtCd: string } {
     acntPrdtCd: KIS_PROD_CODE || '', // 계좌상품코드 (2자리)
   };
 }
+
+// ==================== 순위 조회 API ====================
+
+import type {
+  KISVolumeRankingResponse,
+  KISVolumeRankingItem,
+  VolumeRankingData,
+  KISFluctuationRankingResponse,
+  KISFluctuationRankingItem,
+  FluctuationRankingData,
+  KISMarketCapRankingResponse,
+  KISMarketCapRankingItem,
+  MarketCapRankingData,
+} from '@/types/kis';
+
+/**
+ * 전일 대비 부호 변환 함수
+ * 1:상한, 2:상승, 3:보합, 4:하한, 5:하락
+ */
+function getChangeSign(sign: string): string {
+  const signMap: Record<string, string> = {
+    '1': 'up',
+    '2': 'up',
+    '3': 'flat',
+    '4': 'down',
+    '5': 'down',
+  };
+  return signMap[sign] || 'flat';
+}
+
+/**
+ * 거래량순위 조회
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @returns 거래량순위 데이터 (최대 30건)
+ *
+ * @description
+ * GET /uapi/domestic-stock/v1/quotations/volume-rank
+ * tr_id: FHPST01710000
+ *
+ * 한국투자 HTS(eFriend Plus) > [0171] 거래량 순위 화면의 기능을 API로 개발
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-ranking
+ */
+export async function getVolumeRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all'
+): Promise<VolumeRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  // 시장코드 변환 (0000: 전체, 0001: 코스피, 1001: 코스닥)
+  const marketCodeMap: Record<string, string> = {
+    all: '0000',
+    kospi: '0001',
+    kosdaq: '1001',
+  };
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/volume-rank`);
+  // 필수 파라미터 설정
+  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');       // J: 주식/ETF/ETN
+  url.searchParams.append('FID_COND_SCR_DIV_CODE', '20171');    // 거래량순위 화면코드
+  url.searchParams.append('FID_INPUT_ISCD', marketCodeMap[market]); // 시장구분
+  url.searchParams.append('FID_DIV_CLS_CODE', '0');             // 0: 전체
+  url.searchParams.append('FID_BLNG_CLS_CODE', '0');            // 0: 평균거래량
+  url.searchParams.append('FID_TRGT_CLS_CODE', '111111111');    // 전체 대상
+  url.searchParams.append('FID_TRGT_EXLS_CLS_CODE', '000000');  // 제외 없음
+  url.searchParams.append('FID_INPUT_PRICE_1', '0');            // 최저가격: 전체
+  url.searchParams.append('FID_INPUT_PRICE_2', '0');            // 최고가격: 전체
+  url.searchParams.append('FID_VOL_CNT', '0');                  // 거래량: 전체
+  url.searchParams.append('FID_INPUT_DATE_1', '0');             // 기간: 전체
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'FHPST01710000'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 거래량순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`거래량순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISVolumeRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // 데이터 변환 및 반환
+  return data.output.map((item, index) => transformVolumeRanking(item, index + 1));
+}
+
+/**
+ * 거래량순위 데이터 변환
+ */
+function transformVolumeRanking(raw: KISVolumeRankingItem, defaultRank: number): VolumeRankingData {
+  return {
+    rank: parseInt(raw.data_rank) || defaultRank,
+    symbol: raw.mksc_shrn_iscd,
+    name: raw.hts_kor_isnm,
+    currentPrice: parseFloat(raw.stck_prpr) || 0,
+    change: parseFloat(raw.prdy_vrss) || 0,
+    changePercent: parseFloat(raw.prdy_ctrt) || 0,
+    changeSign: getChangeSign(raw.prdy_vrss_sign),
+    volume: parseInt(raw.acml_vol) || 0,
+    tradingValue: parseInt(raw.acml_tr_pbmn) || 0,
+    volumeIncreaseRate: parseFloat(raw.vol_inrt) || 0,
+  };
+}
+
+/**
+ * 등락률순위 조회
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @param sortOrder 정렬순서 ('asc': 상승률순, 'desc': 하락률순)
+ * @returns 등락률순위 데이터 (최대 30건)
+ *
+ * @description
+ * GET /uapi/domestic-stock/v1/ranking/fluctuation
+ * tr_id: FHPST01700000
+ *
+ * 한국투자 HTS(eFriend Plus) > [0170] 등락률 순위 화면의 기능을 API로 개발
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-ranking
+ */
+export async function getFluctuationRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all',
+  sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<FluctuationRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  // 시장코드 변환
+  const marketCodeMap: Record<string, string> = {
+    all: '0000',
+    kospi: '0001',
+    kosdaq: '1001',
+  };
+
+  // 정렬코드 변환 (0: 상승률순, 1: 하락률순)
+  const sortCodeMap: Record<string, string> = {
+    asc: '0',   // 상승률 높은 순
+    desc: '1',  // 하락률 높은 순
+  };
+
+  // 등락률순위 API 엔드포인트: /uapi/domestic-stock/v1/ranking/fluctuation
+  // 한국투자 HTS [0170] 등락률 순위 화면 API
+  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/ranking/fluctuation`);
+  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');       // J: 주식/ETF/ETN
+  url.searchParams.append('FID_COND_SCR_DIV_CODE', '20170');    // 등락률순위 화면코드
+  url.searchParams.append('FID_INPUT_ISCD', marketCodeMap[market]);
+  url.searchParams.append('FID_RANK_SORT_CLS_CODE', sortCodeMap[sortOrder]);
+  url.searchParams.append('FID_PRC_CLS_CODE', '0');             // 0: 저가대비
+  url.searchParams.append('FID_DIV_CLS_CODE', '0');             // 0: 전체
+  url.searchParams.append('FID_TRGT_CLS_CODE', '111111111');    // 전체 대상
+  url.searchParams.append('FID_TRGT_EXLS_CLS_CODE', '000000');  // 제외 없음
+  url.searchParams.append('FID_INPUT_PRICE_1', '0');            // 최저가격: 전체
+  url.searchParams.append('FID_INPUT_PRICE_2', '0');            // 최고가격: 전체
+  url.searchParams.append('FID_VOL_CNT', '0');                  // 거래량: 전체
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'FHPST01700000'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 등락률순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`등락률순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISFluctuationRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  return data.output.map((item, index) => transformFluctuationRanking(item, index + 1));
+}
+
+/**
+ * 등락률순위 데이터 변환
+ */
+function transformFluctuationRanking(raw: KISFluctuationRankingItem, defaultRank: number): FluctuationRankingData {
+  return {
+    rank: parseInt(raw.data_rank) || defaultRank,
+    symbol: raw.mksc_shrn_iscd,
+    name: raw.hts_kor_isnm,
+    currentPrice: parseFloat(raw.stck_prpr) || 0,
+    change: parseFloat(raw.prdy_vrss) || 0,
+    changePercent: parseFloat(raw.prdy_ctrt) || 0,
+    changeSign: getChangeSign(raw.prdy_vrss_sign),
+    volume: parseInt(raw.acml_vol) || 0,
+    highPrice: parseFloat(raw.stck_hgpr) || 0,
+    lowPrice: parseFloat(raw.stck_lwpr) || 0,
+    openPrice: parseFloat(raw.stck_oprc) || 0,
+  };
+}
+
+/**
+ * 시가총액순위 조회
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @returns 시가총액순위 데이터 (최대 30건)
+ *
+ * @description
+ * GET /uapi/domestic-stock/v1/quotations/market-cap
+ * tr_id: FHPST01740000
+ *
+ * 한국투자 HTS(eFriend Plus) > [0174] 시가총액 상위 화면의 기능을 API로 개발
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-ranking
+ */
+export async function getMarketCapRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all'
+): Promise<MarketCapRankingData[]> {
+  const accessToken = await getAccessToken();
+
+  // 시장코드 변환
+  const marketCodeMap: Record<string, string> = {
+    all: '0000',
+    kospi: '0001',
+    kosdaq: '1001',
+  };
+
+  // 시가총액순위 API 엔드포인트: /uapi/domestic-stock/v1/quotations/market-cap
+  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/market-cap`);
+  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');       // J: 주식
+  url.searchParams.append('FID_COND_SCR_DIV_CODE', '20174');    // 시가총액상위 화면코드
+  url.searchParams.append('FID_INPUT_ISCD', marketCodeMap[market]);
+  url.searchParams.append('FID_DIV_CLS_CODE', '0');             // 0: 전체
+  url.searchParams.append('FID_TRGT_CLS_CODE', '111111111');    // 전체 대상
+  url.searchParams.append('FID_TRGT_EXLS_CLS_CODE', '000000');  // 제외 없음
+  url.searchParams.append('FID_INPUT_PRICE_1', '0');            // 최저가격: 전체
+  url.searchParams.append('FID_INPUT_PRICE_2', '0');            // 최고가격: 전체
+  url.searchParams.append('FID_VOL_CNT', '0');                  // 거래량: 전체
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'FHPST01740000'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 시가총액순위 조회 실패:', errorText);
+
+    if (response.status === 401) {
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`시가총액순위 조회 실패: ${response.status}`);
+  }
+
+  const data: KISMarketCapRankingResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  return data.output.map((item, index) => transformMarketCapRanking(item, index + 1));
+}
+
+/**
+ * 시가총액순위 데이터 변환
+ */
+function transformMarketCapRanking(raw: KISMarketCapRankingItem, defaultRank: number): MarketCapRankingData {
+  return {
+    rank: parseInt(raw.data_rank) || defaultRank,
+    symbol: raw.mksc_shrn_iscd,
+    name: raw.hts_kor_isnm,
+    currentPrice: parseFloat(raw.stck_prpr) || 0,
+    change: parseFloat(raw.prdy_vrss) || 0,
+    changePercent: parseFloat(raw.prdy_ctrt) || 0,
+    changeSign: getChangeSign(raw.prdy_vrss_sign),
+    volume: parseInt(raw.acml_vol) || 0,
+    marketCap: parseFloat(raw.stck_avls) || 0,
+    marketCapRatio: parseFloat(raw.mrkt_whol_avls_rlim) || 0,
+  };
+}

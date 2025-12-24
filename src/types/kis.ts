@@ -239,3 +239,216 @@ export interface KISApiErrorResponse {
   message: string;
   code?: string;
 }
+
+// ==================== 순위 조회 API 타입 ====================
+// @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-ranking
+
+/**
+ * 거래량순위 API 응답
+ * GET /uapi/domestic-stock/v1/quotations/volume-rank
+ * tr_id: FHPST01710000
+ *
+ * @description
+ * 한국투자 HTS(eFriend Plus) > [0171] 거래량 순위 화면의 기능을 API로 개발한 사항
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * 파라미터 (FID 필드):
+ * - FID_COND_MRKT_DIV_CODE: 시장구분코드 (J: 주식/ETF/ETN)
+ * - FID_COND_SCR_DIV_CODE: 조건화면분류코드 (20171: 거래량순위)
+ * - FID_INPUT_ISCD: 입력종목코드 (0000: 전체, 0001: 코스피, 1001: 코스닥)
+ * - FID_DIV_CLS_CODE: 분류구분코드 (0: 전체, 1: 보통주, 2: 우선주)
+ * - FID_BLNG_CLS_CODE: 소속구분코드 (0: 평균거래량, 1: 거래증가율, 2: 평균거래회전율, 3: 거래금액순, 4: 평균거래금액회전율)
+ * - FID_TRGT_CLS_CODE: 대상구분코드 (111111111: 전체, 첫번째부터 관리/투자주의/정리매매/불성실공시/우선주/거래정지/ETF/ETN/REITs)
+ * - FID_TRGT_EXLS_CLS_CODE: 대상제외구분코드 (000000: 없음)
+ * - FID_INPUT_PRICE_1: 입력가격1 (최저가격, 0: 전체)
+ * - FID_INPUT_PRICE_2: 입력가격2 (최고가격, 0: 전체)
+ * - FID_VOL_CNT: 거래량수 (0: 전체)
+ * - FID_INPUT_DATE_1: 입력날짜1 (0: 전체, 기간(일) 설정 가능)
+ */
+export interface KISVolumeRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISVolumeRankingItem[];
+}
+
+/**
+ * 거래량순위 개별 종목 데이터
+ *
+ * 주요 필드:
+ * - hts_kor_isnm: 종목명
+ * - mksc_shrn_iscd: 단축종목코드 (6자리)
+ * - stck_prpr: 현재가
+ * - prdy_vrss: 전일대비
+ * - prdy_vrss_sign: 전일대비부호 (1:상한, 2:상승, 3:보합, 4:하한, 5:하락)
+ * - prdy_ctrt: 전일대비율 (%)
+ * - acml_vol: 누적거래량
+ * - acml_tr_pbmn: 누적거래대금
+ * - vol_inrt: 거래량증가율
+ * - vol_tnrt: 거래량회전율
+ */
+export interface KISVolumeRankingItem {
+  hts_kor_isnm: string;     // 종목명
+  mksc_shrn_iscd: string;   // 단축종목코드 (6자리)
+  data_rank: string;        // 데이터 순위
+  stck_prpr: string;        // 현재가
+  prdy_vrss: string;        // 전일대비
+  prdy_vrss_sign: string;   // 전일대비부호
+  prdy_ctrt: string;        // 전일대비율 (%)
+  acml_vol: string;         // 누적거래량
+  prdy_vol: string;         // 전일거래량
+  lstn_stcn: string;        // 상장주수
+  avrg_vol: string;         // 평균거래량
+  n_befr_clpr_vrss_prpr_rate: string;  // N일전종가대비현재가비율
+  vol_inrt: string;         // 거래량증가율
+  vol_tnrt: string;         // 거래량회전율
+  nday_vol_tnrt: string;    // N일거래량회전율
+  avrg_tr_pbmn: string;     // 평균거래대금
+  tr_pbmn_tnrt: string;     // 거래대금회전율
+  nday_tr_pbmn_tnrt: string; // N일거래대금회전율
+  acml_tr_pbmn: string;     // 누적거래대금
+  [key: string]: string;
+}
+
+/**
+ * 등락률순위 API 응답
+ * GET /uapi/domestic-stock/v1/ranking/fluctuation
+ * tr_id: FHPST01700000
+ *
+ * @description
+ * 한국투자 HTS(eFriend Plus) > [0170] 등락률 순위 화면의 기능을 API로 개발한 사항
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * 파라미터 (FID 필드):
+ * - FID_COND_MRKT_DIV_CODE: 시장구분코드 (J: 주식/ETF/ETN)
+ * - FID_COND_SCR_DIV_CODE: 조건화면분류코드 (20170: 등락률순위)
+ * - FID_INPUT_ISCD: 입력종목코드 (0000: 전체, 0001: 코스피, 1001: 코스닥)
+ * - FID_RANK_SORT_CLS_CODE: 순위정렬구분코드 (0: 상승률순, 1: 하락률순)
+ * - FID_PRC_CLS_CODE: 가격구분코드 (0: 저가대비, 1: 시가대비, 2: 전일대비)
+ * - FID_DIV_CLS_CODE: 분류구분코드 (0: 전체, 1: 보통주, 2: 우선주)
+ * - FID_TRGT_CLS_CODE: 대상구분코드 (111111111)
+ * - FID_TRGT_EXLS_CLS_CODE: 대상제외구분코드 (000000)
+ * - FID_INPUT_PRICE_1: 입력가격1 (0: 전체)
+ * - FID_INPUT_PRICE_2: 입력가격2 (0: 전체)
+ * - FID_VOL_CNT: 거래량수 (0: 전체)
+ */
+export interface KISFluctuationRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISFluctuationRankingItem[];
+}
+
+/**
+ * 등락률순위 개별 종목 데이터
+ */
+export interface KISFluctuationRankingItem {
+  hts_kor_isnm: string;     // 종목명
+  mksc_shrn_iscd: string;   // 단축종목코드 (6자리)
+  data_rank: string;        // 데이터 순위
+  stck_prpr: string;        // 현재가
+  prdy_vrss: string;        // 전일대비
+  prdy_vrss_sign: string;   // 전일대비부호
+  prdy_ctrt: string;        // 전일대비율 (%)
+  acml_vol: string;         // 누적거래량
+  acml_tr_pbmn: string;     // 누적거래대금
+  stck_hgpr: string;        // 최고가
+  hgpr_hour: string;        // 최고가시간
+  stck_lwpr: string;        // 최저가
+  lwpr_hour: string;        // 최저가시간
+  stck_oprc: string;        // 시가
+  oprc_vrss_prpr_rate: string;  // 시가대비현재가비율
+  lwpr_vrss_prpr_rate: string;  // 저가대비현재가비율
+  [key: string]: string;
+}
+
+/**
+ * 시가총액순위 API 응답
+ * GET /uapi/domestic-stock/v1/quotations/market-cap
+ * tr_id: FHPST01740000
+ *
+ * @description
+ * 한국투자 HTS(eFriend Plus) > [0174] 시가총액 상위 화면의 기능을 API로 개발한 사항
+ * 최대 30건 확인 가능, 다음 조회 불가
+ *
+ * 파라미터 (FID 필드):
+ * - FID_COND_MRKT_DIV_CODE: 시장구분코드 (J: 주식)
+ * - FID_COND_SCR_DIV_CODE: 조건화면분류코드 (20174: 시가총액상위)
+ * - FID_INPUT_ISCD: 입력종목코드 (0000: 전체, 0001: 코스피, 1001: 코스닥)
+ * - FID_DIV_CLS_CODE: 분류구분코드 (0: 전체, 1: 보통주, 2: 우선주)
+ */
+export interface KISMarketCapRankingResponse {
+  rt_cd: string;     // 성공 실패 여부 (0: 성공)
+  msg_cd: string;    // 응답코드
+  msg1: string;      // 응답메시지
+  output: KISMarketCapRankingItem[];
+}
+
+/**
+ * 시가총액순위 개별 종목 데이터
+ */
+export interface KISMarketCapRankingItem {
+  hts_kor_isnm: string;     // 종목명
+  mksc_shrn_iscd: string;   // 단축종목코드 (6자리)
+  data_rank: string;        // 데이터 순위
+  stck_prpr: string;        // 현재가
+  prdy_vrss: string;        // 전일대비
+  prdy_vrss_sign: string;   // 전일대비부호
+  prdy_ctrt: string;        // 전일대비율 (%)
+  acml_vol: string;         // 누적거래량
+  lstn_stcn: string;        // 상장주수
+  stck_avls: string;        // 시가총액 (억원 단위)
+  mrkt_whol_avls_rlim: string;  // 시장전체시가총액비중
+  [key: string]: string;
+}
+
+// ==================== 클라이언트용 순위 데이터 타입 ====================
+
+/**
+ * 클라이언트에 반환할 거래량순위 정보 (정제된 형태)
+ */
+export interface VolumeRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드 (6자리)
+  name: string;             // 종목명
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  tradingValue: number;     // 거래대금
+  volumeIncreaseRate: number;  // 거래량증가율
+}
+
+/**
+ * 클라이언트에 반환할 등락률순위 정보 (정제된 형태)
+ */
+export interface FluctuationRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드 (6자리)
+  name: string;             // 종목명
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  highPrice: number;        // 고가
+  lowPrice: number;         // 저가
+  openPrice: number;        // 시가
+}
+
+/**
+ * 클라이언트에 반환할 시가총액순위 정보 (정제된 형태)
+ */
+export interface MarketCapRankingData {
+  rank: number;             // 순위
+  symbol: string;           // 종목코드 (6자리)
+  name: string;             // 종목명
+  currentPrice: number;     // 현재가
+  change: number;           // 전일대비
+  changePercent: number;    // 전일대비율 (%)
+  changeSign: string;       // 등락부호 (up, down, flat)
+  volume: number;           // 거래량
+  marketCap: number;        // 시가총액 (억원)
+  marketCapRatio: number;   // 시장전체대비비중 (%)
+}

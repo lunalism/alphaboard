@@ -20,7 +20,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { StockPriceData, IndexPriceData } from '@/types/kis';
+import type {
+  StockPriceData,
+  IndexPriceData,
+  VolumeRankingData,
+  FluctuationRankingData,
+  MarketCapRankingData,
+} from '@/types/kis';
 import type { MarketIndex, Stock } from '@/types/market';
 
 // ==================== 상수 정의 ====================
@@ -445,4 +451,236 @@ export function useKoreanIndexPrice(
   }, [autoRefresh, refreshInterval, fetchIndex]);
 
   return { index, isLoading, error, refetch: fetchIndex };
+}
+
+// ==================== 순위 조회 훅 ====================
+
+/**
+ * 거래량순위 데이터 훅
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @param autoRefresh 자동 새로고침 여부 (기본: false)
+ * @param refreshInterval 새로고침 간격 (밀리초, 기본: 60초)
+ * @returns 거래량순위 데이터 (최대 30건), 로딩 상태, 에러, refetch 함수
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading, error, refetch } = useVolumeRanking('all');
+ * ```
+ *
+ * @see /api/kis/ranking/volume - API 엔드포인트
+ */
+interface UseVolumeRankingResult {
+  data: VolumeRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useVolumeRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseVolumeRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<VolumeRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 거래량순위 데이터 가져오기
+   */
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/ranking/volume?market=${market}`);
+      const result = await response.json();
+
+      if (response.ok && Array.isArray(result)) {
+        setData(result);
+      } else {
+        setError(result.message || '거래량순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useVolumeRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [market]);
+
+  // 초기 로드
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // 자동 새로고침
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
+}
+
+/**
+ * 등락률순위 데이터 훅
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @param sortOrder 정렬순서 ('asc': 상승률순, 'desc': 하락률순)
+ * @param autoRefresh 자동 새로고침 여부 (기본: false)
+ * @param refreshInterval 새로고침 간격 (밀리초, 기본: 60초)
+ * @returns 등락률순위 데이터 (최대 30건), 로딩 상태, 에러, refetch 함수
+ *
+ * @example
+ * ```tsx
+ * // 상승 TOP
+ * const { data: gainers } = useFluctuationRanking('all', 'asc');
+ * // 하락 TOP
+ * const { data: losers } = useFluctuationRanking('all', 'desc');
+ * ```
+ *
+ * @see /api/kis/ranking/fluctuation - API 엔드포인트
+ */
+interface UseFluctuationRankingResult {
+  data: FluctuationRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useFluctuationRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all',
+  sortOrder: 'asc' | 'desc' = 'asc',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseFluctuationRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<FluctuationRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 등락률순위 데이터 가져오기
+   */
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/ranking/fluctuation?market=${market}&sort=${sortOrder}`);
+      const result = await response.json();
+
+      if (response.ok && Array.isArray(result)) {
+        setData(result);
+      } else {
+        setError(result.message || '등락률순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useFluctuationRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [market, sortOrder]);
+
+  // 초기 로드
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // 자동 새로고침
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
+}
+
+/**
+ * 시가총액순위 데이터 훅
+ *
+ * @param market 시장구분 ('all' | 'kospi' | 'kosdaq')
+ * @param autoRefresh 자동 새로고침 여부 (기본: false)
+ * @param refreshInterval 새로고침 간격 (밀리초, 기본: 60초)
+ * @returns 시가총액순위 데이터 (최대 30건), 로딩 상태, 에러, refetch 함수
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading, error, refetch } = useMarketCapRanking('all');
+ * ```
+ *
+ * @see /api/kis/ranking/market-cap - API 엔드포인트
+ */
+interface UseMarketCapRankingResult {
+  data: MarketCapRankingData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useMarketCapRanking(
+  market: 'all' | 'kospi' | 'kosdaq' = 'all',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseMarketCapRankingResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [data, setData] = useState<MarketCapRankingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 시가총액순위 데이터 가져오기
+   */
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/ranking/market-cap?market=${market}`);
+      const result = await response.json();
+
+      if (response.ok && Array.isArray(result)) {
+        setData(result);
+      } else {
+        setError(result.message || '시가총액순위 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useMarketCapRanking] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [market]);
+
+  // 초기 로드
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // 자동 새로고침
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
 }

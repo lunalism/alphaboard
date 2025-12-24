@@ -41,7 +41,27 @@ import {
 } from '@/components/features/market';
 import { IndexCardSkeletonGrid, StockTableSkeleton } from '@/components/skeleton';
 import { marketIndices, popularStocks, topGainers, topLosers } from '@/constants';
-import { useKoreanIndices, useKoreanStocks } from '@/hooks';
+import {
+  useKoreanIndices,
+  useKoreanStocks,
+  useVolumeRanking,
+  useFluctuationRanking,
+  useMarketCapRanking,
+} from '@/hooks';
+
+/**
+ * 거래량 포맷팅 (표시용)
+ * 1백만 이상: xxM, 1천 이상: xxK
+ */
+function formatVolumeForDisplay(volume: number): string {
+  if (volume >= 1000000) {
+    return (volume / 1000000).toFixed(1) + 'M';
+  }
+  if (volume >= 1000) {
+    return (volume / 1000).toFixed(1) + 'K';
+  }
+  return volume.toString();
+}
 
 /**
  * 메인 마켓 컨텐츠 컴포넌트
@@ -124,7 +144,9 @@ function MarketContent() {
     updateURL(activeType, activeMarket, category);
   };
 
-  // 한국 시장 실시간 데이터
+  // ========== 한국 시장 실시간 데이터 (한국투자증권 API) ==========
+
+  // 한국 지수 데이터
   const {
     indices: koreanIndices,
     isLoading: isKoreanIndicesLoading,
@@ -132,6 +154,7 @@ function MarketContent() {
     refetch: refetchKoreanIndices
   } = useKoreanIndices();
 
+  // 기존 주식 데이터 (폴백용)
   const {
     stocks: koreanStocks,
     isLoading: isKoreanStocksLoading,
@@ -139,40 +162,112 @@ function MarketContent() {
     refetch: refetchKoreanStocks
   } = useKoreanStocks();
 
-  // 현재 국가의 데이터 (국가별 시장용)
-  // 한국: API 데이터, 그 외: 목업 데이터
+  // ========== 순위 API 데이터 ==========
+
+  // 거래량순위 (인기 종목용) - 상위 10개
+  const {
+    data: volumeRankingData,
+    isLoading: isVolumeRankingLoading,
+    error: volumeRankingError,
+    refetch: refetchVolumeRanking
+  } = useVolumeRanking('all');
+
+  // 등락률순위 - 상승 TOP
+  const {
+    data: gainersRankingData,
+    isLoading: isGainersLoading,
+    error: gainersError,
+    refetch: refetchGainers
+  } = useFluctuationRanking('all', 'asc');
+
+  // 등락률순위 - 하락 TOP
+  const {
+    data: losersRankingData,
+    isLoading: isLosersLoading,
+    error: losersError,
+    refetch: refetchLosers
+  } = useFluctuationRanking('all', 'desc');
+
+  // 시가총액순위 (주식 카테고리용)
+  const {
+    data: marketCapRankingData,
+    isLoading: isMarketCapLoading,
+    error: marketCapError,
+    refetch: refetchMarketCap
+  } = useMarketCapRanking('all');
+
+  // ========== 데이터 변환 ==========
+
+  // 현재 국가의 지수 데이터
   const currentIndices = activeMarket === 'kr' ? koreanIndices : marketIndices[activeMarket];
-  const currentStocks = activeMarket === 'kr' ? koreanStocks : popularStocks[activeMarket];
+
+  // 현재 국가의 인기 종목 (한국: 거래량순위 API, 그 외: 목업 데이터)
+  const currentStocks = activeMarket === 'kr' && volumeRankingData.length > 0
+    ? volumeRankingData.slice(0, 10).map((item, idx) => ({
+        rank: idx + 1,
+        name: item.name,
+        ticker: item.symbol,
+        price: item.currentPrice,
+        change: item.change,
+        changePercent: item.changePercent,
+        volume: formatVolumeForDisplay(item.volume),
+        domain: '', // 도메인 정보 없음
+      }))
+    : activeMarket === 'kr'
+      ? koreanStocks // 거래량순위 실패 시 기존 데이터 폴백
+      : popularStocks[activeMarket];
 
   // ========== 등락률 TOP 계산 ==========
-  // 한국 시장: 실제 API 데이터에서 상승/하락 TOP 5 계산
+  // 한국 시장: 등락률순위 API 데이터 사용
   // 그 외 시장: 목업 데이터 사용
-  const currentGainers = activeMarket === 'kr' && koreanStocks.length > 0
-    ? koreanStocks
-        .filter(stock => stock.changePercent > 0)  // 상승 종목만
-        .slice(0, 5)                                // 상위 5개 (이미 등락률 순 정렬됨)
-        .map(stock => ({
-          name: stock.name,
-          ticker: stock.ticker,
-          changePercent: stock.changePercent,
-        }))
-    : topGainers[activeMarket];
 
-  const currentLosers = activeMarket === 'kr' && koreanStocks.length > 0
-    ? koreanStocks
-        .filter(stock => stock.changePercent < 0)  // 하락 종목만
-        .sort((a, b) => a.changePercent - b.changePercent)  // 하락률 큰 순 정렬
-        .slice(0, 5)                                // 하위 5개
-        .map(stock => ({
-          name: stock.name,
-          ticker: stock.ticker,
-          changePercent: stock.changePercent,
-        }))
-    : topLosers[activeMarket];
+  const currentGainers = activeMarket === 'kr' && gainersRankingData.length > 0
+    ? gainersRankingData.slice(0, 5).map(item => ({
+        name: item.name,
+        ticker: item.symbol,
+        changePercent: item.changePercent,
+      }))
+    : activeMarket === 'kr' && koreanStocks.length > 0
+      // 등락률순위 API 실패 시 기존 데이터 폴백
+      ? koreanStocks
+          .filter(stock => stock.changePercent > 0)
+          .slice(0, 5)
+          .map(stock => ({
+            name: stock.name,
+            ticker: stock.ticker,
+            changePercent: stock.changePercent,
+          }))
+      : topGainers[activeMarket];
+
+  const currentLosers = activeMarket === 'kr' && losersRankingData.length > 0
+    ? losersRankingData.slice(0, 5).map(item => ({
+        name: item.name,
+        ticker: item.symbol,
+        changePercent: item.changePercent,
+      }))
+    : activeMarket === 'kr' && koreanStocks.length > 0
+      // 등락률순위 API 실패 시 기존 데이터 폴백
+      ? koreanStocks
+          .filter(stock => stock.changePercent < 0)
+          .sort((a, b) => a.changePercent - b.changePercent)
+          .slice(0, 5)
+          .map(stock => ({
+            name: stock.name,
+            ticker: stock.ticker,
+            changePercent: stock.changePercent,
+          }))
+      : topLosers[activeMarket];
 
   // 한국 시장 로딩/에러 상태
-  const isKoreanDataLoading = activeMarket === 'kr' && (isKoreanIndicesLoading || isKoreanStocksLoading);
-  const koreanDataError = activeMarket === 'kr' ? (koreanIndicesError || koreanStocksError) : null;
+  const isKoreanDataLoading = activeMarket === 'kr' && (
+    isKoreanIndicesLoading ||
+    isVolumeRankingLoading ||
+    isGainersLoading ||
+    isLosersLoading
+  );
+  const koreanDataError = activeMarket === 'kr' ? (
+    koreanIndicesError || volumeRankingError || gainersError || losersError
+  ) : null;
 
   /**
    * 로딩 스켈레톤 렌더링 (국가별 시장)
@@ -235,7 +330,9 @@ function MarketContent() {
               <button
                 onClick={() => {
                   refetchKoreanIndices();
-                  refetchKoreanStocks();
+                  refetchVolumeRanking();
+                  refetchGainers();
+                  refetchLosers();
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
@@ -264,10 +361,10 @@ function MarketContent() {
               </div>
             </section>
 
-            {/* 인기 종목 섹션 */}
+            {/* 인기 종목 (거래량 TOP) 섹션 */}
             <section className="mb-8">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                인기 종목
+                {activeMarket === 'kr' ? '거래량 TOP' : '인기 종목'}
                 {activeMarket === 'kr' && (
                   <span className="ml-2 text-xs font-normal text-green-600 dark:text-green-400">
                     실시간

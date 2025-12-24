@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { MarketRegion, StockSector, Stock } from '@/types';
 import { stocksBySector, sectorTabs } from '@/constants';
 import { CompanyLogo } from '@/components/common';
-import { useKoreanStocks } from '@/hooks';
+import { useKoreanStocks, useMarketCapRanking } from '@/hooks';
 import { StockTableSkeleton } from '@/components/skeleton';
 
 interface StocksContentProps {
@@ -169,17 +169,59 @@ function StockTable({ stocks, market }: { stocks: Stock[]; market: MarketRegion 
   );
 }
 
+/**
+ * 거래량 포맷팅 (표시용)
+ */
+function formatVolumeForDisplay(volume: number): string {
+  if (volume >= 1000000) {
+    return (volume / 1000000).toFixed(1) + 'M';
+  }
+  if (volume >= 1000) {
+    return (volume / 1000).toFixed(1) + 'K';
+  }
+  return volume.toString();
+}
+
 export function StocksContent({ market }: StocksContentProps) {
   // 현재 선택된 섹터 상태
   const [activeSector, setActiveSector] = useState<StockSector>('all');
 
-  // 한국 시장인 경우 실제 API 데이터 사용
-  const { stocks: koreanStocks, isLoading: isKoreanLoading, error: koreanError, refetch } = useKoreanStocks();
+  // 한국 시장: 시가총액 순위 API 사용
+  const {
+    data: marketCapData,
+    isLoading: isMarketCapLoading,
+    error: marketCapError,
+    refetch: refetchMarketCap
+  } = useMarketCapRanking('all');
 
-  // 전체 주식 데이터 (한국: API, 그 외: 목업)
-  const allStocks = market === 'kr' ? koreanStocks : (stocksBySector[market] || []);
-  const isLoading = market === 'kr' && isKoreanLoading;
-  const error = market === 'kr' ? koreanError : null;
+  // 한국 시장: 기존 API 데이터 (폴백용)
+  const {
+    stocks: koreanStocks,
+    isLoading: isKoreanLoading,
+    error: koreanError,
+    refetch: refetchKorean
+  } = useKoreanStocks();
+
+  // 한국 시장: 시가총액 순위 데이터를 Stock 형식으로 변환
+  const koreanMarketCapStocks: Stock[] = marketCapData.length > 0
+    ? marketCapData.slice(0, 30).map((item, idx) => ({
+        rank: idx + 1,
+        name: item.name,
+        ticker: item.symbol,
+        price: item.currentPrice,
+        change: item.change,
+        changePercent: item.changePercent,
+        volume: formatVolumeForDisplay(item.volume),
+        domain: '',
+        // 시가총액 정보 추가 (표시용)
+        marketCap: item.marketCap,
+      }))
+    : koreanStocks; // 시가총액 API 실패 시 기존 데이터 폴백
+
+  // 전체 주식 데이터 (한국: 시가총액 순위 API, 그 외: 목업)
+  const allStocks = market === 'kr' ? koreanMarketCapStocks : (stocksBySector[market] || []);
+  const isLoading = market === 'kr' && (isMarketCapLoading || (marketCapData.length === 0 && isKoreanLoading));
+  const error = market === 'kr' ? (marketCapError || (marketCapData.length === 0 ? koreanError : null)) : null;
 
   // 섹터별 필터링 (한국 API 데이터는 섹터 정보 없으므로 전체만 표시)
   const filteredStocks = activeSector === 'all' || market === 'kr'
@@ -191,9 +233,9 @@ export function StocksContent({ market }: StocksContentProps) {
     return (
       <section>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          인기 종목
+          시가총액 순위
         </h2>
-        <StockTableSkeleton rowCount={8} />
+        <StockTableSkeleton rowCount={10} />
       </section>
     );
   }
@@ -203,12 +245,15 @@ export function StocksContent({ market }: StocksContentProps) {
     return (
       <section>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          인기 종목
+          시가총액 순위
         </h2>
         <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 text-center">
           <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
           <button
-            onClick={() => refetch()}
+            onClick={() => {
+              refetchMarketCap();
+              refetchKorean();
+            }}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
             다시 시도
@@ -221,7 +266,7 @@ export function StocksContent({ market }: StocksContentProps) {
   return (
     <section>
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        인기 종목
+        {market === 'kr' ? '시가총액 순위' : '인기 종목'}
         {market === 'kr' && (
           <span className="ml-2 text-xs font-normal text-green-600 dark:text-green-400">
             실시간
