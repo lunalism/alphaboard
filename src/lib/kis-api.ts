@@ -650,6 +650,12 @@ export async function getVolumeRanking(
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
   }
 
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 거래량순위 데이터가 없습니다.');
+    return [];
+  }
+
   // 데이터 변환 및 반환
   return data.output.map((item, index) => transformVolumeRanking(item, index + 1));
 }
@@ -750,6 +756,12 @@ export async function getFluctuationRanking(
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
   }
 
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 등락률순위 데이터가 없습니다.');
+    return [];
+  }
+
   return data.output.map((item, index) => transformFluctuationRanking(item, index + 1));
 }
 
@@ -835,6 +847,12 @@ export async function getMarketCapRanking(
   if (data.rt_cd !== '0') {
     console.error('[KIS API] API 에러:', data.msg1);
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 시가총액순위 데이터가 없습니다.');
+    return [];
   }
 
   return data.output.map((item, index) => transformMarketCapRanking(item, index + 1));
@@ -1081,6 +1099,12 @@ export async function getOverseasVolumeRanking(
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
   }
 
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 해외주식 거래량순위 데이터가 없습니다.');
+    return [];
+  }
+
   return data.output.map((item, index) => transformOverseasVolumeRanking(item, index + 1, exchange));
 }
 
@@ -1153,6 +1177,12 @@ export async function getOverseasMarketCapRanking(
   if (data.rt_cd !== '0') {
     console.error('[KIS API] API 에러:', data.msg1);
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 해외주식 시가총액순위 데이터가 없습니다.');
+    return [];
   }
 
   return data.output.map((item, index) => transformOverseasMarketCapRanking(item, index + 1, exchange));
@@ -1232,6 +1262,12 @@ export async function getOverseasFluctuationRanking(
   if (data.rt_cd !== '0') {
     console.error('[KIS API] API 에러:', data.msg1);
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // output이 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output || !Array.isArray(data.output)) {
+    console.warn('[KIS API] 해외주식 등락률순위 데이터가 없습니다.');
+    return [];
   }
 
   return data.output.map((item, index) => transformOverseasFluctuationRanking(item, index + 1, exchange));
