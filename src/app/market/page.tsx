@@ -143,8 +143,32 @@ function MarketContent() {
   // 한국: API 데이터, 그 외: 목업 데이터
   const currentIndices = activeMarket === 'kr' ? koreanIndices : marketIndices[activeMarket];
   const currentStocks = activeMarket === 'kr' ? koreanStocks : popularStocks[activeMarket];
-  const currentGainers = topGainers[activeMarket];
-  const currentLosers = topLosers[activeMarket];
+
+  // ========== 등락률 TOP 계산 ==========
+  // 한국 시장: 실제 API 데이터에서 상승/하락 TOP 5 계산
+  // 그 외 시장: 목업 데이터 사용
+  const currentGainers = activeMarket === 'kr' && koreanStocks.length > 0
+    ? koreanStocks
+        .filter(stock => stock.changePercent > 0)  // 상승 종목만
+        .slice(0, 5)                                // 상위 5개 (이미 등락률 순 정렬됨)
+        .map(stock => ({
+          name: stock.name,
+          ticker: stock.ticker,
+          changePercent: stock.changePercent,
+        }))
+    : topGainers[activeMarket];
+
+  const currentLosers = activeMarket === 'kr' && koreanStocks.length > 0
+    ? koreanStocks
+        .filter(stock => stock.changePercent < 0)  // 하락 종목만
+        .sort((a, b) => a.changePercent - b.changePercent)  // 하락률 큰 순 정렬
+        .slice(0, 5)                                // 하위 5개
+        .map(stock => ({
+          name: stock.name,
+          ticker: stock.ticker,
+          changePercent: stock.changePercent,
+        }))
+    : topLosers[activeMarket];
 
   // 한국 시장 로딩/에러 상태
   const isKoreanDataLoading = activeMarket === 'kr' && (isKoreanIndicesLoading || isKoreanStocksLoading);
@@ -255,7 +279,14 @@ function MarketContent() {
 
             {/* 등락률 TOP 섹션 */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">등락률 TOP</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                등락률 TOP
+                {activeMarket === 'kr' && (
+                  <span className="ml-2 text-xs font-normal text-green-600 dark:text-green-400">
+                    실시간
+                  </span>
+                )}
+              </h2>
               <TopMovers gainers={currentGainers} losers={currentLosers} />
             </section>
           </>
