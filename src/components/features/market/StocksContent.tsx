@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { MarketRegion, StockSector, Stock } from '@/types';
 import { stocksBySector, sectorTabs } from '@/constants';
 import { CompanyLogo } from '@/components/common';
-import { useKoreanStocks, useMarketCapRanking, useUSMarketCapRanking } from '@/hooks';
+import { useKoreanStocks, useMarketCapRanking, useUSStocks } from '@/hooks';
 import { StockTableSkeleton } from '@/components/skeleton';
 
 interface StocksContentProps {
@@ -203,13 +203,13 @@ export function StocksContent({ market }: StocksContentProps) {
     refetch: refetchKorean
   } = useKoreanStocks();
 
-  // 미국 시장: 시가총액 순위 API 사용 (NASDAQ 기본)
+  // 미국 시장: 개별 주식 시세 API 사용 (시가총액순위 API 폴백)
   const {
-    data: usMarketCapData,
+    stocks: usStockPrices,
     isLoading: isUSLoading,
     error: usError,
     refetch: refetchUS
-  } = useUSMarketCapRanking();
+  } = useUSStocks();
 
   // 한국 시장: 시가총액 순위 데이터를 Stock 형식으로 변환
   const koreanMarketCapStocks: Stock[] = marketCapData.length > 0
@@ -227,8 +227,8 @@ export function StocksContent({ market }: StocksContentProps) {
       }))
     : koreanStocks; // 시가총액 API 실패 시 기존 데이터 폴백
 
-  // 미국 시장: 시가총액 순위 데이터를 Stock 형식으로 변환
-  const usMarketCapStocks: Stock[] = usMarketCapData.slice(0, 30).map((item, idx) => ({
+  // 미국 시장: 개별 주식 시세 데이터를 Stock 형식으로 변환
+  const usStocks: Stock[] = usStockPrices.slice(0, 50).map((item, idx) => ({
     rank: idx + 1,
     name: item.name,
     ticker: item.symbol,
@@ -237,14 +237,13 @@ export function StocksContent({ market }: StocksContentProps) {
     changePercent: item.changePercent,
     volume: formatVolumeForDisplay(item.volume),
     domain: '',
-    marketCap: item.marketCap,
   }));
 
-  // 전체 주식 데이터 (한국/미국: 시가총액 순위 API, 그 외: 목업)
+  // 전체 주식 데이터 (한국: 시가총액 순위 API, 미국: 개별 시세 API, 그 외: 목업)
   const allStocks = market === 'kr'
     ? koreanMarketCapStocks
     : market === 'us'
-      ? usMarketCapStocks
+      ? usStocks
       : (stocksBySector[market] || []);
 
   const isLoading = (market === 'kr' && (isMarketCapLoading || (marketCapData.length === 0 && isKoreanLoading)))

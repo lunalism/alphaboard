@@ -7,6 +7,10 @@
  * 한국투자증권 Open API를 통해 미국 주요 지수(S&P500, NASDAQ, DOW JONES)의
  * 현재가를 조회합니다.
  *
+ * 지수 API가 0을 반환하는 경우(CCMP, INDU) 해당 ETF 가격을 폴백으로 사용:
+ * - NASDAQ(CCMP) → QQQ ETF (NASDAQ 100 추종)
+ * - DOW JONES(INDU) → DIA ETF (다우존스 추종)
+ *
  * 사용 예시:
  * - GET /api/kis/overseas/indices (모든 지수 조회)
  *
@@ -14,13 +18,23 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getOverseasIndexPrice } from '@/lib/kis-api';
-import type { OverseasIndexData, OverseasIndexCode, KISApiErrorResponse } from '@/types/kis';
+import { getOverseasIndexPrice, getOverseasStockPrice } from '@/lib/kis-api';
+import type { OverseasIndexData, OverseasIndexCode, OverseasExchangeCode, KISApiErrorResponse } from '@/types/kis';
 
 /**
  * 조회할 미국 주요 지수 목록
  */
 const US_INDICES: OverseasIndexCode[] = ['SPX', 'CCMP', 'INDU'];
+
+/**
+ * 지수코드 → ETF 매핑 (폴백용)
+ * 지수 API가 0을 반환할 때 해당 ETF 가격 사용
+ */
+const INDEX_TO_ETF_MAP: Record<OverseasIndexCode, { symbol: string; exchange: OverseasExchangeCode; multiplier: number }> = {
+  'SPX': { symbol: 'SPY', exchange: 'AMS', multiplier: 10 },    // SPY ≈ S&P 500 / 10
+  'CCMP': { symbol: 'QQQ', exchange: 'NAS', multiplier: 40 },   // QQQ ≈ NASDAQ 100 / 40 (NASDAQ Composite 대용)
+  'INDU': { symbol: 'DIA', exchange: 'AMS', multiplier: 100 },  // DIA ≈ DOW / 100
+};
 
 /**
  * API 응답 타입
@@ -39,13 +53,55 @@ interface OverseasIndicesResponse {
  *
  * @returns 미국 주요 지수 시세 또는 에러
  */
+/**
+ * 지수 데이터 조회 (ETF 폴백 포함)
+ *
+ * 1. 먼저 지수 API로 조회
+ * 2. 값이 0이면 해당 ETF 가격을 폴백으로 사용
+ */
+async function getIndexWithFallback(indexCode: OverseasIndexCode): Promise<OverseasIndexData> {
+  // 1. 지수 API 호출
+  const indexData = await getOverseasIndexPrice(indexCode);
+
+  // 2. 값이 0이 아니면 정상 반환
+  if (indexData.currentValue > 0) {
+    return indexData;
+  }
+
+  // 3. 값이 0이면 ETF 가격을 폴백으로 사용
+  const etfInfo = INDEX_TO_ETF_MAP[indexCode];
+  console.log(`[API] ${indexCode} 지수값 0, ${etfInfo.symbol} ETF로 폴백`);
+
+  try {
+    const etfData = await getOverseasStockPrice(etfInfo.exchange, etfInfo.symbol);
+
+    // ETF 가격에 배수를 곱해 대략적인 지수값 계산
+    const estimatedIndexValue = etfData.currentPrice * etfInfo.multiplier;
+    const estimatedChange = etfData.change * etfInfo.multiplier;
+
+    return {
+      indexCode,
+      indexName: indexData.indexName + ' (ETF 기준)',
+      currentValue: Math.round(estimatedIndexValue * 100) / 100,
+      change: Math.round(estimatedChange * 100) / 100,
+      changePercent: etfData.changePercent,
+      changeSign: etfData.changeSign,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (etfError) {
+    console.error(`[API] ${etfInfo.symbol} ETF 폴백도 실패:`, etfError);
+    // ETF도 실패하면 원래 0 값 반환
+    return indexData;
+  }
+}
+
 export async function GET(): Promise<NextResponse<OverseasIndicesResponse | KISApiErrorResponse>> {
   try {
     console.log('[API /api/kis/overseas/indices] 미국 지수 조회 시작');
 
-    // 모든 지수를 병렬로 조회
+    // 모든 지수를 병렬로 조회 (ETF 폴백 포함)
     const results = await Promise.allSettled(
-      US_INDICES.map(indexCode => getOverseasIndexPrice(indexCode))
+      US_INDICES.map(indexCode => getIndexWithFallback(indexCode))
     );
 
     // 성공/실패 분리

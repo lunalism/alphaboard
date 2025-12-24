@@ -827,7 +827,7 @@ import type {
   OverseasStockPriceData,
   OverseasExchangeCode,
 } from '@/types/kis';
-import type { USETFInfo } from '@/constants';
+import type { USETFInfo, USStockInfo } from '@/constants';
 
 /**
  * 미국 지수 데이터 훅
@@ -1169,4 +1169,88 @@ export function useUSETFs(
   }, [autoRefresh, refreshInterval, fetchETFs]);
 
   return { etfs, isLoading, error, refetch: fetchETFs, failedSymbols };
+}
+
+// ==================== 미국 주식 시세 훅 ====================
+
+/**
+ * 미국 주식 시세 데이터 타입
+ */
+export interface USStockPriceData extends OverseasStockPriceData {
+  name: string;
+  sector: USStockInfo['sector'];
+}
+
+/**
+ * 미국 주식 시세 데이터 훅
+ *
+ * @param sector 섹터 필터 ('all' | 'tech' | 'finance' | 'healthcare' | ...)
+ * @param options 옵션
+ * @returns 주식 시세 데이터, 로딩 상태, 에러, refetch 함수, 실패 종목
+ *
+ * @description
+ * 해외주식 시가총액순위 API가 빈 배열을 반환하는 경우의 폴백입니다.
+ * 시가총액 상위 50개 종목의 개별 시세를 조회합니다.
+ *
+ * @see /api/kis/overseas/stock/prices - API 엔드포인트
+ */
+interface UseUSStocksResult {
+  stocks: USStockPriceData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  failedSymbols: string[];
+}
+
+export function useUSStocks(
+  sector: 'all' | 'tech' | 'finance' | 'healthcare' | 'consumer' | 'energy' | 'industrial' | 'telecom' = 'all',
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSStocksResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [stocks, setStocks] = useState<USStockPriceData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [failedSymbols, setFailedSymbols] = useState<string[]>([]);
+
+  const fetchStocks = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/kis/overseas/stock/prices?sector=${sector}`);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setStocks(result.data);
+        setFailedSymbols(result.failed || []);
+
+        if (result.data.length === 0) {
+          setError('미국 주식 시세 데이터를 가져올 수 없습니다.');
+        }
+      } else {
+        setError(result.message || '미국 주식 시세 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('[useUSStocks] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sector]);
+
+  useEffect(() => {
+    fetchStocks();
+  }, [fetchStocks]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalId = setInterval(fetchStocks, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchStocks]);
+
+  return { stocks, isLoading, error, refetch: fetchStocks, failedSymbols };
 }

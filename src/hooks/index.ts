@@ -20,10 +20,12 @@ export {
   useUSFluctuationRanking,
   useUSMarketCapRanking,
   useUSETFs,
+  useUSStocks,  // 미국 주식 개별 시세 (시가총액순위 API 폴백)
   // 상수
   KOREAN_INDICES,
   KOREAN_STOCKS,
   // 타입
   type ETFPriceData,
   type USETFPriceData,
+  type USStockPriceData,
 } from './useKISData';

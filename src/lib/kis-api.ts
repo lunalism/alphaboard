@@ -963,6 +963,16 @@ export async function getOverseasIndexPrice(indexCode: OverseasIndexCode): Promi
 
   const data: KISOverseasIndexChartResponse = await response.json();
 
+  // 디버그: 실제 API 응답 로깅
+  console.log(`[KIS API] 해외지수 ${indexCode} 응답:`, JSON.stringify({
+    rt_cd: data.rt_cd,
+    msg1: data.msg1,
+    output1: data.output1 ? {
+      ovrs_nmix_prpr: data.output1.ovrs_nmix_prpr,
+      ovrs_nmix_prdy_vrss: data.output1.ovrs_nmix_prdy_vrss,
+    } : 'no output1',
+  }));
+
   if (data.rt_cd !== '0') {
     console.error('[KIS API] API 에러:', data.msg1);
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
@@ -1030,12 +1040,33 @@ export async function getOverseasStockPrice(
 
   const data: KISOverseasStockPriceResponse = await response.json();
 
+  // 디버그: 실제 API 응답 로깅
+  console.log(`[KIS API] 해외주식 ${exchange}:${symbol} 응답:`, JSON.stringify({
+    rt_cd: data.rt_cd,
+    msg1: data.msg1,
+    output_keys: data.output ? Object.keys(data.output) : 'no output',
+    last: data.output?.last,
+    base: data.output?.base,
+  }));
+
   if (data.rt_cd !== '0') {
     console.error('[KIS API] API 에러:', data.msg1);
     throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
   }
 
   const output = data.output;
+
+  // NYS 거래소에서 빈 데이터가 반환되면 AMS(NYSE ARCA)로 재시도
+  // 많은 ETF가 NYSE ARCA에 상장되어 있어 AMS 코드가 필요할 수 있음
+  if (exchange === 'NYS' && (!output.last || output.last === '')) {
+    console.log(`[KIS API] ${symbol}: NYS 빈 응답, AMS로 재시도...`);
+    try {
+      return await getOverseasStockPrice('AMS' as OverseasExchangeCode, symbol);
+    } catch (retryError) {
+      console.log(`[KIS API] ${symbol}: AMS도 실패, 원본 응답 사용`);
+    }
+  }
+
   return {
     symbol,
     exchange,

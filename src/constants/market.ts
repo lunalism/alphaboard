@@ -508,12 +508,12 @@ export interface USETFInfo {
 /**
  * 미국 ETF 종목 리스트 (카테고리별)
  *
- * 총 30개 종목:
- * - 지수 추종: 8개
- * - 섹터/테마: 8개
- * - 채권: 6개
- * - 원자재: 4개
- * - 해외 지수: 4개
+ * 총 56개 종목:
+ * - 지수 추종: 13개
+ * - 섹터/테마: 16개
+ * - 채권: 10개
+ * - 원자재: 7개
+ * - 해외 지수: 10개
  */
 export const usETFList: USETFInfo[] = [
   // ========== 지수 추종 ETF ==========
@@ -526,6 +526,11 @@ export const usETFList: USETFInfo[] = [
   { symbol: 'VTI', name: 'Vanguard Total Stock Market', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
   { symbol: 'VIG', name: 'Vanguard Dividend Appreciation', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
   { symbol: 'SCHD', name: 'Schwab US Dividend Equity', category: 'index', exchange: 'NYS', issuer: 'Schwab' },
+  { symbol: 'IVV', name: 'iShares Core S&P 500 ETF', category: 'index', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'RSP', name: 'Invesco S&P 500 Equal Weight', category: 'index', exchange: 'NYS', issuer: 'Invesco' },
+  { symbol: 'VTV', name: 'Vanguard Value ETF', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'VUG', name: 'Vanguard Growth ETF', category: 'index', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'ITOT', name: 'iShares Core S&P Total US Stock', category: 'index', exchange: 'NYS', issuer: 'BlackRock' },
 
   // ========== 섹터/테마 ETF ==========
   // 특정 산업이나 테마에 집중 투자
@@ -533,10 +538,18 @@ export const usETFList: USETFInfo[] = [
   { symbol: 'XLF', name: 'Financial Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
   { symbol: 'XLE', name: 'Energy Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
   { symbol: 'XLV', name: 'Health Care Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLI', name: 'Industrial Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLC', name: 'Communication Services Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLP', name: 'Consumer Staples Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLY', name: 'Consumer Discretionary Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLU', name: 'Utilities Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLRE', name: 'Real Estate Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'XLB', name: 'Materials Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
   { symbol: 'ARKK', name: 'ARK Innovation ETF', category: 'sector', exchange: 'NYS', issuer: 'ARK Invest' },
   { symbol: 'SOXX', name: 'iShares Semiconductor ETF', category: 'sector', exchange: 'NAS', issuer: 'BlackRock' },
   { symbol: 'SMH', name: 'VanEck Semiconductor ETF', category: 'sector', exchange: 'NAS', issuer: 'VanEck' },
-  { symbol: 'XLI', name: 'Industrial Select Sector', category: 'sector', exchange: 'NYS', issuer: 'State Street' },
+  { symbol: 'VGT', name: 'Vanguard Information Tech ETF', category: 'sector', exchange: 'NYS', issuer: 'Vanguard' },
+  { symbol: 'SPHD', name: 'Invesco S&P 500 High Dividend', category: 'sector', exchange: 'NYS', issuer: 'Invesco' },
 
   // ========== 채권 ETF ==========
   { symbol: 'BND', name: 'Vanguard Total Bond Market', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
@@ -545,18 +558,31 @@ export const usETFList: USETFInfo[] = [
   { symbol: 'HYG', name: 'iShares High Yield Corp Bond', category: 'bond', exchange: 'NYS', issuer: 'BlackRock' },
   { symbol: 'SHY', name: 'iShares 1-3 Year Treasury Bond', category: 'bond', exchange: 'NAS', issuer: 'BlackRock' },
   { symbol: 'AGG', name: 'iShares Core US Aggregate Bond', category: 'bond', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'IEF', name: 'iShares 7-10 Year Treasury Bond', category: 'bond', exchange: 'NAS', issuer: 'BlackRock' },
+  { symbol: 'VGSH', name: 'Vanguard Short-Term Treasury', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
+  { symbol: 'VCSH', name: 'Vanguard Short-Term Corp Bond', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
+  { symbol: 'BNDX', name: 'Vanguard Total Intl Bond ETF', category: 'bond', exchange: 'NAS', issuer: 'Vanguard' },
 
   // ========== 원자재 ETF ==========
   { symbol: 'GLD', name: 'SPDR Gold Shares', category: 'commodity', exchange: 'NYS', issuer: 'State Street' },
   { symbol: 'SLV', name: 'iShares Silver Trust', category: 'commodity', exchange: 'NYS', issuer: 'BlackRock' },
   { symbol: 'USO', name: 'United States Oil Fund', category: 'commodity', exchange: 'NYS', issuer: 'US Commodity Funds' },
   { symbol: 'DBC', name: 'Invesco DB Commodity Index', category: 'commodity', exchange: 'NYS', issuer: 'Invesco' },
+  { symbol: 'IAU', name: 'iShares Gold Trust', category: 'commodity', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'UNG', name: 'United States Natural Gas Fund', category: 'commodity', exchange: 'NYS', issuer: 'US Commodity Funds' },
+  { symbol: 'PDBC', name: 'Invesco Optimum Yield Diversified', category: 'commodity', exchange: 'NAS', issuer: 'Invesco' },
 
   // ========== 해외 지수 ETF ==========
   { symbol: 'EFA', name: 'iShares MSCI EAFE ETF', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
   { symbol: 'EEM', name: 'iShares MSCI Emerging Markets', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
   { symbol: 'VWO', name: 'Vanguard FTSE Emerging Markets', category: 'international', exchange: 'NYS', issuer: 'Vanguard' },
   { symbol: 'KWEB', name: 'KraneShares China Internet ETF', category: 'international', exchange: 'NYS', issuer: 'KraneShares' },
+  { symbol: 'VXUS', name: 'Vanguard Total Intl Stock ETF', category: 'international', exchange: 'NAS', issuer: 'Vanguard' },
+  { symbol: 'IEMG', name: 'iShares Core MSCI Emerging Markets', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'EWJ', name: 'iShares MSCI Japan ETF', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'EWZ', name: 'iShares MSCI Brazil ETF', category: 'international', exchange: 'NYS', issuer: 'BlackRock' },
+  { symbol: 'MCHI', name: 'iShares MSCI China ETF', category: 'international', exchange: 'NAS', issuer: 'BlackRock' },
+  { symbol: 'VEA', name: 'Vanguard FTSE Developed Markets', category: 'international', exchange: 'NYS', issuer: 'Vanguard' },
 ];
 
 /**
@@ -589,3 +615,112 @@ export function getUSETFsByCategory(category: USETFInfo['category']): USETFInfo[
 export function getUSETFsByExchange(exchange: 'NAS' | 'NYS'): USETFInfo[] {
   return usETFList.filter(etf => etf.exchange === exchange);
 }
+
+// ==================== 미국 주식 목록 (시가총액 상위) ====================
+
+/**
+ * 미국 주식 정보 타입
+ *
+ * @property symbol - 종목코드 (티커)
+ * @property name - 회사명
+ * @property sector - 섹터
+ * @property exchange - 거래소 (NAS: 나스닥, NYS: 뉴욕)
+ */
+export interface USStockInfo {
+  symbol: string;
+  name: string;
+  sector: 'tech' | 'finance' | 'healthcare' | 'consumer' | 'energy' | 'industrial' | 'telecom' | 'materials' | 'utilities' | 'realestate';
+  exchange: 'NAS' | 'NYS';
+}
+
+/**
+ * 미국 시가총액 상위 주식 목록 (50개)
+ *
+ * 시가총액 기준으로 선정된 미국 대형주
+ * - 기술: AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, AVGO, ORCL, CRM, ADBE, AMD, INTC, CSCO, NFLX, QCOM
+ * - 금융: JPM, V, MA, BAC, WFC, GS, BRK.B, AXP
+ * - 헬스케어: UNH, JNJ, LLY, PFE, ABBV, MRK, TMO
+ * - 소비재: WMT, HD, KO, PEP, MCD, NKE, COST, SBUX
+ * - 에너지: XOM, CVX
+ * - 산업재: CAT, BA, UPS, RTX
+ * - 통신: VZ, T
+ */
+export const usStockList: USStockInfo[] = [
+  // ========== 기술 (Tech) ==========
+  { symbol: 'AAPL', name: 'Apple', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'MSFT', name: 'Microsoft', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'GOOGL', name: 'Alphabet (Google)', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'AMZN', name: 'Amazon', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'NVDA', name: 'NVIDIA', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'META', name: 'Meta Platforms', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'TSLA', name: 'Tesla', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'AVGO', name: 'Broadcom', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'ORCL', name: 'Oracle', sector: 'tech', exchange: 'NYS' },
+  { symbol: 'CRM', name: 'Salesforce', sector: 'tech', exchange: 'NYS' },
+  { symbol: 'ADBE', name: 'Adobe', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'AMD', name: 'Advanced Micro Devices', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'INTC', name: 'Intel', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'CSCO', name: 'Cisco Systems', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'NFLX', name: 'Netflix', sector: 'tech', exchange: 'NAS' },
+  { symbol: 'QCOM', name: 'Qualcomm', sector: 'tech', exchange: 'NAS' },
+
+  // ========== 금융 (Finance) ==========
+  { symbol: 'JPM', name: 'JPMorgan Chase', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'V', name: 'Visa', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'MA', name: 'Mastercard', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'BAC', name: 'Bank of America', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'WFC', name: 'Wells Fargo', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'GS', name: 'Goldman Sachs', sector: 'finance', exchange: 'NYS' },
+  { symbol: 'AXP', name: 'American Express', sector: 'finance', exchange: 'NYS' },
+
+  // ========== 헬스케어 (Healthcare) ==========
+  { symbol: 'UNH', name: 'UnitedHealth Group', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'LLY', name: 'Eli Lilly', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'PFE', name: 'Pfizer', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'ABBV', name: 'AbbVie', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'MRK', name: 'Merck & Co.', sector: 'healthcare', exchange: 'NYS' },
+  { symbol: 'TMO', name: 'Thermo Fisher Scientific', sector: 'healthcare', exchange: 'NYS' },
+
+  // ========== 소비재 (Consumer) ==========
+  { symbol: 'WMT', name: 'Walmart', sector: 'consumer', exchange: 'NYS' },
+  { symbol: 'HD', name: 'Home Depot', sector: 'consumer', exchange: 'NYS' },
+  { symbol: 'KO', name: 'Coca-Cola', sector: 'consumer', exchange: 'NYS' },
+  { symbol: 'PEP', name: 'PepsiCo', sector: 'consumer', exchange: 'NAS' },
+  { symbol: 'MCD', name: "McDonald's", sector: 'consumer', exchange: 'NYS' },
+  { symbol: 'NKE', name: 'Nike', sector: 'consumer', exchange: 'NYS' },
+  { symbol: 'COST', name: 'Costco', sector: 'consumer', exchange: 'NAS' },
+  { symbol: 'SBUX', name: 'Starbucks', sector: 'consumer', exchange: 'NAS' },
+
+  // ========== 에너지 (Energy) ==========
+  { symbol: 'XOM', name: 'ExxonMobil', sector: 'energy', exchange: 'NYS' },
+  { symbol: 'CVX', name: 'Chevron', sector: 'energy', exchange: 'NYS' },
+
+  // ========== 산업재 (Industrial) ==========
+  { symbol: 'CAT', name: 'Caterpillar', sector: 'industrial', exchange: 'NYS' },
+  { symbol: 'BA', name: 'Boeing', sector: 'industrial', exchange: 'NYS' },
+  { symbol: 'UPS', name: 'United Parcel Service', sector: 'industrial', exchange: 'NYS' },
+  { symbol: 'RTX', name: 'Raytheon Technologies', sector: 'industrial', exchange: 'NYS' },
+  { symbol: 'HON', name: 'Honeywell', sector: 'industrial', exchange: 'NAS' },
+  { symbol: 'GE', name: 'General Electric', sector: 'industrial', exchange: 'NYS' },
+
+  // ========== 통신 (Telecom) ==========
+  { symbol: 'VZ', name: 'Verizon', sector: 'telecom', exchange: 'NYS' },
+  { symbol: 'T', name: 'AT&T', sector: 'telecom', exchange: 'NYS' },
+];
+
+/**
+ * 미국 주식 섹터 라벨 (UI 표시용)
+ */
+export const usStockSectorLabels: Record<USStockInfo['sector'], string> = {
+  tech: 'Technology',
+  finance: 'Finance',
+  healthcare: 'Healthcare',
+  consumer: 'Consumer',
+  energy: 'Energy',
+  industrial: 'Industrial',
+  telecom: 'Telecom',
+  materials: 'Materials',
+  utilities: 'Utilities',
+  realestate: 'Real Estate',
+};
