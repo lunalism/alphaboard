@@ -19,7 +19,7 @@
  * - 시장별 탭 (한국/미국/일본/홍콩)
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MarketRegion } from '@/types';
 import { Sidebar, BottomNav } from '@/components/layout';
@@ -397,92 +397,106 @@ export default function WatchlistPage() {
   const [itemsWithPrice, setItemsWithPrice] = useState<WatchlistItemWithPrice[]>([]);
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
 
+  // fetch 중복 방지를 위한 ref
+  const isFetchingRef = useRef(false);
+
   // 현재 시장의 관심종목
   const marketWatchlist = getWatchlistByMarket(activeMarket);
 
-  /**
-   * 시세 데이터 조회
-   * 한국/미국 종목의 실시간 시세를 API에서 가져옴
-   */
-  const fetchPrices = useCallback(async () => {
+  // 안정적인 dependency를 위해 티커 목록을 문자열로 변환
+  const marketWatchlistKey = marketWatchlist.map((item) => item.ticker).join(',');
+
+  // 시장 변경 또는 관심종목 변경 시 시세 조회
+  useEffect(() => {
+    // 로드 완료 전이면 스킵
+    if (!isLoaded) return;
+
+    // 이미 fetch 중이면 스킵
+    if (isFetchingRef.current) return;
+
+    // 관심종목이 없으면 빈 배열로 설정
     if (marketWatchlist.length === 0) {
       setItemsWithPrice([]);
       return;
     }
 
-    setIsLoadingPrices(true);
+    /**
+     * 시세 데이터 조회
+     * 한국/미국 종목의 실시간 시세를 API에서 가져옴
+     */
+    const fetchPrices = async () => {
+      isFetchingRef.current = true;
+      setIsLoadingPrices(true);
 
-    // 초기 상태: 로딩 중
-    setItemsWithPrice(
-      marketWatchlist.map((item) => ({
-        ...item,
-        isLoading: true,
-      }))
-    );
-
-    try {
-      // 각 종목의 시세 조회
-      const updatedItems = await Promise.all(
-        marketWatchlist.map(async (item) => {
-          try {
-            let apiUrl = '';
-
-            if (item.market === 'kr') {
-              // 한국 주식 시세 API
-              apiUrl = `/api/kis/stock/price?symbol=${item.ticker}`;
-            } else if (item.market === 'us') {
-              // 미국 주식 시세 API (개별 조회는 현재 미지원, 목록에서 찾기)
-              // TODO: 미국 주식 개별 시세 API 추가 필요
-              return {
-                ...item,
-                isLoading: false,
-                error: '미국 주식 시세 조회 미지원',
-              };
-            } else {
-              // 일본/홍콩은 현재 미지원
-              return {
-                ...item,
-                isLoading: false,
-                error: '해당 시장 시세 조회 미지원',
-              };
-            }
-
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('시세 조회 실패');
-
-            const data = await response.json();
-
-            return {
-              ...item,
-              price: data.currentPrice,
-              change: data.change,
-              changePercent: data.changePercent,
-              volume: data.volume,
-              isLoading: false,
-            };
-          } catch (error) {
-            console.error(`[Watchlist] ${item.ticker} 시세 조회 실패:`, error);
-            return {
-              ...item,
-              isLoading: false,
-              error: '시세 조회 실패',
-            };
-          }
-        })
+      // 초기 상태: 로딩 중
+      setItemsWithPrice(
+        marketWatchlist.map((item) => ({
+          ...item,
+          isLoading: true,
+        }))
       );
 
-      setItemsWithPrice(updatedItems);
-    } finally {
-      setIsLoadingPrices(false);
-    }
-  }, [marketWatchlist]);
+      try {
+        // 각 종목의 시세 조회
+        const updatedItems = await Promise.all(
+          marketWatchlist.map(async (item) => {
+            try {
+              let apiUrl = '';
 
-  // 시장 변경 또는 관심종목 변경 시 시세 조회
-  useEffect(() => {
-    if (isLoaded) {
-      fetchPrices();
-    }
-  }, [isLoaded, activeMarket, watchlist.length, fetchPrices]);
+              if (item.market === 'kr') {
+                // 한국 주식 시세 API
+                apiUrl = `/api/kis/stock/price?symbol=${item.ticker}`;
+              } else if (item.market === 'us') {
+                // 미국 주식 시세 API (개별 조회는 현재 미지원, 목록에서 찾기)
+                // TODO: 미국 주식 개별 시세 API 추가 필요
+                return {
+                  ...item,
+                  isLoading: false,
+                  error: '미국 주식 시세 조회 미지원',
+                };
+              } else {
+                // 일본/홍콩은 현재 미지원
+                return {
+                  ...item,
+                  isLoading: false,
+                  error: '해당 시장 시세 조회 미지원',
+                };
+              }
+
+              const response = await fetch(apiUrl);
+              if (!response.ok) throw new Error('시세 조회 실패');
+
+              const data = await response.json();
+
+              return {
+                ...item,
+                price: data.currentPrice,
+                change: data.change,
+                changePercent: data.changePercent,
+                volume: data.volume,
+                isLoading: false,
+              };
+            } catch (error) {
+              console.error(`[Watchlist] ${item.ticker} 시세 조회 실패:`, error);
+              return {
+                ...item,
+                isLoading: false,
+                error: '시세 조회 실패',
+              };
+            }
+          })
+        );
+
+        setItemsWithPrice(updatedItems);
+      } finally {
+        setIsLoadingPrices(false);
+        isFetchingRef.current = false;
+      }
+    };
+
+    fetchPrices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, activeMarket, marketWatchlistKey]);
 
   /**
    * 관심종목 삭제 핸들러
