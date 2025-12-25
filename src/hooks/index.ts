@@ -29,3 +29,6 @@ export {
   type USETFPriceData,
   type USStockPriceData,
 } from './useKISData';
+
+// 관심종목 관리 훅
+export { useWatchlist, type WatchlistItem } from './useWatchlist';

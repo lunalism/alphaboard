@@ -11,6 +11,11 @@
  *
  * 다른 국가(us, jp, hk) 선택 시:
  * - 기존 목업 데이터 사용
+ *
+ * 관심종목 기능:
+ * - 각 종목에 ⭐ 버튼 표시
+ * - 클릭 시 관심종목 추가/제거 토글
+ * - 토스트 알림으로 결과 표시
  */
 
 import { useState } from 'react';
@@ -18,8 +23,9 @@ import { useRouter } from 'next/navigation';
 import { MarketRegion, StockSector, Stock } from '@/types';
 import { stocksBySector, sectorTabs } from '@/constants';
 import { CompanyLogo } from '@/components/common';
-import { useKoreanStocks, useMarketCapRanking, useUSStocks } from '@/hooks';
+import { useKoreanStocks, useMarketCapRanking, useUSStocks, useWatchlist } from '@/hooks';
 import { StockTableSkeleton } from '@/components/skeleton';
+import { showSuccess } from '@/lib/toast';
 
 interface StocksContentProps {
   // 현재 선택된 국가
@@ -59,10 +65,75 @@ function SectorFilter({
 }
 
 /**
+ * 관심종목 버튼 컴포넌트
+ *
+ * @description
+ * 종목별 관심종목 추가/제거 버튼
+ * - 관심종목에 있으면: ★ (노란색, 채워진 별)
+ * - 관심종목에 없으면: ☆ (빈 별)
+ */
+function WatchlistButton({
+  ticker,
+  name,
+  market,
+  isInWatchlist,
+  onToggle,
+}: {
+  ticker: string;
+  name: string;
+  market: MarketRegion;
+  isInWatchlist: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation(); // 행 클릭 이벤트 방지
+        onToggle();
+      }}
+      className={`p-1.5 rounded-lg transition-all duration-200 ${
+        isInWatchlist
+          ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+          : 'text-gray-300 hover:text-yellow-500 hover:bg-gray-50 dark:text-gray-600 dark:hover:text-yellow-500 dark:hover:bg-gray-700'
+      }`}
+      title={isInWatchlist ? '관심종목에서 제거' : '관심종목에 추가'}
+    >
+      {isInWatchlist ? (
+        // 채워진 별 (관심종목)
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ) : (
+        // 빈 별 (미등록)
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+/**
  * 주식 테이블 컴포넌트
  * 필터링된 주식 목록을 테이블 형태로 표시
+ * 관심종목 기능 포함
  */
-function StockTable({ stocks, market }: { stocks: Stock[]; market: MarketRegion }) {
+function StockTable({
+  stocks,
+  market,
+  isInWatchlist,
+  onToggleWatchlist,
+}: {
+  stocks: Stock[];
+  market: MarketRegion;
+  isInWatchlist: (ticker: string) => boolean;
+  onToggleWatchlist: (ticker: string, name: string) => void;
+}) {
   const router = useRouter();
 
   // 가격 포맷팅 (국가별 통화 형식)
@@ -98,6 +169,8 @@ function StockTable({ stocks, market }: { stocks: Stock[]; market: MarketRegion 
         <table className="w-full min-w-[600px]">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+              {/* 관심종목 버튼 컬럼 */}
+              <th className="w-12 py-3 px-2"></th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">순위</th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">종목명</th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">티커</th>
@@ -109,6 +182,7 @@ function StockTable({ stocks, market }: { stocks: Stock[]; market: MarketRegion 
           <tbody>
             {stocks.map((stock, idx) => {
               const isPositive = stock.changePercent >= 0;
+              const inWatchlist = isInWatchlist(stock.ticker);
               return (
                 // key: ticker + index로 고유성 보장
                 <tr
@@ -116,6 +190,16 @@ function StockTable({ stocks, market }: { stocks: Stock[]; market: MarketRegion 
                   onClick={() => router.push(`/market/${stock.ticker}`)}
                   className="border-b border-gray-50 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
                 >
+                  {/* 관심종목 버튼 */}
+                  <td className="py-4 px-2">
+                    <WatchlistButton
+                      ticker={stock.ticker}
+                      name={stock.name}
+                      market={market}
+                      isInWatchlist={inWatchlist}
+                      onToggle={() => onToggleWatchlist(stock.ticker, stock.name)}
+                    />
+                  </td>
                   {/* 순위 */}
                   <td className="py-4 px-4">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -186,6 +270,24 @@ function formatVolumeForDisplay(volume: number): string {
 export function StocksContent({ market }: StocksContentProps) {
   // 현재 선택된 섹터 상태
   const [activeSector, setActiveSector] = useState<StockSector>('all');
+
+  // ========================================
+  // 관심종목 관리 훅
+  // ========================================
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+
+  /**
+   * 관심종목 토글 핸들러
+   * - 추가/제거 후 토스트 알림 표시
+   */
+  const handleToggleWatchlist = (ticker: string, name: string) => {
+    const added = toggleWatchlist({ ticker, name, market });
+    if (added) {
+      showSuccess(`${name}을(를) 관심종목에 추가했습니다`);
+    } else {
+      showSuccess(`${name}을(를) 관심종목에서 제거했습니다`);
+    }
+  };
 
   // 한국 시장: 시가총액 순위 API 사용
   const {
@@ -312,9 +414,14 @@ export function StocksContent({ market }: StocksContentProps) {
       {market !== 'kr' && market !== 'us' && (
         <SectorFilter activeSector={activeSector} onSectorChange={setActiveSector} />
       )}
-      {/* 주식 테이블 */}
+      {/* 주식 테이블 (관심종목 기능 포함) */}
       {filteredStocks.length > 0 ? (
-        <StockTable stocks={filteredStocks} market={market} />
+        <StockTable
+          stocks={filteredStocks}
+          market={market}
+          isInWatchlist={isInWatchlist}
+          onToggleWatchlist={handleToggleWatchlist}
+        />
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-8 text-center">
           <p className="text-gray-500 dark:text-gray-400">

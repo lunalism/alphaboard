@@ -1,26 +1,502 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * 관심종목 페이지
+ *
+ * @route /watchlist
+ *
+ * @description
+ * localStorage 기반 관심종목 관리 페이지
+ * - 저장된 관심종목 목록 표시
+ * - 실시간 시세 연동 (한국투자증권 API)
+ * - 종목별 현재가, 등락률, 등락폭 표시
+ * - 삭제 버튼으로 관심종목 제거
+ *
+ * @features
+ * - 반응형 UI: 데스크톱(테이블), 모바일(카드)
+ * - 다크모드 지원
+ * - 빈 상태 표시
+ * - 시장별 탭 (한국/미국/일본/홍콩)
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { MarketRegion } from '@/types';
 import { Sidebar, BottomNav } from '@/components/layout';
 import { MarketTabs } from '@/components/features/market';
-import { LoginPrompt, WatchlistTable } from '@/components/features/watchlist';
-import { watchlistData } from '@/constants';
-import { useAuthStore } from '@/stores';
+import { useWatchlist, WatchlistItem } from '@/hooks';
 import { showSuccess } from '@/lib/toast';
+import { CompanyLogo } from '@/components/common';
+
+// ==================== 타입 정의 ====================
+
+/**
+ * 시세 정보가 포함된 관심종목 아이템
+ */
+interface WatchlistItemWithPrice extends WatchlistItem {
+  price?: number;
+  change?: number;
+  changePercent?: number;
+  volume?: number;
+  isLoading?: boolean;
+  error?: string;
+}
+
+// ==================== 컴포넌트 ====================
+
+/**
+ * 빈 상태 컴포넌트
+ * 관심종목이 없을 때 표시
+ */
+function EmptyState() {
+  const router = useRouter();
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-12 text-center">
+      {/* 별 아이콘 */}
+      <div className="w-20 h-20 bg-yellow-50 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg className="w-10 h-10 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      </div>
+
+      {/* 안내 텍스트 */}
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        관심종목이 없습니다
+      </h3>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">
+        시세 페이지에서 ⭐를 눌러 관심종목을 추가하세요
+      </p>
+
+      {/* 시세 페이지로 이동 버튼 */}
+      <button
+        onClick={() => router.push('/market')}
+        className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+      >
+        시세 보러 가기
+      </button>
+    </div>
+  );
+}
+
+/**
+ * 로딩 스켈레톤
+ */
+function LoadingSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-4 p-4 border-b border-gray-50 dark:border-gray-700">
+            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+            </div>
+            <div className="text-right">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 관심종목 테이블 (데스크톱)
+ */
+function WatchlistTableDesktop({
+  items,
+  market,
+  onDelete,
+  onItemClick,
+}: {
+  items: WatchlistItemWithPrice[];
+  market: MarketRegion;
+  onDelete: (ticker: string, name: string) => void;
+  onItemClick: (ticker: string) => void;
+}) {
+  // 가격 포맷팅
+  const formatPrice = (price: number) => {
+    if (market === 'kr') return price.toLocaleString('ko-KR') + '원';
+    if (market === 'jp') return '¥' + price.toLocaleString('ja-JP');
+    if (market === 'hk') return 'HK$' + price.toFixed(2);
+    return '$' + price.toFixed(2);
+  };
+
+  // 변동폭 포맷팅
+  const formatChange = (change: number) => {
+    const sign = change >= 0 ? '+' : '';
+    if (market === 'kr') return sign + change.toLocaleString('ko-KR');
+    return sign + change.toFixed(2);
+  };
+
+  // 변동률 포맷팅
+  const formatPercent = (percent: number) => {
+    const sign = percent >= 0 ? '+' : '';
+    return `${sign}${percent.toFixed(2)}%`;
+  };
+
+  return (
+    <div className="hidden md:block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                종목명
+              </th>
+              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                티커
+              </th>
+              <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                현재가
+              </th>
+              <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                등락률
+              </th>
+              <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                등락폭
+              </th>
+              <th className="w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const isPositive = (item.changePercent ?? 0) >= 0;
+              const hasPrice = item.price !== undefined;
+
+              return (
+                <tr
+                  key={item.ticker}
+                  onClick={() => onItemClick(item.ticker)}
+                  className="border-b border-gray-50 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+                >
+                  {/* 종목명 + 로고 */}
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <CompanyLogo domain="" size="sm" />
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {item.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* 티커 */}
+                  <td className="py-4 px-4">
+                    <span className="text-gray-500 dark:text-gray-400 text-sm font-mono">
+                      {item.ticker}
+                    </span>
+                  </td>
+
+                  {/* 현재가 */}
+                  <td className="py-4 px-4 text-right">
+                    {item.isLoading ? (
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 ml-auto animate-pulse" />
+                    ) : hasPrice ? (
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {formatPrice(item.price!)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
+                    )}
+                  </td>
+
+                  {/* 등락률 */}
+                  <td className="py-4 px-4 text-right">
+                    {item.isLoading ? (
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto animate-pulse" />
+                    ) : hasPrice ? (
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          isPositive
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        }`}
+                      >
+                        {formatPercent(item.changePercent!)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
+                    )}
+                  </td>
+
+                  {/* 등락폭 */}
+                  <td className="py-4 px-4 text-right">
+                    {item.isLoading ? (
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto animate-pulse" />
+                    ) : hasPrice ? (
+                      <span
+                        className={`text-sm ${
+                          isPositive
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                        }`}
+                      >
+                        {formatChange(item.change!)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
+                    )}
+                  </td>
+
+                  {/* 삭제 버튼 */}
+                  <td className="py-4 px-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item.ticker, item.name);
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      title="관심종목에서 삭제"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 관심종목 리스트 (모바일)
+ */
+function WatchlistListMobile({
+  items,
+  market,
+  onDelete,
+  onItemClick,
+}: {
+  items: WatchlistItemWithPrice[];
+  market: MarketRegion;
+  onDelete: (ticker: string, name: string) => void;
+  onItemClick: (ticker: string) => void;
+}) {
+  // 가격 포맷팅
+  const formatPrice = (price: number) => {
+    if (market === 'kr') return price.toLocaleString('ko-KR') + '원';
+    if (market === 'jp') return '¥' + price.toLocaleString('ja-JP');
+    if (market === 'hk') return 'HK$' + price.toFixed(2);
+    return '$' + price.toFixed(2);
+  };
+
+  // 변동률 포맷팅
+  const formatPercent = (percent: number) => {
+    const sign = percent >= 0 ? '+' : '';
+    return `${sign}${percent.toFixed(2)}%`;
+  };
+
+  return (
+    <div className="md:hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="divide-y divide-gray-50 dark:divide-gray-700">
+        {items.map((item) => {
+          const isPositive = (item.changePercent ?? 0) >= 0;
+          const hasPrice = item.price !== undefined;
+
+          return (
+            <div
+              key={item.ticker}
+              onClick={() => onItemClick(item.ticker)}
+              className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                {/* 왼쪽: 종목 정보 */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <CompanyLogo domain="" size="sm" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                      {item.ticker}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 오른쪽: 가격 정보 + 삭제 버튼 */}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    {item.isLoading ? (
+                      <>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-1 animate-pulse" />
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-14 ml-auto animate-pulse" />
+                      </>
+                    ) : hasPrice ? (
+                      <>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {formatPrice(item.price!)}
+                        </p>
+                        <span
+                          className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            isPositive
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                        >
+                          {formatPercent(item.changePercent!)}
+                        </span>
+                      </>
+                    ) : (
+                      <p className="text-gray-400 dark:text-gray-500">-</p>
+                    )}
+                  </div>
+
+                  {/* 삭제 버튼 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(item.ticker, item.name);
+                    }}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="관심종목에서 삭제"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ==================== 메인 페이지 ====================
 
 export default function WatchlistPage() {
+  const router = useRouter();
   const [activeMenu, setActiveMenu] = useState('watchlist');
-  const [activeMarket, setActiveMarket] = useState<MarketRegion>('us');
-  const { isLoggedIn, login } = useAuthStore();
-  const [items, setItems] = useState(watchlistData);
+  const [activeMarket, setActiveMarket] = useState<MarketRegion>('kr');
 
-  const handleDelete = (id: string) => {
-    setItems(prev => ({
-      ...prev,
-      [activeMarket]: prev[activeMarket].filter(item => item.id !== id),
-    }));
-    showSuccess('관심종목에서 삭제되었습니다');
+  // 관심종목 훅
+  const { watchlist, isLoaded, removeFromWatchlist, getWatchlistByMarket } = useWatchlist();
+
+  // 시세 정보가 포함된 관심종목 상태
+  const [itemsWithPrice, setItemsWithPrice] = useState<WatchlistItemWithPrice[]>([]);
+  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+
+  // 현재 시장의 관심종목
+  const marketWatchlist = getWatchlistByMarket(activeMarket);
+
+  /**
+   * 시세 데이터 조회
+   * 한국/미국 종목의 실시간 시세를 API에서 가져옴
+   */
+  const fetchPrices = useCallback(async () => {
+    if (marketWatchlist.length === 0) {
+      setItemsWithPrice([]);
+      return;
+    }
+
+    setIsLoadingPrices(true);
+
+    // 초기 상태: 로딩 중
+    setItemsWithPrice(
+      marketWatchlist.map((item) => ({
+        ...item,
+        isLoading: true,
+      }))
+    );
+
+    try {
+      // 각 종목의 시세 조회
+      const updatedItems = await Promise.all(
+        marketWatchlist.map(async (item) => {
+          try {
+            let apiUrl = '';
+
+            if (item.market === 'kr') {
+              // 한국 주식 시세 API
+              apiUrl = `/api/kis/stock/price?symbol=${item.ticker}`;
+            } else if (item.market === 'us') {
+              // 미국 주식 시세 API (개별 조회는 현재 미지원, 목록에서 찾기)
+              // TODO: 미국 주식 개별 시세 API 추가 필요
+              return {
+                ...item,
+                isLoading: false,
+                error: '미국 주식 시세 조회 미지원',
+              };
+            } else {
+              // 일본/홍콩은 현재 미지원
+              return {
+                ...item,
+                isLoading: false,
+                error: '해당 시장 시세 조회 미지원',
+              };
+            }
+
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('시세 조회 실패');
+
+            const data = await response.json();
+
+            return {
+              ...item,
+              price: data.currentPrice,
+              change: data.change,
+              changePercent: data.changePercent,
+              volume: data.volume,
+              isLoading: false,
+            };
+          } catch (error) {
+            console.error(`[Watchlist] ${item.ticker} 시세 조회 실패:`, error);
+            return {
+              ...item,
+              isLoading: false,
+              error: '시세 조회 실패',
+            };
+          }
+        })
+      );
+
+      setItemsWithPrice(updatedItems);
+    } finally {
+      setIsLoadingPrices(false);
+    }
+  }, [marketWatchlist]);
+
+  // 시장 변경 또는 관심종목 변경 시 시세 조회
+  useEffect(() => {
+    if (isLoaded) {
+      fetchPrices();
+    }
+  }, [isLoaded, activeMarket, watchlist.length, fetchPrices]);
+
+  /**
+   * 관심종목 삭제 핸들러
+   */
+  const handleDelete = (ticker: string, name: string) => {
+    removeFromWatchlist(ticker);
+    showSuccess(`${name}을(를) 관심종목에서 제거했습니다`);
+  };
+
+  /**
+   * 종목 클릭 핸들러 (상세 페이지로 이동)
+   */
+  const handleItemClick = (ticker: string) => {
+    router.push(`/market/${ticker}`);
   };
 
   return (
@@ -37,29 +513,44 @@ export default function WatchlistPage() {
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">관심종목</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">나만의 관심종목을 관리하세요</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              나만의 관심종목을 관리하세요
+              {watchlist.length > 0 && (
+                <span className="ml-2 text-blue-600 dark:text-blue-400">
+                  (총 {watchlist.length}개)
+                </span>
+              )}
+            </p>
           </div>
 
-          {!isLoggedIn ? (
-            <LoginPrompt onLogin={login} />
+          {/* Market Tabs */}
+          <div className="mb-6">
+            <MarketTabs activeMarket={activeMarket} onMarketChange={setActiveMarket} />
+          </div>
+
+          {/* Content */}
+          {!isLoaded ? (
+            // 초기 로딩
+            <LoadingSkeleton />
+          ) : marketWatchlist.length === 0 ? (
+            // 빈 상태
+            <EmptyState />
           ) : (
             <>
-              {/* Market Tabs & Add Button */}
-              <div className="flex items-center justify-between mb-6">
-                <MarketTabs activeMarket={activeMarket} onMarketChange={setActiveMarket} />
-                <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  종목 추가
-                </button>
-              </div>
-
-              {/* Watchlist Table */}
-              <WatchlistTable
-                items={items[activeMarket]}
+              {/* 데스크톱 테이블 */}
+              <WatchlistTableDesktop
+                items={itemsWithPrice}
                 market={activeMarket}
                 onDelete={handleDelete}
+                onItemClick={handleItemClick}
+              />
+
+              {/* 모바일 리스트 */}
+              <WatchlistListMobile
+                items={itemsWithPrice}
+                market={activeMarket}
+                onDelete={handleDelete}
+                onItemClick={handleItemClick}
               />
             </>
           )}
