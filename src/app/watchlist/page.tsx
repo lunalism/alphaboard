@@ -447,13 +447,8 @@ export default function WatchlistPage() {
                 // 한국 주식 시세 API
                 apiUrl = `/api/kis/stock/price?symbol=${item.ticker}`;
               } else if (item.market === 'us') {
-                // 미국 주식 시세 API (개별 조회는 현재 미지원, 목록에서 찾기)
-                // TODO: 미국 주식 개별 시세 API 추가 필요
-                return {
-                  ...item,
-                  isLoading: false,
-                  error: '미국 주식 시세 조회 미지원',
-                };
+                // 미국 주식 개별 시세 API
+                apiUrl = `/api/kis/overseas/stock/price?symbol=${item.ticker}`;
               } else {
                 // 일본/홍콩은 현재 미지원
                 return {
@@ -471,7 +466,8 @@ export default function WatchlistPage() {
               return {
                 ...item,
                 // API에서 종목명을 가져온 경우 업데이트 (티커로 저장된 경우 수정)
-                name: data.stockName || item.name,
+                // 한국 주식: stockName, 미국 주식: name
+                name: data.stockName || data.name || item.name,
                 price: data.currentPrice,
                 change: data.change,
                 changePercent: data.changePercent,

@@ -60,6 +60,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         {menuItems
           .filter((item) => item.id !== 'profile')
           .filter((item) => item.id !== 'notification' || isLoggedIn)
+          .filter((item) => item.id !== 'watchlist' || isLoggedIn)
           .map((item) => (
           <Link
             key={item.id}
