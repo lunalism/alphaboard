@@ -424,6 +424,7 @@ function transformStockPrice(
 
   return {
     symbol,
+    stockName: raw.hts_kor_isnm || '',  // HTS 한글 종목명
     currentPrice: parseFloat(raw.stck_prpr) || 0,
     change: parseFloat(raw.prdy_vrss) || 0,
     changePercent: parseFloat(raw.prdy_ctrt) || 0,

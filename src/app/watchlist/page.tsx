@@ -470,6 +470,8 @@ export default function WatchlistPage() {
 
               return {
                 ...item,
+                // API에서 종목명을 가져온 경우 업데이트 (티커로 저장된 경우 수정)
+                name: data.stockName || item.name,
                 price: data.currentPrice,
                 change: data.change,
                 changePercent: data.changePercent,
