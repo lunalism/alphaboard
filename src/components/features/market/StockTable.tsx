@@ -6,20 +6,20 @@
  * 인기 종목을 반응형으로 표시하는 테이블/리스트 컴포넌트
  *
  * ============================================================
+ * 관심종목 기능:
+ * ============================================================
+ * - 각 종목에 ⭐ 버튼 표시
+ * - 클릭 시 관심종목 추가/제거 토글
+ * - localStorage 기반 저장 (useWatchlist 훅 사용)
+ * - 토스트 알림으로 결과 표시
+ *
+ * ============================================================
  * 반응형 레이아웃 (768px 기준):
  * ============================================================
  *
  * [모바일] 768px 미만 (md:hidden)
  * - 심플 리스트 UI (TopMovers/VolumeMovers와 동일한 스타일)
  * - UI가 통일되어 깔끔한 사용자 경험 제공
- * - 구조:
- *   ┌─────────────────────────────────────┐
- *   │ 1  KODEX 200선물인버스2X    -0.15%  │  <- 순위 + 종목명 + 등락률 배지
- *   │    665원 · 거래량 365.1M           │  <- 현재가 · 거래량 (회색)
- *   ├─────────────────────────────────────┤
- *   │ 2  현대무벡스              +9.94%  │
- *   │    18,580원 · 거래량 46.0M         │
- *   └─────────────────────────────────────┘
  *
  * [데스크톱] 768px 이상 (hidden md:block)
  * - 테이블 형태로 정보 밀도 높게 표시
@@ -38,21 +38,86 @@
 import { useRouter } from 'next/navigation';
 import { Stock, MarketRegion } from '@/types';
 import { CompanyLogo } from '@/components/common';
+import { useWatchlist } from '@/hooks';
+import { showSuccess } from '@/lib/toast';
 
 interface StockTableProps {
   stocks: Stock[];
   market: MarketRegion;
 }
 
+/**
+ * 관심종목 버튼 컴포넌트
+ *
+ * @description
+ * 종목별 관심종목 추가/제거 버튼
+ * - 관심종목에 있으면: ★ (노란색, 채워진 별)
+ * - 관심종목에 없으면: ☆ (회색, 빈 별)
+ */
+function WatchlistButton({
+  isInWatchlist,
+  onToggle,
+}: {
+  isInWatchlist: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation(); // 행 클릭 이벤트 방지
+        onToggle();
+      }}
+      className={`p-1.5 rounded-lg transition-all duration-200 ${
+        isInWatchlist
+          ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+          : 'text-gray-300 hover:text-yellow-500 hover:bg-gray-50 dark:text-gray-600 dark:hover:text-yellow-500 dark:hover:bg-gray-700'
+      }`}
+      title={isInWatchlist ? '관심종목에서 제거' : '관심종목에 추가'}
+    >
+      {isInWatchlist ? (
+        // 채워진 별 (관심종목)
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ) : (
+        // 빈 별 (미등록)
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export function StockTable({ stocks, market }: StockTableProps) {
   const router = useRouter();
+
+  // ========================================
+  // 관심종목 관리 훅
+  // ========================================
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+
+  /**
+   * 관심종목 토글 핸들러
+   * - 추가/제거 후 토스트 알림 표시
+   */
+  const handleToggleWatchlist = (ticker: string, name: string) => {
+    const added = toggleWatchlist({ ticker, name, market });
+    if (added) {
+      showSuccess(`${name}을(를) 관심종목에 추가했습니다`);
+    } else {
+      showSuccess(`${name}을(를) 관심종목에서 제거했습니다`);
+    }
+  };
 
   /**
    * 가격 포맷팅
    * 국가별 통화 형식에 맞게 표시
-   *
-   * @param price - 가격 (숫자)
-   * @returns 통화 형식 문자열 (예: "1,234원", "$123.45")
    */
   const formatPrice = (price: number) => {
     if (market === 'kr') {
@@ -67,10 +132,6 @@ export function StockTable({ stocks, market }: StockTableProps) {
 
   /**
    * 등락폭 포맷팅
-   * 양수면 +, 음수면 - 표시
-   *
-   * @param change - 등락폭 (숫자)
-   * @returns 부호 포함 문자열 (예: "+1,234", "-56.78")
    */
   const formatChange = (change: number) => {
     const sign = change >= 0 ? '+' : '';
@@ -82,10 +143,6 @@ export function StockTable({ stocks, market }: StockTableProps) {
 
   /**
    * 등락률 포맷팅
-   * 퍼센트 형식으로 표시
-   *
-   * @param percent - 등락률 (숫자)
-   * @returns 퍼센트 문자열 (예: "+1.23%", "-4.56%")
    */
   const formatPercent = (percent: number) => {
     const sign = percent >= 0 ? '+' : '';
@@ -94,8 +151,6 @@ export function StockTable({ stocks, market }: StockTableProps) {
 
   /**
    * 종목 상세 페이지로 이동
-   *
-   * @param ticker - 종목 티커 (예: "005930", "AAPL")
    */
   const handleStockClick = (ticker: string) => {
     router.push(`/market/${ticker}`);
@@ -105,29 +160,14 @@ export function StockTable({ stocks, market }: StockTableProps) {
     <>
       {/* ========================================
           모바일 심플 리스트 레이아웃 (768px 미만)
-
-          TopMovers/VolumeMovers와 동일한 스타일로 UI 통일
-          - 카드 형태가 아닌 심플 리스트 형태
-          - 각 항목: 순위 + 종목명 + 등락률 (첫 줄)
-          - 하위 정보: 현재가 · 거래량 (둘째 줄, 회색)
-
-          스타일 구조:
-          ┌─────────────────────────────────────┐
-          │ [순위배지]  종목명         [등락률] │
-          │            현재가 · 거래량 xxx     │
-          └─────────────────────────────────────┘
           ======================================== */}
       <div className="md:hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-        {/* 종목 리스트 - 각 항목 사이에 적절한 간격 */}
         <div className="space-y-1">
           {stocks.map((stock, idx) => {
-            // 등락률이 양수인지 확인 (색상 결정용)
             const isPositive = stock.changePercent >= 0;
+            const inWatchlist = isInWatchlist(stock.ticker);
 
             return (
-              // key: ticker + index로 고유성 보장
-              // - ticker가 undefined인 경우 대비
-              // - 동일 ticker가 여러 번 나타날 수 있는 경우 대비
               <div
                 key={`${stock.ticker || 'stock'}-${idx}`}
                 onClick={() => handleStockClick(stock.ticker)}
@@ -136,15 +176,17 @@ export function StockTable({ stocks, market }: StockTableProps) {
                            active:bg-gray-100 dark:active:bg-gray-600
                            transition-colors cursor-pointer"
               >
-                {/* ========================================
-                    첫 번째 줄: 순위 + 종목명 + 등락률 배지
-                    ======================================== */}
+                {/* 첫 번째 줄: 관심종목 + 순위 + 종목명 + 등락률 */}
                 <div className="flex items-center justify-between">
-                  {/* 왼쪽: 순위 배지 + 종목명 */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* 순위 배지
-                        - TOP 3: 파란색 배경 + 흰색 텍스트
-                        - 4위 이하: 회색 배경 */}
+                  {/* 왼쪽: 관심종목 버튼 + 순위 배지 + 종목명 */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {/* 관심종목 버튼 */}
+                    <WatchlistButton
+                      isInWatchlist={inWatchlist}
+                      onToggle={() => handleToggleWatchlist(stock.ticker, stock.name)}
+                    />
+
+                    {/* 순위 배지 */}
                     <span
                       className={`w-5 h-5 rounded-full flex items-center justify-center
                                   text-xs font-bold flex-shrink-0 ${
@@ -156,15 +198,13 @@ export function StockTable({ stocks, market }: StockTableProps) {
                       {stock.rank}
                     </span>
 
-                    {/* 종목명 - 길면 말줄임표 처리 */}
+                    {/* 종목명 */}
                     <span className="font-medium text-gray-900 dark:text-white text-sm truncate">
                       {stock.name}
                     </span>
                   </div>
 
-                  {/* 오른쪽: 등락률 배지
-                      - 양수: 초록색 배경
-                      - 음수: 빨간색 배경 */}
+                  {/* 오른쪽: 등락률 배지 */}
                   <span
                     className={`text-sm font-semibold px-2.5 py-1 rounded-lg flex-shrink-0 ml-2 ${
                       isPositive
@@ -176,12 +216,8 @@ export function StockTable({ stocks, market }: StockTableProps) {
                   </span>
                 </div>
 
-                {/* ========================================
-                    두 번째 줄: 현재가 · 거래량 (회색 보조 텍스트)
-                    - 순위 배지 너비만큼 왼쪽 들여쓰기 (정렬용)
-                    - 중간점(·)으로 정보 구분
-                    ======================================== */}
-                <div className="mt-1 ml-8 text-xs text-gray-500 dark:text-gray-400">
+                {/* 두 번째 줄: 현재가 · 거래량 */}
+                <div className="mt-1 ml-14 text-xs text-gray-500 dark:text-gray-400">
                   {formatPrice(stock.price)} · 거래량 {stock.volume}
                 </div>
               </div>
@@ -192,9 +228,6 @@ export function StockTable({ stocks, market }: StockTableProps) {
 
       {/* ========================================
           태블릿/데스크톱 테이블 레이아웃 (768px 이상)
-
-          - 태블릿 (768px~1023px): 거래량 컬럼 숨김
-          - 데스크톱 (1024px+): 전체 컬럼 표시
           ======================================== */}
       <div className="hidden md:block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
@@ -202,6 +235,8 @@ export function StockTable({ stocks, market }: StockTableProps) {
             {/* 테이블 헤더 */}
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+                {/* 관심종목 컬럼 */}
+                <th className="w-12 py-3 px-2"></th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   순위
                 </th>
@@ -217,7 +252,6 @@ export function StockTable({ stocks, market }: StockTableProps) {
                 <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   등락률
                 </th>
-                {/* 거래량: 태블릿에서 숨김, 데스크톱에서 표시 */}
                 <th className="hidden lg:table-cell text-right py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   거래량
                 </th>
@@ -228,13 +262,22 @@ export function StockTable({ stocks, market }: StockTableProps) {
             <tbody>
               {stocks.map((stock, idx) => {
                 const isPositive = stock.changePercent >= 0;
+                const inWatchlist = isInWatchlist(stock.ticker);
+
                 return (
-                  // key: ticker + index로 고유성 보장
                   <tr
                     key={`${stock.ticker || 'stock'}-${idx}`}
                     onClick={() => handleStockClick(stock.ticker)}
                     className="border-b border-gray-50 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
                   >
+                    {/* 관심종목 버튼 */}
+                    <td className="py-4 px-2">
+                      <WatchlistButton
+                        isInWatchlist={inWatchlist}
+                        onToggle={() => handleToggleWatchlist(stock.ticker, stock.name)}
+                      />
+                    </td>
+
                     {/* 순위 */}
                     <td className="py-4 px-4">
                       <span
@@ -296,7 +339,7 @@ export function StockTable({ stocks, market }: StockTableProps) {
                       </div>
                     </td>
 
-                    {/* 거래량: 태블릿에서 숨김, 데스크톱에서 표시 */}
+                    {/* 거래량 */}
                     <td className="hidden lg:table-cell py-4 px-4 text-right">
                       <span className="text-gray-500 dark:text-gray-400 text-sm">
                         {stock.volume}

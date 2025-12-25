@@ -27,7 +27,8 @@ import {
 } from 'recharts';
 import { getAssetDetail, getRelatedNews } from '@/constants';
 import { ChartPeriod, AssetDetail, RelatedNews } from '@/types/market';
-import { useKoreanStockPrice, KOREAN_STOCKS } from '@/hooks';
+import { useKoreanStockPrice, KOREAN_STOCKS, useWatchlist } from '@/hooks';
+import { showSuccess } from '@/lib/toast';
 
 // 차트 기간 탭 정의
 const chartPeriods: { id: ChartPeriod; label: string }[] = [
@@ -141,6 +142,44 @@ function getAssetTypeLabel(type: string): string {
 }
 
 /**
+ * 관심종목 버튼 컴포넌트
+ */
+function WatchlistButton({
+  isInWatchlist,
+  onToggle,
+}: {
+  isInWatchlist: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`p-2 rounded-lg transition-all duration-200 ${
+        isInWatchlist
+          ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+          : 'text-gray-300 hover:text-yellow-500 hover:bg-gray-50 dark:text-gray-600 dark:hover:text-yellow-500 dark:hover:bg-gray-700'
+      }`}
+      title={isInWatchlist ? '관심종목에서 제거' : '관심종목에 추가'}
+    >
+      {isInWatchlist ? (
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ) : (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+/**
  * 차트 툴팁 커스텀 컴포넌트
  */
 function CustomTooltip({ active, payload, currency }: { active?: boolean; payload?: any[]; currency: string }) {
@@ -210,6 +249,20 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   const { stock, isLoading, error, refetch } = useKoreanStockPrice(ticker);
   const stockInfo = getKoreanStockInfo(ticker);
   const news = getRelatedNews(ticker);
+
+  // 관심종목 관리
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const inWatchlist = isInWatchlist(ticker);
+
+  const handleToggleWatchlist = () => {
+    const stockName = stockInfo?.name || stock?.stockName || ticker;
+    const added = toggleWatchlist({ ticker, name: stockName, market: 'kr' });
+    if (added) {
+      showSuccess(`${stockName}을(를) 관심종목에 추가했습니다`);
+    } else {
+      showSuccess(`${stockName}을(를) 관심종목에서 제거했습니다`);
+    }
+  };
 
   // 로딩 중
   if (isLoading) {
@@ -290,9 +343,16 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 <span className="text-xs text-gray-500 dark:text-gray-400">주식</span>
                 <span className="text-xs font-medium text-green-600 dark:text-green-400">실시간</span>
               </div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                {stockInfo?.name || stock.stockName || ticker}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {stockInfo?.name || stock.stockName || ticker}
+                </h1>
+                {/* 관심종목 버튼 */}
+                <WatchlistButton
+                  isInWatchlist={inWatchlist}
+                  onToggle={handleToggleWatchlist}
+                />
+              </div>
             </div>
 
             {/* 가격 정보 */}
@@ -495,6 +555,9 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
   // React 19 use() hook for params
   const { ticker } = use(params);
 
+  // 관심종목 관리 (훅은 조건부 반환 전에 호출해야 함)
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+
   // 한국 종목인 경우 별도 컴포넌트 사용
   if (isKoreanStock(ticker)) {
     return <KoreanAssetDetailPage ticker={ticker} />;
@@ -503,6 +566,19 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
   // 종목 데이터 가져오기 (기존 목업 데이터)
   const asset = getAssetDetail(ticker);
   const news = getRelatedNews(ticker);
+
+  // 관심종목 상태 및 핸들러 (asset 로드 후)
+  const inWatchlist = isInWatchlist(ticker);
+  const handleToggleWatchlist = () => {
+    if (!asset) return;
+    // 미국 주식으로 기본 설정 (다른 시장은 향후 확장)
+    const added = toggleWatchlist({ ticker, name: asset.name, market: 'us' });
+    if (added) {
+      showSuccess(`${asset.name}을(를) 관심종목에 추가했습니다`);
+    } else {
+      showSuccess(`${asset.name}을(를) 관심종목에서 제거했습니다`);
+    }
+  };
 
   // 종목 없음 상태
   if (!asset) {
@@ -559,7 +635,14 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
                   {getAssetTypeLabel(asset.assetType)}
                 </span>
               </div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">{asset.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">{asset.name}</h1>
+                {/* 관심종목 버튼 */}
+                <WatchlistButton
+                  isInWatchlist={inWatchlist}
+                  onToggle={handleToggleWatchlist}
+                />
+              </div>
             </div>
 
             {/* 가격 정보 */}
