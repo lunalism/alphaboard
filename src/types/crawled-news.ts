@@ -10,11 +10,18 @@
  *
  * - headlines: 실시간 속보 (메인)
  * - market: 시장 뉴스 (코스피/코스닥)
- * - stock: 종목별 뉴스 (검색/상세 페이지용)
+ * - disclosure: 기업 공시 뉴스 (공시.메모)
  * - world: 해외 증시
  * - bond: 채권/외환
+ *
+ * 참고: 네이버 금융 뉴스 URL 구조
+ * - 실시간 속보: section_id2=258
+ * - 시장: section_id2=258
+ * - 공시.메모: section_id2=258, section_id3=406
+ * - 해외증시: section_id2=262
+ * - 채권/외환: section_id2=259
  */
-export type CrawledNewsCategory = 'headlines' | 'market' | 'stock' | 'world' | 'bond';
+export type CrawledNewsCategory = 'headlines' | 'market' | 'disclosure' | 'world' | 'bond';
 
 /**
  * 크롤링된 뉴스 아이템 타입
@@ -81,11 +88,21 @@ export interface CrawledNewsErrorResponse {
 
 /**
  * 뉴스 카테고리 정보
+ *
+ * UI에서 탭 버튼을 렌더링할 때 사용합니다.
+ * 각 카테고리는 고유 ID, 표시 라벨, 이모지 아이콘을 가집니다.
+ *
+ * 카테고리별 설명:
+ * - headlines (실시간 속보): 메인 뉴스, 증권가 핫이슈
+ * - market (시장): 코스피/코스닥 시장 동향 뉴스
+ * - disclosure (공시): 기업 공시, 실적 발표, 대표이사 변경 등
+ * - world (해외증시): 미국, 중국, 일본 등 해외 증시 뉴스
+ * - bond (채권/외환): 채권 금리, 환율 동향 뉴스
  */
 export const NEWS_CATEGORIES: { id: CrawledNewsCategory; label: string; emoji: string }[] = [
   { id: 'headlines', label: '실시간 속보', emoji: '🔥' },
   { id: 'market', label: '시장', emoji: '📈' },
-  { id: 'stock', label: '종목', emoji: '📊' },
+  { id: 'disclosure', label: '공시', emoji: '📋' },
   { id: 'world', label: '해외증시', emoji: '🌍' },
   { id: 'bond', label: '채권/외환', emoji: '💱' },
 ];

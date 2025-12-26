@@ -3,13 +3,20 @@
  *
  * 네이버 금융 뉴스 크롤링 API를 호출하여 뉴스 데이터를 가져옵니다.
  *
+ * 지원 카테고리:
+ * - headlines: 실시간 속보
+ * - market: 시장 뉴스
+ * - disclosure: 기업 공시 (대표이사 변경, 최대주주 변경 등)
+ * - world: 해외증시
+ * - bond: 채권/외환
+ *
  * @example
  * ```tsx
  * // 실시간 속보 조회
  * const { news, isLoading, error } = useNews({ category: 'headlines' });
  *
- * // 종목별 뉴스 조회
- * const { news } = useNews({ category: 'stock', stockCode: '005930' });
+ * // 기업 공시 뉴스 조회
+ * const { news } = useNews({ category: 'disclosure' });
  * ```
  */
 
@@ -25,12 +32,10 @@ import type {
  * useNews 훅 옵션
  */
 interface UseNewsOptions {
-  /** 뉴스 카테고리 */
+  /** 뉴스 카테고리 (headlines, market, disclosure, world, bond) */
   category?: CrawledNewsCategory;
   /** 최대 뉴스 개수 */
   limit?: number;
-  /** 종목 코드 (category가 'stock'인 경우) */
-  stockCode?: string;
   /** 자동 페칭 활성화 (기본: true) */
   enabled?: boolean;
   /** 리페치 간격 (ms, 0이면 비활성화) */
@@ -67,7 +72,6 @@ export function useNews(options: UseNewsOptions = {}): UseNewsResult {
   const {
     category = 'headlines',
     limit = 20,
-    stockCode,
     enabled = true,
     refetchInterval = 0,
   } = options;
@@ -81,15 +85,14 @@ export function useNews(options: UseNewsOptions = {}): UseNewsResult {
 
   /**
    * 뉴스 데이터 페칭
+   *
+   * API 호출 흐름:
+   * 1. /api/news?category={category}&limit={limit} 호출
+   * 2. 응답 데이터 파싱 및 상태 업데이트
+   * 3. 캐시 적중 여부 및 타임스탬프 저장
    */
   const fetchNews = useCallback(async () => {
     if (!enabled) {
-      setIsLoading(false);
-      return;
-    }
-
-    // 종목 뉴스인데 종목 코드가 없으면 스킵
-    if (category === 'stock' && !stockCode) {
       setIsLoading(false);
       return;
     }
@@ -98,15 +101,11 @@ export function useNews(options: UseNewsOptions = {}): UseNewsResult {
     setError(null);
 
     try {
-      // URL 파라미터 구성
+      // URL 파라미터 구성 (category, limit)
       const params = new URLSearchParams({
         category,
         limit: limit.toString(),
       });
-
-      if (stockCode) {
-        params.set('stockCode', stockCode);
-      }
 
       const response = await fetch(`/api/news?${params.toString()}`);
       const data: CrawledNewsResponse | CrawledNewsErrorResponse = await response.json();
@@ -128,7 +127,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsResult {
     } finally {
       setIsLoading(false);
     }
-  }, [category, limit, stockCode, enabled]);
+  }, [category, limit, enabled]);
 
   /**
    * 초기 페칭 및 카테고리 변경 시 리페치
@@ -184,19 +183,21 @@ export function useMultiCategoryNews(
   categories: CrawledNewsCategory[],
   limit: number = 10
 ): UseMultiCategoryNewsResult {
+  // 카테고리별 뉴스 초기 상태
   const [newsMap, setNewsMap] = useState<Record<CrawledNewsCategory, CrawledNewsItem[]>>({
     headlines: [],
     market: [],
-    stock: [],
+    disclosure: [],
     world: [],
     bond: [],
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  // 카테고리별 에러 상태
   const [errors, setErrors] = useState<Record<CrawledNewsCategory, string | null>>({
     headlines: null,
     market: null,
-    stock: null,
+    disclosure: null,
     world: null,
     bond: null,
   });

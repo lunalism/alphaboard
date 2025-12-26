@@ -40,7 +40,7 @@ interface CrawledNewsCardProps {
  * 카테고리별 색상:
  * - headlines (속보): 빨간색 - 긴급하고 중요한 뉴스
  * - market (시장): 파란색 - 시장 동향 뉴스
- * - stock (종목): 초록색 - 개별 종목 뉴스
+ * - disclosure (공시): 노란색 - 기업 공시 뉴스 (대표이사 변경, 최대주주 변경 등)
  * - world (해외): 보라색 - 해외 증시 뉴스
  * - bond (채권): 주황색 - 채권/외환 뉴스
  */
@@ -50,8 +50,8 @@ function getCategoryStyle(category: CrawledNewsCategory): string {
     headlines: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     // 시장: 파란색 배경 - 안정적이고 신뢰감 있는 색상
     market: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    // 종목: 초록색 배경 - 성장과 투자를 연상시키는 색상
-    stock: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    // 공시: 노란색 배경 - 중요 알림을 나타내는 색상
+    disclosure: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
     // 해외: 보라색 배경 - 글로벌하고 다양성을 나타내는 색상
     world: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     // 채권: 주황색 배경 - 안전자산을 나타내는 따뜻한 색상
@@ -69,7 +69,7 @@ function getCategoryStyle(category: CrawledNewsCategory): string {
  * 라벨 매핑:
  * - headlines → "속보"
  * - market → "시장"
- * - stock → "종목"
+ * - disclosure → "공시"
  * - world → "해외"
  * - bond → "채권"
  */
@@ -77,7 +77,7 @@ function getCategoryLabel(category: CrawledNewsCategory): string {
   const labels: Record<CrawledNewsCategory, string> = {
     headlines: "속보",
     market: "시장",
-    stock: "종목",
+    disclosure: "공시",
     world: "해외",
     bond: "채권",
   };
@@ -93,7 +93,7 @@ function getCategoryLabel(category: CrawledNewsCategory): string {
  * 아이콘 매핑:
  * - headlines → 🔥 (불꽃 - 핫한 뉴스)
  * - market → 📈 (상승 차트 - 시장 동향)
- * - stock → 📊 (막대 차트 - 종목 분석)
+ * - disclosure → 📋 (클립보드 - 기업 공시)
  * - world → 🌍 (지구 - 글로벌 뉴스)
  * - bond → 💱 (환전 - 채권/외환)
  */
@@ -101,7 +101,7 @@ function getCategoryIcon(category: CrawledNewsCategory): string {
   const icons: Record<CrawledNewsCategory, string> = {
     headlines: "🔥",
     market: "📈",
-    stock: "📊",
+    disclosure: "📋",
     world: "🌍",
     bond: "💱",
   };

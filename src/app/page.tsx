@@ -110,9 +110,7 @@ export default function Home() {
             <div className="text-center py-12">
               <span className="text-4xl mb-4 block">📰</span>
               <p className="text-gray-500 dark:text-gray-400">
-                {activeCategory === 'stock'
-                  ? '종목별 뉴스는 종목 상세 페이지에서 확인하세요.'
-                  : '뉴스를 불러오지 못했습니다.'}
+                뉴스를 불러오지 못했습니다.
               </p>
             </div>
           ) : (

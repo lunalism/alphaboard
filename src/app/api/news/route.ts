@@ -5,16 +5,17 @@
  * 서버 부하 방지를 위해 5분 캐싱을 적용합니다.
  *
  * @route GET /api/news
- * @query category - 뉴스 카테고리 ('headlines' | 'market' | 'stock' | 'world' | 'bond')
+ * @query category - 뉴스 카테고리 ('headlines' | 'market' | 'disclosure' | 'world' | 'bond')
  * @query limit - 최대 뉴스 개수 (기본값: 20, 최대: 50)
- * @query stockCode - 종목 코드 (category가 'stock'인 경우)
  *
  * @returns 뉴스 목록
  *
  * 사용 예시:
  * - GET /api/news (실시간 속보)
  * - GET /api/news?category=market (시장 뉴스)
- * - GET /api/news?category=stock&stockCode=005930 (삼성전자 뉴스)
+ * - GET /api/news?category=disclosure (기업 공시 뉴스)
+ * - GET /api/news?category=world (해외증시 뉴스)
+ * - GET /api/news?category=bond (채권/외환 뉴스)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -43,17 +44,24 @@ const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
  * 네이버 금융 뉴스 URL 매핑
  *
  * 카테고리별 네이버 금융 뉴스 페이지 URL입니다.
+ *
+ * URL 파라미터 설명:
+ * - mode: LSS2D (2depth), LSS3D (3depth)
+ * - section_id: 101 (경제)
+ * - section_id2: 258 (증권), 259 (채권/외환), 262 (해외증시)
+ * - section_id3: 406 (공시.메모) - 3depth인 경우에만 사용
  */
 const NEWS_URLS: Record<CrawledNewsCategory, string> = {
-  // 실시간 속보 - 메인 뉴스
+  // 실시간 속보 - 메인 뉴스 (증권 > 증권일반)
   headlines: 'https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=258',
-  // 시장 뉴스 - 증시 일반
+  // 시장 뉴스 - 증시 일반 (증권 > 증권일반)
   market: 'https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=258',
-  // 종목별 뉴스 - 동적 URL (stockCode 필요)
-  stock: 'https://finance.naver.com/item/news.naver?code=',
-  // 해외 증시
+  // 기업 공시 뉴스 - 공시.메모 (증권 > 증권일반 > 공시.메모)
+  // 대표이사 변경, 최대주주 변경, CB 발행 등 기업 공시 정보
+  disclosure: 'https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=406',
+  // 해외 증시 (미국, 중국, 일본 등)
   world: 'https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=262',
-  // 채권/외환
+  // 채권/외환 (금리, 환율 동향)
   bond: 'https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=259',
 };
 
@@ -79,12 +87,14 @@ const newsCache = new Map<string, NewsCache>();
 /**
  * 캐시 키 생성
  *
+ * 카테고리별로 캐시 키를 생성합니다.
+ * 예: 'headlines', 'market', 'disclosure', 'world', 'bond'
+ *
  * @param category 뉴스 카테고리
- * @param stockCode 종목 코드 (옵션)
  * @returns 캐시 키 문자열
  */
-function getCacheKey(category: CrawledNewsCategory, stockCode?: string): string {
-  return stockCode ? `${category}:${stockCode}` : category;
+function getCacheKey(category: CrawledNewsCategory): string {
+  return category;
 }
 
 /**
@@ -171,21 +181,23 @@ function parseTimeText(timeText: string): string {
  * 지정된 카테고리의 뉴스를 크롤링합니다.
  * User-Agent를 설정하여 차단을 방지합니다.
  *
+ * 카테고리별 크롤링 대상:
+ * - headlines: 실시간 속보 뉴스
+ * - market: 시장 동향 뉴스
+ * - disclosure: 기업 공시 뉴스 (대표이사 변경, 최대주주 변경, CB 발행 등)
+ * - world: 해외증시 뉴스
+ * - bond: 채권/외환 뉴스
+ *
  * @param category 뉴스 카테고리
- * @param stockCode 종목 코드 (stock 카테고리인 경우)
  * @param limit 최대 뉴스 개수
  * @returns 크롤링된 뉴스 목록
  */
 async function crawlNaverFinanceNews(
   category: CrawledNewsCategory,
-  stockCode?: string,
   limit: number = 20
 ): Promise<CrawledNewsItem[]> {
-  // URL 결정
-  let url = NEWS_URLS[category];
-  if (category === 'stock' && stockCode) {
-    url = `${url}${stockCode}`;
-  }
+  // 카테고리에 해당하는 URL 선택
+  const url = NEWS_URLS[category];
 
   console.log(`[News Crawler] ${category} 뉴스 크롤링 시작: ${url}`);
 
@@ -219,91 +231,88 @@ async function crawlNaverFinanceNews(
 
     const newsItems: CrawledNewsItem[] = [];
 
-    // 종목 뉴스 크롤링 (다른 HTML 구조)
-    if (category === 'stock' && stockCode) {
-      // 종목 뉴스 테이블에서 추출
-      $('table.type5 tbody tr').each((_, row) => {
-        if (newsItems.length >= limit) return false;
+    // 일반 뉴스 목록 크롤링
+    // 모든 카테고리(headlines, market, disclosure, world, bond)가 동일한 HTML 구조를 사용함
+    // 네이버 금융 뉴스 페이지 구조:
+    // dt.thumb > a > img (썸네일) - articleSubject의 이전 형제
+    // dd.articleSubject > a (제목/링크)
+    // dd.articleSummary (요약, 언론사, 시간) - articleSubject의 다음 형제
 
-        const $row = $(row);
-        const $titleLink = $row.find('td.title a');
-        const title = $titleLink.text().trim();
-        const href = $titleLink.attr('href');
-        const source = $row.find('td.info').text().trim();
-        const time = $row.find('td.date').text().trim();
+    // 모든 articleSubject 요소를 직접 선택
+    $('dd.articleSubject, dt.articleSubject').each((_, subject) => {
+      if (newsItems.length >= limit) return false;
 
-        if (title && href) {
-          // 네이버 뉴스 URL로 변환
-          const fullUrl = href.startsWith('http') ? href : `https://finance.naver.com${href}`;
+      const $subject = $(subject);
+      const $link = $subject.find('a');
+      const title = $link.attr('title')?.trim() || $link.text().trim();
+      const href = $link.attr('href');
 
-          newsItems.push({
-            id: generateNewsId(fullUrl),
-            title,
-            url: fullUrl,
-            source: source || '네이버금융',
-            thumbnail: null,
-            publishedAt: parseTimeText(time),
-            description: null,
-            category,
-            stockCode,
-          });
+      if (!title || !href) return;
+
+      // 다음 형제 요소에서 articleSummary 찾기
+      const $summary = $subject.next('dd.articleSummary');
+
+      // 언론사 정보 (span.press)
+      const source = $summary.find('span.press').text().trim() || '네이버금융';
+
+      // 시간 정보 (span.wdate)
+      const time = $summary.find('span.wdate').text().trim();
+
+      // 요약 텍스트 (press와 wdate span을 제외한 첫 번째 텍스트 노드)
+      let description: string | null = null;
+      $summary.contents().each((_, node) => {
+        if (node.type === 'text') {
+          const text = $(node).text().trim();
+          if (text.length > 10) {
+            description = text.substring(0, 150) + '...';
+            return false; // break
+          }
         }
       });
-    } else {
-      // 일반 뉴스 목록 크롤링
-      // 네이버 금융 뉴스 페이지 구조:
-      // dt.thumb > a > img (썸네일) - articleSubject의 이전 형제
-      // dd.articleSubject > a (제목/링크)
-      // dd.articleSummary (요약, 언론사, 시간) - articleSubject의 다음 형제
 
-      // 모든 articleSubject 요소를 직접 선택
-      $('dd.articleSubject, dt.articleSubject').each((_, subject) => {
+      // 썸네일 (이전 형제 dt.thumb에서 찾기)
+      // 구조: dt.thumb > a > img
+      const $thumb = $subject.prev('dt.thumb');
+      let thumbnail: string | null = null;
+
+      if ($thumb.length > 0) {
+        let imgSrc = $thumb.find('img').attr('src');
+        // placeholder 이미지 필터링
+        if (imgSrc && !imgSrc.includes('thumb_72x54.gif') && !imgSrc.startsWith('data:')) {
+          // 썸네일 크기 최적화: thumb70 → thumb200 (적당한 크기로 변경)
+          if (imgSrc.includes('/thumb70/')) {
+            imgSrc = imgSrc.replace('/thumb70/', '/thumb200/');
+          }
+          thumbnail = imgSrc;
+        }
+      }
+
+      const fullUrl = href.startsWith('http') ? href : `https://finance.naver.com${href}`;
+
+      newsItems.push({
+        id: generateNewsId(fullUrl),
+        title,
+        url: fullUrl,
+        source,
+        thumbnail,
+        publishedAt: parseTimeText(time),
+        description,
+        category,
+      });
+    });
+
+    // 뉴스가 없으면 다른 선택자 시도 (newsList 클래스)
+    // 일부 페이지에서 다른 HTML 구조를 사용할 수 있음
+    if (newsItems.length === 0) {
+      $('.newsList li, .realtimeNewsList li').each((_, el) => {
         if (newsItems.length >= limit) return false;
 
-        const $subject = $(subject);
-        const $link = $subject.find('a');
+        const $el = $(el);
+        const $link = $el.find('a').first();
         const title = $link.attr('title')?.trim() || $link.text().trim();
         const href = $link.attr('href');
 
         if (!title || !href) return;
-
-        // 다음 형제 요소에서 articleSummary 찾기
-        const $summary = $subject.next('dd.articleSummary');
-
-        // 언론사 정보 (span.press)
-        const source = $summary.find('span.press').text().trim() || '네이버금융';
-
-        // 시간 정보 (span.wdate)
-        const time = $summary.find('span.wdate').text().trim();
-
-        // 요약 텍스트 (press와 wdate span을 제외한 첫 번째 텍스트 노드)
-        let description: string | null = null;
-        $summary.contents().each((_, node) => {
-          if (node.type === 'text') {
-            const text = $(node).text().trim();
-            if (text.length > 10) {
-              description = text.substring(0, 150) + '...';
-              return false; // break
-            }
-          }
-        });
-
-        // 썸네일 (이전 형제 dt.thumb에서 찾기)
-        // 구조: dt.thumb > a > img
-        const $thumb = $subject.prev('dt.thumb');
-        let thumbnail: string | null = null;
-
-        if ($thumb.length > 0) {
-          let imgSrc = $thumb.find('img').attr('src');
-          // placeholder 이미지 필터링
-          if (imgSrc && !imgSrc.includes('thumb_72x54.gif') && !imgSrc.startsWith('data:')) {
-            // 썸네일 크기 최적화: thumb70 → thumb200 (적당한 크기로 변경)
-            if (imgSrc.includes('/thumb70/')) {
-              imgSrc = imgSrc.replace('/thumb70/', '/thumb200/');
-            }
-            thumbnail = imgSrc;
-          }
-        }
 
         const fullUrl = href.startsWith('http') ? href : `https://finance.naver.com${href}`;
 
@@ -311,40 +320,13 @@ async function crawlNaverFinanceNews(
           id: generateNewsId(fullUrl),
           title,
           url: fullUrl,
-          source,
-          thumbnail,
-          publishedAt: parseTimeText(time),
-          description,
+          source: '네이버금융',
+          thumbnail: null,
+          publishedAt: '',
+          description: null,
           category,
         });
       });
-
-      // 뉴스가 없으면 다른 선택자 시도 (newsList 클래스)
-      if (newsItems.length === 0) {
-        $('.newsList li, .realtimeNewsList li').each((_, el) => {
-          if (newsItems.length >= limit) return false;
-
-          const $el = $(el);
-          const $link = $el.find('a').first();
-          const title = $link.attr('title')?.trim() || $link.text().trim();
-          const href = $link.attr('href');
-
-          if (!title || !href) return;
-
-          const fullUrl = href.startsWith('http') ? href : `https://finance.naver.com${href}`;
-
-          newsItems.push({
-            id: generateNewsId(fullUrl),
-            title,
-            url: fullUrl,
-            source: '네이버금융',
-            thumbnail: null,
-            publishedAt: '',
-            description: null,
-            category,
-          });
-        });
-      }
     }
 
     console.log(`[News Crawler] ${category} 뉴스 ${newsItems.length}개 크롤링 완료`);
@@ -369,12 +351,14 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams;
 
   // 쿼리 파라미터 파싱
+  // category: 뉴스 카테고리 (headlines, market, disclosure, world, bond)
+  // limit: 최대 뉴스 개수 (기본값: 20, 최대: 50)
   const categoryParam = searchParams.get('category') || 'headlines';
   const limitParam = searchParams.get('limit');
-  const stockCode = searchParams.get('stockCode') || undefined;
 
   // 카테고리 유효성 검사
-  const validCategories: CrawledNewsCategory[] = ['headlines', 'market', 'stock', 'world', 'bond'];
+  // 유효한 카테고리: headlines(속보), market(시장), disclosure(공시), world(해외증시), bond(채권/외환)
+  const validCategories: CrawledNewsCategory[] = ['headlines', 'market', 'disclosure', 'world', 'bond'];
   if (!validCategories.includes(categoryParam as CrawledNewsCategory)) {
     return NextResponse.json(
       {
@@ -388,18 +372,6 @@ export async function GET(
 
   const category = categoryParam as CrawledNewsCategory;
 
-  // 종목 뉴스인데 종목 코드가 없는 경우
-  if (category === 'stock' && !stockCode) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'MISSING_STOCK_CODE',
-        message: 'category가 stock인 경우 stockCode 파라미터가 필요합니다.',
-      },
-      { status: 400 }
-    );
-  }
-
   // limit 파싱 (기본값: 20, 최대: 50)
   let limit = 20;
   if (limitParam) {
@@ -410,8 +382,8 @@ export async function GET(
   }
 
   try {
-    // 캐시 확인
-    const cacheKey = getCacheKey(category, stockCode);
+    // 캐시 확인 (카테고리별로 캐시)
+    const cacheKey = getCacheKey(category);
     const cached = getFromCache(cacheKey);
 
     if (cached) {
@@ -430,7 +402,7 @@ export async function GET(
     }
 
     // 크롤링 실행
-    const news = await crawlNaverFinanceNews(category, stockCode, limit);
+    const news = await crawlNaverFinanceNews(category, limit);
 
     // 캐시 저장
     setToCache(cacheKey, news);
