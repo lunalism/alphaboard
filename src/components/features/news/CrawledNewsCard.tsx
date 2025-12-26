@@ -83,7 +83,7 @@ export function CrawledNewsCard({ news }: CrawledNewsCardProps) {
             alt={news.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1440px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover scale-[0.85] group-hover:scale-90 transition-transform duration-300"
             unoptimized
           />
         ) : (
