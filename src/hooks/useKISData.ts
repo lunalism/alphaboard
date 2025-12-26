@@ -1254,3 +1254,124 @@ export function useUSStocks(
 
   return { stocks, isLoading, error, refetch: fetchStocks, failedSymbols };
 }
+
+// ==================== 미국 주식 개별 시세 훅 ====================
+
+/**
+ * 미국 주식 개별 시세 응답 타입
+ *
+ * API 응답에서 받는 데이터 형식입니다.
+ */
+export interface USStockPriceResponse {
+  /** 종목 심볼 (예: AAPL, TSLA) */
+  symbol: string;
+  /** 회사명 */
+  name: string;
+  /** 거래소 코드 (NAS, NYS, AMS) */
+  exchange: string;
+  /** 현재가 (USD) */
+  currentPrice: number;
+  /** 전일 대비 변동폭 */
+  change: number;
+  /** 전일 대비 변동률 (%) */
+  changePercent: number;
+  /** 거래량 */
+  volume: number;
+  /** 조회 시각 */
+  timestamp: string;
+}
+
+interface UseUSStockPriceResult {
+  /** 종목 시세 데이터 */
+  stock: USStockPriceResponse | null;
+  /** 로딩 상태 */
+  isLoading: boolean;
+  /** 에러 메시지 */
+  error: string | null;
+  /** 수동 새로고침 함수 */
+  refetch: () => Promise<void>;
+}
+
+/**
+ * 미국 주식 개별 시세 조회 훅
+ *
+ * 한국투자증권 API를 통해 미국 개별 주식의 현재가를 조회합니다.
+ *
+ * @param symbol 종목 심볼 (예: AAPL, TSLA, MSFT)
+ * @param options 옵션 (autoRefresh, refreshInterval)
+ * @returns 종목 시세 데이터, 로딩 상태, 에러, refetch 함수
+ *
+ * @example
+ * ```tsx
+ * // AAPL 현재가 조회
+ * const { stock, isLoading, error, refetch } = useUSStockPrice('AAPL');
+ *
+ * // 자동 새로고침 활성화 (1분 간격)
+ * const { stock } = useUSStockPrice('TSLA', { autoRefresh: true });
+ * ```
+ *
+ * @see /api/kis/overseas/stock/price - API 엔드포인트
+ */
+export function useUSStockPrice(
+  symbol: string,
+  options?: {
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  }
+): UseUSStockPriceResult {
+  const { autoRefresh = false, refreshInterval = DEFAULT_REFRESH_INTERVAL } = options || {};
+
+  const [stock, setStock] = useState<USStockPriceResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 종목 시세 데이터 가져오기
+   */
+  const fetchStock = useCallback(async () => {
+    // 심볼이 없으면 에러
+    if (!symbol) {
+      setError('종목 심볼이 필요합니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 미국 주식 개별 시세 API 호출
+      const response = await fetch(`/api/kis/overseas/stock/price?symbol=${symbol.toUpperCase()}`);
+      const result = await response.json();
+
+      if (response.ok && result.currentPrice !== undefined) {
+        // 성공: 시세 데이터 설정
+        setStock(result);
+      } else {
+        // 실패: 에러 메시지 설정
+        setError(result.message || '종목 데이터를 가져올 수 없습니다.');
+      }
+    } catch (err) {
+      // 네트워크 에러 등
+      console.error('[useUSStockPrice] 에러:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [symbol]);
+
+  // 초기 로드 (심볼 변경 시 재조회)
+  useEffect(() => {
+    fetchStock();
+  }, [fetchStock]);
+
+  // 자동 새로고침 (옵션 활성화 시)
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(fetchStock, refreshInterval);
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchStock]);
+
+  return { stock, isLoading, error, refetch: fetchStock };
+}

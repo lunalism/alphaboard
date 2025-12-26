@@ -21,6 +21,7 @@ export {
   useUSMarketCapRanking,
   useUSETFs,
   useUSStocks,  // 미국 주식 개별 시세 (시가총액순위 API 폴백)
+  useUSStockPrice,  // 미국 주식 개별 시세 조회 (종목 상세 페이지용)
   // 상수
   KOREAN_INDICES,
   KOREAN_STOCKS,
@@ -28,6 +29,7 @@ export {
   type ETFPriceData,
   type USETFPriceData,
   type USStockPriceData,
+  type USStockPriceResponse,  // 미국 주식 개별 시세 응답 타입
 } from './useKISData';
 
 // 관심종목 관리 훅

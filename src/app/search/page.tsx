@@ -255,17 +255,37 @@ function SearchInput({
           {/* 최근 검색어 목록 */}
           <div className="py-1 max-h-[300px] overflow-y-auto">
             {recentSearches.map((query, idx) => (
-              <button
+              /**
+               * 최근 검색어 항목
+               *
+               * 주의: HTML 규격상 button 안에 button을 넣을 수 없음 (Hydration Error 발생)
+               * 따라서 외부 요소는 div로 하고, 클릭 영역과 삭제 버튼을 분리함
+               *
+               * 구조:
+               * - div (컨테이너, 키보드 선택 시 배경색 변경)
+               *   - div (클릭 가능한 검색어 영역 - onClick으로 검색 실행)
+               *   - button (삭제 버튼 - stopPropagation으로 이벤트 버블링 방지)
+               */
+              <div
                 key={`recent-${query}-${idx}`}
-                type="button"
-                onClick={() => handleRecentSearchClick(query)}
                 className={`
-                  w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left
+                  w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors
                   ${selectedIndex === idx ? "bg-blue-50 dark:bg-blue-900/30" : ""}
                 `}
               >
-                {/* 시계 아이콘 + 검색어 */}
-                <div className="flex items-center gap-3 min-w-0">
+                {/* 클릭 가능한 검색어 영역 (시계 아이콘 + 검색어) */}
+                <div
+                  className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                  onClick={() => handleRecentSearchClick(query)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleRecentSearchClick(query);
+                    }
+                  }}
+                >
+                  {/* 시계 아이콘 - 최근 검색어임을 나타냄 */}
                   <svg
                     className="w-4 h-4 text-gray-400 flex-shrink-0"
                     fill="none"
@@ -279,12 +299,13 @@ function SearchInput({
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
+                  {/* 검색어 텍스트 */}
                   <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                     {query}
                   </span>
                 </div>
 
-                {/* 삭제 버튼 */}
+                {/* 삭제 버튼 - 개별 검색어 삭제 */}
                 <button
                   type="button"
                   onClick={(e) => handleRemoveRecentSearch(e, query)}
@@ -295,7 +316,7 @@ function SearchInput({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -309,6 +330,12 @@ function SearchInput({
  *
  * 종목명, 티커, 시장/거래소 정보를 표시합니다.
  * 클릭 시 종목 상세 페이지로 이동합니다.
+ *
+ * URL 형식:
+ * - 한국 종목: /market/005930?market=kr
+ * - 미국 종목: /market/IREN?market=us
+ *
+ * market 파라미터를 통해 종목 상세 페이지에서 올바른 API를 호출할 수 있습니다.
  */
 function StockResultCard({
   stock,
@@ -316,13 +343,23 @@ function StockResultCard({
   stock: StockSearchResult;
 }) {
   // 시장/거래소 표시 텍스트
+  // - 한국 종목: KOSPI 또는 KOSDAQ
+  // - 미국 종목: NASDAQ, NYSE, AMEX
   const marketLabel = stock.type === 'kr'
     ? stock.market // KOSPI or KOSDAQ
     : stock.exchange; // NASDAQ, NYSE, AMEX
 
+  /**
+   * 종목 상세 페이지 URL 생성
+   *
+   * market 쿼리 파라미터를 추가하여 종목 상세 페이지에서
+   * 한국/미국 종목을 구분하고 적절한 API를 호출할 수 있도록 합니다.
+   */
+  const detailUrl = `/market/${stock.symbol}?market=${stock.type}`;
+
   return (
     <Link
-      href={`/market/${stock.symbol}`}
+      href={detailUrl}
       className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
     >
       {/* 종목 아이콘 */}

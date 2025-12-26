@@ -16,7 +16,7 @@
  */
 
 import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   XAxis,
   YAxis,
@@ -27,7 +27,7 @@ import {
 } from 'recharts';
 import { getAssetDetail, getRelatedNews } from '@/constants';
 import { ChartPeriod, AssetDetail, RelatedNews } from '@/types/market';
-import { useKoreanStockPrice, KOREAN_STOCKS, useWatchlist } from '@/hooks';
+import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist } from '@/hooks';
 import { showSuccess } from '@/lib/toast';
 
 // 차트 기간 탭 정의
@@ -546,21 +546,375 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
 }
 
 /**
+ * 미국 주식 상세 페이지 컴포넌트
+ *
+ * 미국 주식(NASDAQ, NYSE, AMEX)의 실시간 시세를 표시합니다.
+ * 한국투자증권 해외주식 API를 통해 데이터를 조회합니다.
+ *
+ * @param ticker 종목 심볼 (예: AAPL, TSLA, MSFT)
+ */
+function USAssetDetailPage({ ticker }: { ticker: string }) {
+  const router = useRouter();
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
+
+  // 미국 주식 실시간 데이터 조회
+  const { stock, isLoading, error, refetch } = useUSStockPrice(ticker);
+  const news = getRelatedNews(ticker);
+
+  // 관심종목 관리
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const inWatchlist = isInWatchlist(ticker);
+
+  /**
+   * 관심종목 토글 핸들러
+   */
+  const handleToggleWatchlist = () => {
+    const stockName = stock?.name || ticker;
+    const added = toggleWatchlist({ ticker, name: stockName, market: 'us' });
+    if (added) {
+      showSuccess(`${stockName}을(를) 관심종목에 추가했습니다`);
+    } else {
+      showSuccess(`${stockName}을(를) 관심종목에서 제거했습니다`);
+    }
+  };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">종목 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 또는 데이터 없음 상태
+  if (error || !stock) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 dark:text-gray-400 mb-2">{error || '종목을 찾을 수 없습니다'}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">종목코드: {ticker}</p>
+          <div className="flex gap-2 justify-center mt-4">
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              다시 시도
+            </button>
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              뒤로 가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 등락 여부 (양수면 상승, 음수면 하락)
+  const isPositive = stock.changePercent >= 0;
+
+  // 차트 데이터 생성 (가상 데이터 - 실제 API 연동 시 대체)
+  const periodDays: Record<ChartPeriod, number> = {
+    '1D': 1, '1W': 7, '1M': 30, '3M': 90, '1Y': 365, 'ALL': 730
+  };
+  const chartData = generateChartDataForUS(stock.currentPrice, periodDays[chartPeriod], stock.changePercent);
+
+  // 차트 Y축 범위 계산
+  const prices = chartData.map((d) => d.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  const yMin = minPrice - priceRange * 0.1;
+  const yMax = maxPrice + priceRange * 0.1;
+
+  return (
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
+      {/* 헤더 */}
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-[1200px] mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            {/* 뒤로가기 버튼 */}
+            <button
+              onClick={() => router.back()}
+              className="p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* 종목 정보 */}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                {/* 티커 심볼 배지 */}
+                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                  {ticker}
+                </span>
+                {/* 거래소 표시 */}
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
+                </span>
+                {/* 실시간 표시 */}
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">실시간</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* 종목명 */}
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {stock.name}
+                </h1>
+                {/* 관심종목 버튼 */}
+                <WatchlistButton
+                  isInWatchlist={inWatchlist}
+                  onToggle={handleToggleWatchlist}
+                />
+              </div>
+            </div>
+
+            {/* 가격 정보 */}
+            <div className="text-right">
+              {/* 현재가 (USD) */}
+              <p className="text-xl font-bold text-gray-900 dark:text-white">
+                ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              {/* 변동 정보 */}
+              <div className="flex items-center justify-end gap-2 mt-1">
+                {/* 변동폭 */}
+                <span className={`text-sm font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {isPositive ? '+' : ''}{stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
+                </span>
+                {/* 변동률 배지 */}
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  isPositive
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                }`}>
+                  {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 메인 콘텐츠 */}
+      <main className="max-w-[1200px] mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 왼쪽: 차트 + 관련 뉴스 */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* 차트 섹션 */}
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+              {/* 기간 탭 */}
+              <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg w-fit">
+                {chartPeriods.map((period) => (
+                  <button
+                    key={period.id}
+                    onClick={() => setChartPeriod(period.id)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      chartPeriod === period.id
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {period.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 차트 */}
+              <div className="h-[300px] md:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorPriceUs" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#9ca3af' }}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      domain={[yMin, yMax]}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#9ca3af' }}
+                      tickFormatter={(value) => '$' + value.toFixed(0)}
+                      width={60}
+                    />
+                    <Tooltip content={<CustomTooltip currency="USD" />} />
+                    <Area
+                      type="monotone"
+                      dataKey="price"
+                      stroke={isPositive ? '#22c55e' : '#ef4444'}
+                      strokeWidth={2}
+                      fill="url(#colorPriceUs)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            {/* 관련 뉴스 섹션 */}
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
+              {news.length > 0 ? (
+                <div className="space-y-3">
+                  {news.map((item) => (
+                    <NewsItem key={item.id} news={item} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
+              )}
+            </section>
+          </div>
+
+          {/* 오른쪽: 핵심 지표 */}
+          <div className="space-y-6">
+            {/* 가격 정보 */}
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">가격 정보</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard
+                  label="현재가"
+                  value={'$' + stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                />
+                <MetricCard
+                  label="변동폭"
+                  value={(stock.change >= 0 ? '+$' : '-$') + Math.abs(stock.change).toFixed(2)}
+                />
+              </div>
+            </section>
+
+            {/* 거래 정보 */}
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
+              <div className="grid grid-cols-1 gap-3">
+                <MetricCard
+                  label="거래량"
+                  value={stock.volume >= 1000000
+                    ? (stock.volume / 1000000).toFixed(1) + 'M'
+                    : stock.volume >= 1000
+                    ? (stock.volume / 1000).toFixed(1) + 'K'
+                    : stock.volume.toLocaleString()
+                  }
+                />
+                <MetricCard
+                  label="거래소"
+                  value={stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
+                />
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/**
+ * 미국 주식 차트 데이터 생성 (가상 데이터)
+ *
+ * 현재가와 변동률을 기반으로 가상의 과거 가격 데이터를 생성합니다.
+ * 실제 일별 시세 API 연동 시 이 함수를 대체해야 합니다.
+ *
+ * @param currentPrice 현재가 (USD)
+ * @param days 데이터 생성 일수
+ * @param changePercent 전일 대비 변동률 (%)
+ * @returns 차트 데이터 배열
+ */
+function generateChartDataForUS(
+  currentPrice: number,
+  days: number,
+  changePercent: number
+): { date: string; price: number; volume: number }[] {
+  const data: { date: string; price: number; volume: number }[] = [];
+  const today = new Date();
+
+  // 변동률을 기반으로 과거 가격 추정
+  const basePrice = currentPrice / (1 + changePercent / 100);
+
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+
+    // 시간 진행률 (0 ~ 1)
+    const progress = (days - i) / days;
+    // 랜덤 노이즈 추가 (±2%)
+    const noise = (Math.random() - 0.5) * 0.02 * currentPrice;
+    // 가격 계산 (과거 가격에서 현재 가격으로 점진적 변화)
+    const price = basePrice + (currentPrice - basePrice) * progress + noise;
+
+    data.push({
+      date: date.toISOString().split('T')[0],
+      price: Math.round(price * 100) / 100, // 소수점 2자리
+      volume: Math.floor(Math.random() * 50000000) + 10000000,
+    });
+  }
+
+  // 마지막 가격을 현재가로 정확히 설정
+  if (data.length > 0) {
+    data[data.length - 1].price = currentPrice;
+  }
+
+  return data;
+}
+
+/**
  * 메인 페이지 컴포넌트
+ *
+ * URL 파라미터를 분석하여 적절한 상세 페이지 컴포넌트를 렌더링합니다.
+ *
+ * 라우팅 로직:
+ * 1. market=kr 또는 6자리 숫자: 한국 종목 → KoreanAssetDetailPage
+ * 2. market=us: 미국 종목 → USAssetDetailPage
+ * 3. 그 외: 기존 목업 데이터 기반 페이지
  */
 export default function AssetDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
   // React 19 use() hook for params
   const { ticker } = use(params);
 
+  // URL 쿼리 파라미터에서 market 정보 가져오기
+  // 검색 결과에서 클릭 시 /market/IREN?market=us 형태로 전달됨
+  const marketParam = searchParams.get('market');
+
   // 관심종목 관리 (훅은 조건부 반환 전에 호출해야 함)
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
-  // 한국 종목인 경우 별도 컴포넌트 사용
-  if (isKoreanStock(ticker)) {
+  /**
+   * 시장 유형 판별 로직:
+   * 1. market 파라미터가 'kr'이면 한국 종목
+   * 2. market 파라미터가 'us'이면 미국 종목
+   * 3. 6자리 숫자이면 한국 종목 (레거시 URL 호환)
+   * 4. 그 외: 기존 목업 데이터 사용
+   */
+
+  // 한국 종목인 경우 (market=kr 또는 6자리 숫자)
+  if (marketParam === 'kr' || isKoreanStock(ticker)) {
     return <KoreanAssetDetailPage ticker={ticker} />;
+  }
+
+  // 미국 종목인 경우 (market=us)
+  if (marketParam === 'us') {
+    return <USAssetDetailPage ticker={ticker} />;
   }
 
   // 종목 데이터 가져오기 (기존 목업 데이터)
