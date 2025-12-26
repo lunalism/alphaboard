@@ -75,7 +75,7 @@ export function CrawledNewsCard({ news }: CrawledNewsCardProps) {
         href={news.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-700 block"
+        className="relative aspect-[16/9] sm:aspect-[2/1] overflow-hidden bg-gray-100 dark:bg-gray-700 block"
       >
         {news.thumbnail ? (
           <Image
