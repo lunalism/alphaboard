@@ -252,6 +252,7 @@ async function crawlNaverFinanceNews(
     } else {
       // 일반 뉴스 목록 크롤링
       // 네이버 금융 뉴스 페이지 구조:
+      // dt.thumb > a > img (썸네일) - articleSubject의 이전 형제
       // dd.articleSubject > a (제목/링크)
       // dd.articleSummary (요약, 언론사, 시간) - articleSubject의 다음 형제
 
@@ -267,7 +268,7 @@ async function crawlNaverFinanceNews(
         if (!title || !href) return;
 
         // 다음 형제 요소에서 articleSummary 찾기
-        let $summary = $subject.next('dd.articleSummary');
+        const $summary = $subject.next('dd.articleSummary');
 
         // 언론사 정보 (span.press)
         const source = $summary.find('span.press').text().trim() || '네이버금융';
@@ -287,10 +288,18 @@ async function crawlNaverFinanceNews(
           }
         });
 
-        // 썸네일 (같은 dl 내의 img 찾기)
-        const $parent = $subject.closest('dl');
-        const $img = $parent.find('img').first();
-        const thumbnail = $img.attr('src') || null;
+        // 썸네일 (이전 형제 dt.thumb에서 찾기)
+        // 구조: dt.thumb > a > img
+        const $thumb = $subject.prev('dt.thumb');
+        let thumbnail: string | null = null;
+
+        if ($thumb.length > 0) {
+          const imgSrc = $thumb.find('img').attr('src');
+          // placeholder 이미지 필터링
+          if (imgSrc && !imgSrc.includes('thumb_72x54.gif') && !imgSrc.startsWith('data:')) {
+            thumbnail = imgSrc;
+          }
+        }
 
         const fullUrl = href.startsWith('http') ? href : `https://finance.naver.com${href}`;
 
