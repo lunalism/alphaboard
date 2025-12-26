@@ -294,9 +294,13 @@ async function crawlNaverFinanceNews(
         let thumbnail: string | null = null;
 
         if ($thumb.length > 0) {
-          const imgSrc = $thumb.find('img').attr('src');
+          let imgSrc = $thumb.find('img').attr('src');
           // placeholder 이미지 필터링
           if (imgSrc && !imgSrc.includes('thumb_72x54.gif') && !imgSrc.startsWith('data:')) {
+            // 썸네일 해상도 개선: thumb70 → thumb400 (고해상도로 변경)
+            if (imgSrc.includes('/thumb70/')) {
+              imgSrc = imgSrc.replace('/thumb70/', '/thumb400/');
+            }
             thumbnail = imgSrc;
           }
         }
