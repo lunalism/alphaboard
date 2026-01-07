@@ -16,33 +16,113 @@
  * │ 📊 종목 미니 카드 (태그된 종목 정보)      │
  * │                                         │
  * │ ♡ 24    💬 12    🔄 8    🔖             │
+ * │                                         │
+ * │ 💬 댓글 섹션 (펼침/접힘)                  │
  * └─────────────────────────────────────────┘
  */
 
 import { useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { FeedPost as FeedPostType, StockTag } from '@/types/community';
+import { FeedPost as FeedPostType, StockTag, CommunityComment } from '@/types/community';
 
 interface FeedPostProps {
   post: FeedPostType;
+  /** 실제 게시글 ID (Supabase UUID) - 없으면 API 호출 안함 */
+  postId?: string;
+  /** 좋아요 토글 콜백 */
+  onLikeToggle?: (postId: string) => Promise<boolean>;
+  /** 댓글 목록 조회 콜백 */
+  onLoadComments?: (postId: string) => Promise<CommunityComment[]>;
+  /** 댓글 작성 콜백 */
+  onAddComment?: (postId: string, content: string) => Promise<CommunityComment | null>;
 }
 
-export function FeedPost({ post }: FeedPostProps) {
+export function FeedPost({ post, postId, onLikeToggle, onLoadComments, onAddComment }: FeedPostProps) {
   const router = useRouter();
 
-  // 인터랙션 상태 (로컬)
+  // 인터랙션 상태
   const [liked, setLiked] = useState(post.liked);
   const [likesCount, setLikesCount] = useState(post.likes);
   const [bookmarked, setBookmarked] = useState(post.bookmarked);
   const [reposted, setReposted] = useState(post.reposted);
   const [repostsCount, setRepostsCount] = useState(post.reposts);
+  const [commentsCount, setCommentsCount] = useState(post.comments);
+
+  // 댓글 관련 상태
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [commentInput, setCommentInput] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  // 좋아요 로딩 상태
+  const [isLiking, setIsLiking] = useState(false);
 
   /**
    * 좋아요 토글
    */
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+  const handleLike = async () => {
+    if (isLiking) return;
+
+    // API 콜백이 있으면 사용
+    if (postId && onLikeToggle) {
+      setIsLiking(true);
+      try {
+        const newLiked = await onLikeToggle(postId);
+        setLiked(newLiked);
+        setLikesCount(prev => newLiked ? prev + 1 : prev - 1);
+      } catch {
+        // 에러 시 UI 변경 안함
+      } finally {
+        setIsLiking(false);
+      }
+    } else {
+      // 로컬 토글 (폴백)
+      setLiked(!liked);
+      setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+    }
+  };
+
+  /**
+   * 댓글 섹션 토글
+   */
+  const handleToggleComments = async () => {
+    const newShowComments = !showComments;
+    setShowComments(newShowComments);
+
+    // 댓글을 처음 열 때 로드
+    if (newShowComments && comments.length === 0 && postId && onLoadComments) {
+      setIsLoadingComments(true);
+      try {
+        const loadedComments = await onLoadComments(postId);
+        setComments(loadedComments);
+      } catch {
+        // 에러 처리
+      } finally {
+        setIsLoadingComments(false);
+      }
+    }
+  };
+
+  /**
+   * 댓글 작성
+   */
+  const handleSubmitComment = async () => {
+    if (!commentInput.trim() || !postId || !onAddComment || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const newComment = await onAddComment(postId, commentInput.trim());
+      if (newComment) {
+        setComments(prev => [...prev, newComment]);
+        setCommentsCount(prev => prev + 1);
+        setCommentInput('');
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   /**
@@ -244,13 +324,16 @@ export function FeedPost({ post }: FeedPostProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // 상세 페이지로 이동
+                  handleToggleComments();
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-gray-500 dark:text-gray-400
-                           hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors
+                  ${showComments
+                    ? 'text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                  }`}
               >
                 <span className="text-lg">💬</span>
-                <span className="text-sm">{post.comments}</span>
+                <span className="text-sm">{commentsCount}</span>
               </button>
 
               {/* 리포스트 */}
@@ -289,6 +372,101 @@ export function FeedPost({ post }: FeedPostProps) {
           </div>
         </div>
       </div>
+
+      {/* 댓글 섹션 */}
+      {showComments && (
+        <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700">
+          {/* 댓글 입력창 */}
+          {postId && onAddComment && (
+            <div className="flex gap-3 pt-3 pb-3">
+              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-sm flex-shrink-0">
+                👤
+              </div>
+              <div className="flex-1 flex gap-2">
+                <input
+                  type="text"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmitComment();
+                    }
+                  }}
+                  placeholder="댓글을 입력하세요..."
+                  className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-full text-sm
+                             text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
+                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSubmitComment();
+                  }}
+                  disabled={!commentInput.trim() || isSubmittingComment}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full
+                             hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingComment ? '...' : '게시'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 댓글 목록 */}
+          <div className="space-y-3">
+            {isLoadingComments ? (
+              <div className="py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                댓글을 불러오는 중...
+              </div>
+            ) : comments.length > 0 ? (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm flex-shrink-0">
+                    {comment.author.avatarUrl || '👤'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-medium text-sm text-gray-900 dark:text-white">
+                        {comment.author.name}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatCommentTime(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                      {comment.content}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                아직 댓글이 없습니다
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </article>
   );
+}
+
+/**
+ * 댓글 시간 포맷
+ */
+function formatCommentTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return '방금 전';
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  if (diffDays < 7) return `${diffDays}일 전`;
+  return date.toLocaleDateString('ko-KR');
 }

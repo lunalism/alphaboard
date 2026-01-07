@@ -17,12 +17,14 @@
  * - 종목 태그: $AAPL 형태로 입력하면 파란색 링크
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   CommunityCategory,
   SortType,
   CommunityPost,
+  CommunityComment,
   FeedPost as FeedPostType,
+  CommunityApiResponse,
 } from '@/types/community';
 import { Sidebar, BottomNav } from '@/components/layout';
 import {
@@ -112,8 +114,48 @@ export default function CommunityPage() {
     sort: sortType,
   });
 
-  // FeedPost 형식으로 변환
-  const feedPosts = posts.map(toFeedPost);
+  /**
+   * 좋아요 토글 핸들러
+   */
+  const handleLikeToggle = useCallback(async (postId: string): Promise<boolean> => {
+    return await toggleLike(postId);
+  }, [toggleLike]);
+
+  /**
+   * 댓글 목록 로드 핸들러
+   */
+  const handleLoadComments = useCallback(async (postId: string): Promise<CommunityComment[]> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments`);
+      const result: CommunityApiResponse<{ comments: CommunityComment[] }> = await response.json();
+      if (result.success && result.data) {
+        return result.data.comments;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  /**
+   * 댓글 작성 핸들러
+   */
+  const handleAddComment = useCallback(async (postId: string, content: string): Promise<CommunityComment | null> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const result: CommunityApiResponse<CommunityComment> = await response.json();
+      if (result.success && result.data) {
+        return result.data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
@@ -191,7 +233,7 @@ export default function CommunityPage() {
 
               {/* 피드 리스트 */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                {isLoading && feedPosts.length === 0 ? (
+                {isLoading && posts.length === 0 ? (
                   /* 로딩 상태 */
                   <div className="p-8 text-center">
                     <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
@@ -199,8 +241,17 @@ export default function CommunityPage() {
                       게시글을 불러오는 중...
                     </p>
                   </div>
-                ) : feedPosts.length > 0 ? (
-                  feedPosts.map((post) => <FeedPost key={post.id} post={post} />)
+                ) : posts.length > 0 ? (
+                  posts.map((post) => (
+                    <FeedPost
+                      key={post.id}
+                      post={toFeedPost(post)}
+                      postId={post.id}
+                      onLikeToggle={handleLikeToggle}
+                      onLoadComments={handleLoadComments}
+                      onAddComment={handleAddComment}
+                    />
+                  ))
                 ) : (
                   /* 빈 상태 */
                   <div className="p-8 text-center">
