@@ -1,20 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * 로그인 페이지
+ *
+ * 사용자 인증을 위한 페이지
+ * - Google OAuth 로그인
+ * - 테스트 모드 로그인 (개발용)
+ *
+ * 테스트 모드:
+ * - 토글 ON: Supabase에 테스트 계정으로 로그인
+ * - 토글 OFF: 로그아웃
+ * - 로그인 성공 시 메인 페이지로 이동
+ */
+
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores';
 import { Sidebar, BottomNav } from '@/components/layout';
-import { signInWithGoogle } from './actions';
+import { signInWithGoogle, testSignIn, testSignOut } from './actions';
 
 export default function LoginPage() {
   const [activeMenu, setActiveMenu] = useState('');
   const router = useRouter();
-  const { isLoggedIn, toggleLogin } = useAuthStore();
 
+  // 인증 스토어에서 상태 및 액션 가져오기
+  const { isLoggedIn, isTestMode, testLogin, testLogout } = useAuthStore();
+
+  // Server Action 실행 중 상태 (로딩 표시용)
+  const [isPending, startTransition] = useTransition();
+
+  // 에러 메시지 상태
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 테스트 모드 토글 핸들러
+   *
+   * 현재 로그인 상태에 따라:
+   * - 비로그인 → 테스트 로그인 시도
+   * - 로그인 → 로그아웃
+   */
   const handleTestLogin = () => {
-    toggleLogin();
-    if (!isLoggedIn) {
-      router.push('/');
+    setError(null);
+
+    if (isLoggedIn) {
+      // 로그아웃 처리
+      startTransition(async () => {
+        await testSignOut();
+        testLogout();
+      });
+    } else {
+      // 로그인 처리
+      startTransition(async () => {
+        const result = await testSignIn();
+
+        if (result.success && result.user) {
+          // Zustand 스토어에 사용자 정보 저장
+          testLogin({
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+          });
+          // 메인 페이지로 이동
+          router.push('/');
+        } else {
+          // 에러 표시
+          setError(result.error || '로그인에 실패했습니다');
+        }
+      });
     }
   };
 
@@ -74,13 +126,16 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">테스트 모드</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">개발용 로그인 테스트</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {isPending ? '처리 중...' : '개발용 로그인 테스트'}
+                  </p>
                 </div>
                 <button
                   onClick={handleTestLogin}
+                  disabled={isPending}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     isLoggedIn ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
+                  } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -89,6 +144,30 @@ export default function LoginPage() {
                   />
                 </button>
               </div>
+
+              {/* 테스트 모드 로그인 상태 표시 */}
+              {isLoggedIn && isTestMode && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    테스트 모드로 로그인됨
+                  </p>
+                </div>
+              )}
+
+              {/* 에러 메시지 */}
+              {error && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {error}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Terms */}

@@ -7,3 +7,4 @@ export * from './notification';
 export * from './calendar';
 export * from './glossary';
 export * from './search';
+export * from './priceAlert';

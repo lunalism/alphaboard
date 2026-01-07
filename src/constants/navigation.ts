@@ -20,7 +20,8 @@ export const menuItems: MenuItem[] = [
   { id: "community", icon: "chat", label: "커뮤니티", emoji: "💬", href: "/community" },
   { id: "watchlist", icon: "checklist", label: "관심종목", emoji: "⭐", href: "/watchlist" },
   { id: "profile", icon: "profile", label: "프로필", emoji: "👤", href: "/profile" },
-  { id: "notification", icon: "notification", label: "알림", emoji: "🔔", href: "/notifications" },
+  // 가격 알림 메뉴 - 로그인 시에만 표시 (Sidebar에서 필터링)
+  { id: "alerts", icon: "notification", label: "가격 알림", emoji: "🔔", href: "/alerts" },
   { id: "glossary", icon: "book", label: "용어사전", emoji: "📖", href: "/glossary" },
 ];
 

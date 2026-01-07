@@ -12,7 +12,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
-  const { isLoggedIn, userName } = useAuthStore();
+  // 인증 상태에서 로그인 여부와 사용자 정보 가져오기
+  const { isLoggedIn, user } = useAuthStore();
+  // 사용자 이름 (없으면 기본값)
+  const userName = user?.name || '사용자';
   const router = useRouter();
 
   return (
@@ -59,7 +62,8 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
       <nav className="flex-1 flex flex-col gap-1 px-3">
         {menuItems
           .filter((item) => item.id !== 'profile')
-          .filter((item) => item.id !== 'notification' || isLoggedIn)
+          // 가격 알림과 관심종목은 로그인 시에만 표시
+          .filter((item) => item.id !== 'alerts' || isLoggedIn)
           .filter((item) => item.id !== 'watchlist' || isLoggedIn)
           .map((item) => (
           <Link

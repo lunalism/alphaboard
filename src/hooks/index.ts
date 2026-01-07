@@ -52,3 +52,6 @@ export { useNews, useMultiCategoryNews } from './useNews';
 
 // 최근 본 종목 관리 훅
 export { useRecentlyViewed } from './useRecentlyViewed';
+
+// 가격 알림 관리 훅
+export { useAlerts } from './useAlerts';

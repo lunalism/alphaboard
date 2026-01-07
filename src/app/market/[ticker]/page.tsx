@@ -27,9 +27,12 @@ import {
 } from 'recharts';
 import { getAssetDetail, getRelatedNews } from '@/constants';
 import { ChartPeriod, AssetDetail, RelatedNews } from '@/types/market';
-import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed } from '@/hooks';
-import { showSuccess } from '@/lib/toast';
+import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed, useAlerts } from '@/hooks';
+import { showSuccess, showError } from '@/lib/toast';
 import { MarketType } from '@/types/recentlyViewed';
+import { useAuthStore } from '@/stores';
+import { AddAlertModal } from '@/components/features/alert/AddAlertModal';
+import { AlertMarket } from '@/types/priceAlert';
 
 // 차트 기간 탭 정의
 const chartPeriods: { id: ChartPeriod; label: string }[] = [
@@ -181,6 +184,50 @@ function WatchlistButton({
 }
 
 /**
+ * 알림 버튼 컴포넌트
+ *
+ * 로그인 상태에 따라 알림 추가 모달 열기 또는 로그인 유도
+ */
+function AlertButton({
+  hasAlert,
+  onClick,
+  isLoggedIn,
+}: {
+  hasAlert: boolean;
+  onClick: () => void;
+  isLoggedIn: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-2 rounded-lg transition-all duration-200 ${
+        hasAlert
+          ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+          : 'text-gray-300 hover:text-blue-500 hover:bg-gray-50 dark:text-gray-600 dark:hover:text-blue-500 dark:hover:bg-gray-700'
+      }`}
+      title={isLoggedIn ? (hasAlert ? '알림 설정됨' : '가격 알림 추가') : '로그인 후 이용 가능'}
+    >
+      {hasAlert ? (
+        // 알림 설정됨 아이콘 (채워진 종)
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+        </svg>
+      ) : (
+        // 알림 없음 아이콘 (빈 종)
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+/**
  * 차트 툴팁 커스텀 컴포넌트
  */
 function CustomTooltip({ active, payload, currency }: { active?: boolean; payload?: any[]; currency: string }) {
@@ -246,6 +293,9 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   const router = useRouter();
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
+  // 알림 모달 상태
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+
   // 한국 종목 실시간 데이터
   const { stock, isLoading, error, refetch } = useKoreanStockPrice(ticker);
   const stockInfo = getKoreanStockInfo(ticker);
@@ -257,6 +307,26 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
 
   // 최근 본 종목 관리
   const { addToRecentlyViewed } = useRecentlyViewed();
+
+  // 인증 상태
+  const { isLoggedIn } = useAuthStore();
+
+  // 알림 관리
+  const { hasAlertForTicker } = useAlerts();
+  const hasAlert = hasAlertForTicker(ticker);
+
+  /**
+   * 알림 버튼 클릭 핸들러
+   * 로그인 상태에 따라 모달 열기 또는 로그인 페이지로 이동
+   */
+  const handleAlertClick = () => {
+    if (!isLoggedIn) {
+      showError('로그인이 필요합니다');
+      router.push('/login');
+      return;
+    }
+    setIsAlertModalOpen(true);
+  };
 
   // ========================================
   // 최근 본 종목 자동 기록
@@ -372,6 +442,12 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                   isInWatchlist={inWatchlist}
                   onToggle={handleToggleWatchlist}
                 />
+                {/* 알림 버튼 */}
+                <AlertButton
+                  hasAlert={hasAlert}
+                  onClick={handleAlertClick}
+                  isLoggedIn={isLoggedIn}
+                />
               </div>
             </div>
 
@@ -396,6 +472,16 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
           </div>
         </div>
       </header>
+
+      {/* 알림 추가 모달 */}
+      <AddAlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        ticker={ticker}
+        stockName={stockInfo?.name || stock.stockName || ticker}
+        market="KR"
+        currentPrice={stock.currentPrice}
+      />
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-[1200px] mx-auto px-4 py-6">
@@ -577,6 +663,9 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
   const router = useRouter();
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
+  // 알림 모달 상태
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+
   // 미국 주식 실시간 데이터 조회
   const { stock, isLoading, error, refetch } = useUSStockPrice(ticker);
   const news = getRelatedNews(ticker);
@@ -587,6 +676,25 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
 
   // 최근 본 종목 관리
   const { addToRecentlyViewed } = useRecentlyViewed();
+
+  // 인증 상태
+  const { isLoggedIn } = useAuthStore();
+
+  // 알림 관리
+  const { hasAlertForTicker } = useAlerts();
+  const hasAlert = hasAlertForTicker(ticker);
+
+  /**
+   * 알림 버튼 클릭 핸들러
+   */
+  const handleAlertClick = () => {
+    if (!isLoggedIn) {
+      showError('로그인이 필요합니다');
+      router.push('/login');
+      return;
+    }
+    setIsAlertModalOpen(true);
+  };
 
   // ========================================
   // 최근 본 종목 자동 기록
@@ -711,6 +819,12 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                   isInWatchlist={inWatchlist}
                   onToggle={handleToggleWatchlist}
                 />
+                {/* 알림 버튼 */}
+                <AlertButton
+                  hasAlert={hasAlert}
+                  onClick={handleAlertClick}
+                  isLoggedIn={isLoggedIn}
+                />
               </div>
             </div>
 
@@ -739,6 +853,16 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
           </div>
         </div>
       </header>
+
+      {/* 알림 추가 모달 */}
+      <AddAlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        ticker={ticker}
+        stockName={stock.name}
+        market="US"
+        currentPrice={stock.currentPrice}
+      />
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-[1200px] mx-auto px-4 py-6">
