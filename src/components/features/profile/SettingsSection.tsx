@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { UserSettings, Language } from '@/types';
 import {
   useFontSizeStore,
@@ -14,10 +15,12 @@ import {
 interface SettingsSectionProps {
   settings: UserSettings;
   onSettingsChange: (settings: UserSettings) => void;
-  onLogout: () => void;
+  onDeleteAccount?: () => void;
 }
 
-export function SettingsSection({ settings, onSettingsChange, onLogout }: SettingsSectionProps) {
+export function SettingsSection({ settings, onSettingsChange, onDeleteAccount }: SettingsSectionProps) {
+  const [isDangerZoneOpen, setIsDangerZoneOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   // 폰트 크기 store 연결
   const { titleSize, bodySize, setTitleSize, setBodySize, resetFontSize } = useFontSizeStore();
   // 테마 store 연결
@@ -160,28 +163,100 @@ export function SettingsSection({ settings, onSettingsChange, onLogout }: Settin
         </div>
       </div>
 
-      {/* Account Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          계정
-        </h3>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <button
-            onClick={onLogout}
-            className="text-red-500 dark:text-red-400 font-medium hover:text-red-600 dark:hover:text-red-300 transition-colors"
+      {/* Danger Zone - 위험 영역 (아코디언) */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-900/50 overflow-hidden">
+        {/* 아코디언 헤더 */}
+        <button
+          onClick={() => setIsDangerZoneOpen(!isDangerZoneOpen)}
+          className="w-full p-6 flex items-center justify-between hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-red-600 dark:text-red-400">위험 영역</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">계정 삭제 및 되돌릴 수 없는 작업</p>
+            </div>
+          </div>
+          <svg
+            className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isDangerZoneOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            로그아웃
-          </button>
-          <span className="hidden sm:block text-gray-300 dark:text-gray-600">|</span>
-          <button className="text-gray-400 dark:text-gray-500 text-sm hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
-            회원탈퇴
-          </button>
-        </div>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* 아코디언 내용 */}
+        {isDangerZoneOpen && (
+          <div className="px-6 pb-6 border-t border-red-100 dark:border-red-900/30">
+            <div className="pt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+              </p>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                회원탈퇴
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* 회원탈퇴 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDeleteModal(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 w-[90%] max-w-sm shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">정말 탈퇴하시겠습니까?</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">이 작업은 되돌릴 수 없습니다</p>
+              </div>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+              회원탈퇴 시 작성하신 게시글, 댓글, 관심종목 등 모든 데이터가 영구적으로 삭제됩니다.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  onDeleteAccount?.();
+                }}
+                className="flex-1 px-4 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors"
+              >
+                탈퇴하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

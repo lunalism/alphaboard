@@ -169,7 +169,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-6">
               {/* Profile Card */}
-              <ProfileCard profile={userProfile} onEdit={handleEditProfile} />
+              <ProfileCard profile={userProfile} onEdit={handleEditProfile} onLogout={handleLogoutClick} />
 
               {/* Activity Summary */}
               <ActivitySummaryCard activity={activitySummary} />
@@ -178,7 +178,6 @@ export default function ProfilePage() {
               <SettingsSection
                 settings={settings}
                 onSettingsChange={handleSettingsChange}
-                onLogout={handleLogoutClick}
               />
 
               {/* ========== 토스트 테스트 섹션 ========== */}
