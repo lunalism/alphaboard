@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserSettings } from '@/types';
+import { UserSettings, UserProfile } from '@/types';
 import { Sidebar, BottomNav } from '@/components/layout';
 import {
   ProfileLoginPrompt,
@@ -11,19 +11,54 @@ import {
   SettingsSection,
 } from '@/components/features/profile';
 import {
-  dummyUserProfile,
   dummyActivitySummary,
   defaultUserSettings,
 } from '@/constants';
 import { useAuthStore } from '@/stores';
 import { showSuccess, showError, showWarning, showInfo } from '@/lib/toast';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState('profile');
-  const { isLoggedIn, toggleLogin, login, logout } = useAuthStore();
+  const { isLoggedIn, user, toggleLogin, login, logout } = useAuthStore();
   const [settings, setSettings] = useState<UserSettings>(defaultUserSettings);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [joinDate, setJoinDate] = useState<string>('');
+
+  // Hydration 문제 방지
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Supabase에서 가입일 가져오기
+  useEffect(() => {
+    if (user?.id) {
+      const fetchUserData = async () => {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (data.user?.created_at) {
+          const date = new Date(data.user.created_at);
+          setJoinDate(date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }));
+        }
+      };
+      fetchUserData();
+    }
+  }, [user?.id]);
+
+  // 실제 사용자 프로필 데이터 생성
+  const userProfile: UserProfile = useMemo(() => ({
+    id: user?.id || '',
+    name: user?.name || '사용자',
+    email: user?.email || '',
+    avatar: user?.avatarUrl,
+    joinDate: joinDate || '알 수 없음',
+  }), [user, joinDate]);
 
   const handleEditProfile = () => {
     showInfo('프로필 수정 기능은 준비 중입니다');
@@ -101,12 +136,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {!isLoggedIn ? (
+          {!(mounted && isLoggedIn) ? (
             <ProfileLoginPrompt onLogin={login} />
           ) : (
             <div className="space-y-6">
               {/* Profile Card */}
-              <ProfileCard profile={dummyUserProfile} onEdit={handleEditProfile} />
+              <ProfileCard profile={userProfile} onEdit={handleEditProfile} />
 
               {/* Activity Summary */}
               <ActivitySummaryCard activity={dummyActivitySummary} />

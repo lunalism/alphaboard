@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider, ToastProvider } from "@/components/providers";
+import { ThemeProvider, ToastProvider, AuthProvider } from "@/components/providers";
 import { OfflineIndicator } from "@/components/common";
 
 export const metadata: Metadata = {
@@ -17,9 +17,11 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider>
-          <ToastProvider />
-          <OfflineIndicator />
-          {children}
+          <AuthProvider>
+            <ToastProvider />
+            <OfflineIndicator />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

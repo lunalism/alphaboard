@@ -92,12 +92,13 @@ export const useAuthStore = create<AuthState>()(
       // 사용자 이름 (하위 호환성 - user.name과 동기화됨)
       userName: '사용자',
 
-      // 사용자 설정 (로그인 시)
+      // 사용자 설정 (로그인 시) - 실제 세션이므로 테스트 모드 해제
       setUser: (user: User) =>
         set({
           isLoggedIn: true,
           user,
           userName: user.name,
+          isTestMode: false, // 실제 로그인 시 테스트 모드 해제
         }),
 
       // 로그아웃

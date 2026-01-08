@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { menuItems } from '@/constants';
 import { MenuIcon } from '@/components/common';
@@ -11,7 +12,12 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
+  const [mounted, setMounted] = useState(false);
   const { isLoggedIn } = useAuthStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 하단 네비: 뉴스, 시세, 캘린더, 커뮤니티, 용어사전 (5개)
   // 사이드바 순서와 동일하게 정렬
@@ -40,14 +46,14 @@ export function BottomNav({ activeMenu, onMenuChange }: BottomNavProps) {
 
         {/* 로그인/프로필 (로그인 상태에 따라 변경) */}
         <Link
-          href={isLoggedIn ? "/profile" : "/login"}
+          href={(mounted && isLoggedIn) ? "/profile" : "/login"}
           className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
         >
           <div className={`transition-colors ${activeMenu === 'profile' ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`}>
             <MenuIcon icon="profile" active={activeMenu === 'profile'} />
           </div>
           <span className={`text-xs mt-1 ${activeMenu === 'profile' ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>
-            {isLoggedIn ? "프로필" : "로그인"}
+            {(mounted && isLoggedIn) ? "프로필" : "로그인"}
           </span>
         </Link>
       </div>

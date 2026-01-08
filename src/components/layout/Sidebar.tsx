@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { menuItems } from '@/constants';
@@ -12,11 +13,27 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
+  // Hydration 문제 방지를 위한 mounted 상태
+  const [mounted, setMounted] = useState(false);
+
   // 인증 상태에서 로그인 여부와 사용자 정보 가져오기
   const { isLoggedIn, user } = useAuthStore();
   // 사용자 이름 (없으면 기본값)
   const userName = user?.name || '사용자';
+  const userAvatar = user?.avatarUrl;
   const router = useRouter();
+
+  // 클라이언트 사이드에서만 auth 상태 표시
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 디버그: 인증 상태 변경 로깅
+  useEffect(() => {
+    if (mounted) {
+      console.log('[Sidebar] Auth state:', { isLoggedIn, user: user?.email });
+    }
+  }, [mounted, isLoggedIn, user]);
 
   return (
     <aside className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 hidden md:flex flex-col py-4 z-50 transition-all duration-300 w-[72px] lg:w-60">
@@ -62,9 +79,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
       <nav className="flex-1 flex flex-col gap-1 px-3">
         {menuItems
           .filter((item) => item.id !== 'profile')
-          // 가격 알림과 관심종목은 로그인 시에만 표시
-          .filter((item) => item.id !== 'alerts' || isLoggedIn)
-          .filter((item) => item.id !== 'watchlist' || isLoggedIn)
+          // 가격 알림과 관심종목은 로그인 시에만 표시 (mounted 후에만 체크)
+          .filter((item) => item.id !== 'alerts' || (mounted && isLoggedIn))
+          .filter((item) => item.id !== 'watchlist' || (mounted && isLoggedIn))
           .map((item) => (
           <Link
             key={item.id}
@@ -93,18 +110,26 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
       {/* Login/User Section */}
       <div className="px-3 mt-auto">
-        {isLoggedIn ? (
+        {mounted && isLoggedIn ? (
           <Link
             href="/profile"
             className="group relative w-full h-12 rounded-xl flex items-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
             title={userName}
           >
             <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{userName.charAt(0)}</span>
-              </div>
+              {userAvatar ? (
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">{userName.charAt(0)}</span>
+                </div>
+              )}
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block">{userName}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block truncate max-w-[140px]">{userName}</span>
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
               {userName}
             </div>
