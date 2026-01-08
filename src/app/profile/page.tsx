@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserSettings, UserProfile } from '@/types';
+import { UserSettings, UserProfile, ActivitySummary } from '@/types';
 import { Sidebar, BottomNav } from '@/components/layout';
 import {
   ProfileLoginPrompt,
@@ -10,10 +10,7 @@ import {
   ActivitySummaryCard,
   SettingsSection,
 } from '@/components/features/profile';
-import {
-  dummyActivitySummary,
-  defaultUserSettings,
-} from '@/constants';
+import { defaultUserSettings } from '@/constants';
 import { useAuthStore } from '@/stores';
 import { showSuccess, showError, showWarning, showInfo } from '@/lib/toast';
 import { createClient } from '@/lib/supabase/client';
@@ -21,22 +18,29 @@ import { createClient } from '@/lib/supabase/client';
 export default function ProfilePage() {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState('profile');
-  const { isLoggedIn, user, toggleLogin, login, logout } = useAuthStore();
+  const { isLoggedIn, user, isTestMode, toggleLogin, login, logout } = useAuthStore();
   const [settings, setSettings] = useState<UserSettings>(defaultUserSettings);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [joinDate, setJoinDate] = useState<string>('');
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary>({
+    posts: 0,
+    comments: 0,
+    watchlist: 0,
+  });
 
   // Hydration 문제 방지
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Supabase에서 가입일 가져오기
+  // Supabase에서 가입일과 활동 통계 가져오기
   useEffect(() => {
     if (user?.id) {
       const fetchUserData = async () => {
         const supabase = createClient();
+
+        // 가입일 가져오기
         const { data } = await supabase.auth.getUser();
         if (data.user?.created_at) {
           const date = new Date(data.user.created_at);
@@ -46,6 +50,28 @@ export default function ProfilePage() {
             day: 'numeric',
           }));
         }
+
+        // 활동 통계 가져오기 (병렬 실행)
+        const [postsResult, commentsResult, watchlistResult] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('comments')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('watchlist')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+        ]);
+
+        setActivitySummary({
+          posts: postsResult.count || 0,
+          comments: commentsResult.count || 0,
+          watchlist: watchlistResult.count || 0,
+        });
       };
       fetchUserData();
     }
@@ -118,22 +144,24 @@ export default function ProfilePage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">계정 정보와 설정을 관리하세요</p>
             </div>
 
-            {/* Login Test Toggle */}
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 dark:text-gray-400">로그인 테스트</span>
-              <button
-                onClick={handleTestToggle}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  isLoggedIn ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    isLoggedIn ? 'left-7' : 'left-1'
+            {/* Login Test Toggle - 테스트 모드일 때만 표시 (실제 로그인 시 숨김) */}
+            {mounted && isTestMode && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500 dark:text-gray-400">테스트 모드</span>
+                <button
+                  onClick={handleTestToggle}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    isLoggedIn ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
-                />
-              </button>
-            </div>
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      isLoggedIn ? 'left-7' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
           </div>
 
           {!(mounted && isLoggedIn) ? (
@@ -144,7 +172,7 @@ export default function ProfilePage() {
               <ProfileCard profile={userProfile} onEdit={handleEditProfile} />
 
               {/* Activity Summary */}
-              <ActivitySummaryCard activity={dummyActivitySummary} />
+              <ActivitySummaryCard activity={activitySummary} />
 
               {/* Settings - 설정 변경 시 토스트 표시 */}
               <SettingsSection

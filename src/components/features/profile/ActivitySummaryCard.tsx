@@ -18,11 +18,11 @@ export function ActivitySummaryCard({ activity }: ActivitySummaryCardProps) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="bg-white rounded-2xl border border-gray-100 p-6 text-center"
+          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 text-center"
         >
           <span className="text-3xl mb-2 block">{item.emoji}</span>
-          <p className="text-2xl font-bold text-gray-900 mb-1">{item.value}개</p>
-          <p className="text-sm text-gray-500">{item.label}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{item.value}개</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{item.label}</p>
         </div>
       ))}
     </div>
