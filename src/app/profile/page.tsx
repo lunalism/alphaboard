@@ -42,15 +42,38 @@ export default function ProfilePage() {
       const fetchUserData = async () => {
         const supabase = createClient();
 
-        // 가입일 가져오기
-        const { data } = await supabase.auth.getUser();
+        // 가입일 가져오기 (auth.users 또는 profiles 테이블에서)
+        const { data, error } = await supabase.auth.getUser();
+        console.log('[Profile] getUser 결과:', { data, error });
+
         if (data.user?.created_at) {
           const date = new Date(data.user.created_at);
-          setJoinDate(date.toLocaleDateString('ko-KR', {
+          const formatted = date.toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
-          }));
+          });
+          console.log('[Profile] 가입일 설정:', formatted);
+          setJoinDate(formatted);
+        } else {
+          // auth.users에서 가져오기 실패 시 profiles 테이블에서 시도
+          console.log('[Profile] auth.users에서 created_at 없음, profiles 테이블 조회');
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('created_at')
+            .eq('id', user.id)
+            .single();
+
+          if (profile?.created_at) {
+            const date = new Date(profile.created_at);
+            const formatted = date.toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+            console.log('[Profile] profiles 테이블에서 가입일:', formatted);
+            setJoinDate(formatted);
+          }
         }
 
         // 활동 통계 가져오기 (병렬 실행)
@@ -92,13 +115,12 @@ export default function ProfilePage() {
     setShowEditModal(true);
   };
 
-  const handleSaveProfile = (name: string, avatarUrl?: string) => {
+  const handleSaveProfile = (name: string) => {
     // Zustand 스토어의 user 정보 업데이트
     if (user) {
       setUser({
         ...user,
         name,
-        avatarUrl: avatarUrl || user.avatarUrl,
       });
     }
   };
