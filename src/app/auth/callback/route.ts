@@ -6,9 +6,6 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
-  // 리다이렉트 응답 준비
-  const redirectUrl = code ? `${origin}${next}` : `${origin}/login?error=no_code`
-
   if (code) {
     // 쿠키를 응답에 설정하기 위한 변수
     const cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[] = []
@@ -31,27 +28,45 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-    // 응답 생성 후 쿠키 설정
-    const response = NextResponse.redirect(
-      error ? `${origin}/login?error=${encodeURIComponent(error.message)}` : redirectUrl
-    )
-
-    // 쿠키를 응답에 추가
-    cookiesToSet.forEach(({ name, value, options }) => {
-      response.cookies.set(name, value, options)
-    })
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
       console.error('[Auth Callback] Error exchanging code:', error.message)
-    } else {
-      console.log('[Auth Callback] Session exchanged successfully, cookies set:', cookiesToSet.length)
+      const response = NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+      cookiesToSet.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options)
+      })
+      return response
     }
+
+    console.log('[Auth Callback] Session exchanged successfully, cookies set:', cookiesToSet.length)
+
+    // 신규 사용자 체크: profiles 테이블에서 name 확인
+    let redirectTo = next
+    if (data.session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', data.session.user.id)
+        .single()
+
+      const isNewUser = !profile || !profile.name
+      console.log('[Auth Callback] 신규 사용자:', isNewUser, 'profile:', profile)
+
+      if (isNewUser) {
+        redirectTo = '/onboarding'
+      }
+    }
+
+    // 응답 생성 후 쿠키 설정
+    const response = NextResponse.redirect(`${origin}${redirectTo}`)
+    cookiesToSet.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options)
+    })
 
     return response
   }
 
   // code가 없는 경우
-  return NextResponse.redirect(redirectUrl)
+  return NextResponse.redirect(`${origin}/login?error=no_code`)
 }

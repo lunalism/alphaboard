@@ -13,7 +13,7 @@
  * - 로그인 성공 시 메인 페이지로 이동
  */
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores';
 import { Sidebar, BottomNav } from '@/components/layout';
@@ -25,6 +25,13 @@ export default function LoginPage() {
 
   // 인증 스토어에서 상태 및 액션 가져오기
   const { isLoggedIn, isTestMode, testLogin, testLogout } = useAuthStore();
+
+  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  useEffect(() => {
+    if (isLoggedIn && !isTestMode) {
+      router.replace('/');
+    }
+  }, [isLoggedIn, isTestMode, router]);
 
   // Server Action 실행 중 상태 (로딩 표시용)
   const [isPending, startTransition] = useTransition();
