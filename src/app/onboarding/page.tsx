@@ -1,88 +1,79 @@
 'use client';
 
+/**
+ * 온보딩 페이지
+ *
+ * 신규 사용자가 닉네임을 설정하는 페이지입니다.
+ * Google 로그인 후 profiles 테이블에 name이 없으면 이 페이지로 리다이렉트됩니다.
+ *
+ * 플로우:
+ * 1. Google 로그인 성공
+ * 2. Auth Callback에서 신규 사용자 감지 → /onboarding 리다이렉트
+ * 3. 닉네임 입력 → profiles 테이블에 저장
+ * 4. 홈으로 이동
+ */
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { showSuccess, showError } from '@/lib/toast';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
+
+  // 전역 인증 상태 사용
+  const { user, userProfile, isLoading, isLoggedIn, isNewUser, updateProfile } = useAuth();
+
+  // 로컬 상태
   const [nickname, setNickname] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Supabase 세션에서 가져온 사용자 정보 (useAuthStore와 별도로 관리)
-  const [sessionUser, setSessionUser] = useState<{ email?: string; avatarUrl?: string } | null>(null);
 
-  // 닉네임 유효성 검사
+  /**
+   * 닉네임 유효성 검사
+   * - 2-20자
+   * - 한글, 영문, 숫자만 허용
+   */
   const validateNickname = (value: string): string | null => {
     if (value.length < 2) return '닉네임은 2자 이상이어야 합니다';
     if (value.length > 20) return '닉네임은 20자 이하여야 합니다';
-    // 한글, 영문, 숫자만 허용
     const regex = /^[가-힣a-zA-Z0-9]+$/;
     if (!regex.test(value)) return '한글, 영문, 숫자만 사용할 수 있습니다';
     return null;
   };
 
-  // 페이지 접근 권한 확인
+  /**
+   * 접근 권한 확인
+   * - 비로그인 → /login
+   * - 이미 닉네임 있음 → /
+   */
   useEffect(() => {
-    const checkAccess = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+    if (isLoading) return;
 
-      console.log('[Onboarding] 세션 확인:', session?.user?.id);
+    if (!isLoggedIn) {
+      // 비로그인 사용자 → 로그인 페이지로
+      console.log('[Onboarding] 비로그인 → /login');
+      router.replace('/login');
+      return;
+    }
 
-      if (!session) {
-        // 로그인 안 한 사용자 → 로그인 페이지로
-        console.log('[Onboarding] 세션 없음 → /login');
-        router.replace('/login');
-        return;
-      }
+    if (!isNewUser && userProfile?.name) {
+      // 이미 닉네임이 있는 사용자 → 홈으로
+      console.log('[Onboarding] 기존 사용자 → /');
+      router.replace('/');
+      return;
+    }
 
-      // Supabase 세션에서 사용자 정보 추출하여 저장
-      const userMeta = session.user.user_metadata;
-      setSessionUser({
-        email: session.user.email,
-        avatarUrl: userMeta?.avatar_url || userMeta?.picture,
-      });
+    console.log('[Onboarding] 신규 사용자, 닉네임 입력 필요');
+  }, [isLoading, isLoggedIn, isNewUser, userProfile, router]);
 
-      // useAuthStore도 업데이트 (아직 안 되어있을 수 있음)
-      if (!user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          name: '', // 닉네임은 이 페이지에서 설정할 예정
-          avatarUrl: userMeta?.avatar_url || userMeta?.picture,
-        });
-        console.log('[Onboarding] useAuthStore 업데이트');
-      }
-
-      // 이미 닉네임이 있는 사용자인지 확인
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile?.name) {
-        // 이미 닉네임이 있으면 홈으로
-        console.log('[Onboarding] 이미 닉네임 있음 → /');
-        router.replace('/');
-        return;
-      }
-
-      console.log('[Onboarding] 신규 사용자, 닉네임 입력 필요');
-      setIsLoading(false);
-    };
-
-    checkAccess();
-  }, [router, user, setUser]);
-
+  /**
+   * 닉네임 저장 제출
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 유효성 검사
     const validationError = validateNickname(nickname);
     if (validationError) {
       setError(validationError);
@@ -93,48 +84,28 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        showError('로그인이 필요합니다');
-        router.replace('/login');
-        return;
-      }
-
-      // profiles 테이블에 닉네임 저장
-      const { error: upsertError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: session.user.id,
-          name: nickname.trim(),
-          email: session.user.email,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (upsertError) throw upsertError;
-
-      // Zustand 스토어 업데이트
-      if (user) {
-        setUser({
-          ...user,
-          name: nickname.trim(),
-        });
-      }
+      // AuthProvider의 updateProfile 사용
+      await updateProfile(nickname.trim());
 
       showSuccess('환영합니다! 🎉');
-      router.replace('/');
+
+      // 홈으로 이동 (전체 새로고침으로 상태 동기화)
+      window.location.href = '/';
     } catch (err) {
-      console.error('[Onboarding] 에러:', err);
+      console.error('[Onboarding] 저장 에러:', err);
       showError('닉네임 저장에 실패했습니다');
     } finally {
       setIsSaving(false);
     }
   };
 
+  /**
+   * 닉네임 입력 변경 핸들러
+   */
   const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNickname(value);
+    // 에러가 있었으면 다시 검사
     if (error) {
       setError(validateNickname(value));
     }
@@ -142,6 +113,15 @@ export default function OnboardingPage() {
 
   // 로딩 중
   if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // 비로그인 상태 (리다이렉트 대기 중)
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -167,16 +147,16 @@ export default function OnboardingPage() {
 
           {/* 프로필 이미지 */}
           <div className="flex justify-center mb-8">
-            {(sessionUser?.avatarUrl || user?.avatarUrl) ? (
+            {userProfile?.avatarUrl ? (
               <img
-                src={sessionUser?.avatarUrl || user?.avatarUrl}
+                src={userProfile.avatarUrl}
                 alt="프로필"
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900"
               />
             ) : (
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900">
                 <span className="text-4xl text-white font-bold">
-                  {(sessionUser?.email || user?.email)?.charAt(0).toUpperCase() || '?'}
+                  {userProfile?.email?.charAt(0).toUpperCase() || '?'}
                 </span>
               </div>
             )}
@@ -209,6 +189,13 @@ export default function OnboardingPage() {
                   2-20자, 한글/영문/숫자만 사용 가능
                 </p>
               )}
+            </div>
+
+            {/* 이메일 표시 (읽기 전용) */}
+            <div className="mb-6">
+              <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
+                {userProfile?.email}
+              </p>
             </div>
 
             {/* 시작하기 버튼 */}
