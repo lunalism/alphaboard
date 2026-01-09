@@ -41,10 +41,12 @@ function MoverList({ title, emoji, movers, isGainer }: {
       </h3>
       {/* 종목 리스트 */}
       <div className="space-y-3">
-        {movers.map((mover, idx) => (
+        {movers
+          .filter(mover => mover.ticker) // ticker가 있는 항목만 표시
+          .map((mover, idx) => (
           // Link로 감싸서 클릭 시 종목 상세 페이지로 이동
           <Link
-            key={`${mover.ticker || 'mover'}-${idx}`}
+            key={`${mover.ticker}-${idx}`}
             href={`/market/${mover.ticker}`}
             className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
           >

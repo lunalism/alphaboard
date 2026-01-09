@@ -345,6 +345,7 @@ export interface KISFluctuationRankingResponse {
 export interface KISFluctuationRankingItem {
   hts_kor_isnm: string;     // 종목명
   mksc_shrn_iscd: string;   // 단축종목코드 (6자리)
+  stck_shrn_iscd?: string;  // 주식단축종목코드 (일부 API에서 사용)
   data_rank: string;        // 데이터 순위
   stck_prpr: string;        // 현재가
   prdy_vrss: string;        // 전일대비
@@ -359,7 +360,7 @@ export interface KISFluctuationRankingItem {
   stck_oprc: string;        // 시가
   oprc_vrss_prpr_rate: string;  // 시가대비현재가비율
   lwpr_vrss_prpr_rate: string;  // 저가대비현재가비율
-  [key: string]: string;
+  [key: string]: string | undefined;
 }
 
 /**

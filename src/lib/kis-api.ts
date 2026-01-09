@@ -945,12 +945,20 @@ export async function getFluctuationRanking(
 
 /**
  * 등락률순위 데이터 변환
+ *
+ * @description
+ * KIS API 응답에서 종목코드 필드명이 다를 수 있음:
+ * - mksc_shrn_iscd: 단축종목코드 (일반적)
+ * - stck_shrn_iscd: 주식단축종목코드 (일부 API)
  */
 function transformFluctuationRanking(raw: KISFluctuationRankingItem, defaultRank: number): FluctuationRankingData {
+  // 종목코드 필드 fallback (여러 필드명 대응)
+  const symbol = raw.mksc_shrn_iscd || raw.stck_shrn_iscd || raw['stck_shrn_iscd'] || '';
+
   return {
     rank: parseInt(raw.data_rank) || defaultRank,
-    symbol: raw.mksc_shrn_iscd,
-    name: raw.hts_kor_isnm,
+    symbol,
+    name: raw.hts_kor_isnm || '',
     currentPrice: parseFloat(raw.stck_prpr) || 0,
     change: parseFloat(raw.prdy_vrss) || 0,
     changePercent: parseFloat(raw.prdy_ctrt) || 0,

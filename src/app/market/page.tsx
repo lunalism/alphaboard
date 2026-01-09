@@ -346,11 +346,14 @@ function MarketContent() {
   // 그 외 시장: 목업 데이터 사용
 
   const currentGainers = activeMarket === 'kr' && gainersRankingData.length > 0
-    ? gainersRankingData.slice(0, 5).map(item => ({
-        name: item.name,
-        ticker: item.symbol,
-        changePercent: item.changePercent,
-      }))
+    ? gainersRankingData
+        .filter(item => item.symbol) // symbol이 있는 항목만 필터
+        .slice(0, 5)
+        .map(item => ({
+          name: item.name,
+          ticker: item.symbol,
+          changePercent: item.changePercent,
+        }))
     : activeMarket === 'kr' && koreanStocks.length > 0
       // 등락률순위 API 실패 시 기존 데이터 폴백
       ? koreanStocks
@@ -366,11 +369,14 @@ function MarketContent() {
         : topGainers[activeMarket];
 
   const currentLosers = activeMarket === 'kr' && losersRankingData.length > 0
-    ? losersRankingData.slice(0, 5).map(item => ({
-        name: item.name,
-        ticker: item.symbol,
-        changePercent: item.changePercent,
-      }))
+    ? losersRankingData
+        .filter(item => item.symbol) // symbol이 있는 항목만 필터
+        .slice(0, 5)
+        .map(item => ({
+          name: item.name,
+          ticker: item.symbol,
+          changePercent: item.changePercent,
+        }))
     : activeMarket === 'kr' && koreanStocks.length > 0
       // 등락률순위 API 실패 시 기존 데이터 폴백
       ? koreanStocks
