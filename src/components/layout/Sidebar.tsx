@@ -32,8 +32,6 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
     setMounted(true);
   });
 
-  // 디버깅 로그
-  console.log('[Sidebar] 렌더링:', { mounted, isLoading, isLoggedIn, userProfile: userProfile?.email });
 
   // 사용자 정보
   const userName = userProfile?.name || '사용자';

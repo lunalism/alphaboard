@@ -142,11 +142,9 @@ export function EditProfileModal({
         .eq('id', userId);
 
       if (updateError) {
-        console.error('[EditProfileModal] 업데이트 에러:', updateError);
         throw updateError;
       }
 
-      console.log('[EditProfileModal] 저장 완료:', name.trim());
       showSuccess('프로필이 수정되었습니다');
 
       // 콜백 호출 (있으면)
@@ -155,8 +153,7 @@ export function EditProfileModal({
       // 페이지 새로고침으로 AuthProvider 상태 갱신
       // (onClose 호출 없이 바로 새로고침)
       window.location.reload();
-    } catch (err) {
-      console.error('[EditProfileModal] 에러:', err);
+    } catch {
       showError('프로필 수정에 실패했습니다');
       setIsSaving(false);
     }

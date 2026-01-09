@@ -93,11 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', supabaseUser.id)
         .single();
 
-      console.log('[AuthProvider] profiles 조회:', { profile, error: error?.message });
-
       // 프로필이 없거나 name이 없으면 신규 사용자
       if (error || !profile || !profile.name) {
-        console.log('[AuthProvider] 신규 사용자 감지');
         setIsNewUser(true);
         // 기본 프로필 설정 (Google OAuth 정보 사용)
         setUserProfile(extractUserProfile(supabaseUser));
@@ -105,7 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // 기존 사용자 - profiles 테이블의 name 사용
-      console.log('[AuthProvider] 기존 사용자:', profile.name);
       setIsNewUser(false);
       setUserProfile({
         id: supabaseUser.id,
@@ -132,8 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('로그인이 필요합니다');
     }
 
-    console.log('[AuthProvider] 프로필 업데이트 시작:', name);
-
     const { error } = await supabase
       .from('profiles')
       .upsert({
@@ -145,11 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
     if (error) {
-      console.error('[AuthProvider] 프로필 업데이트 에러:', error);
       throw error;
     }
-
-    console.log('[AuthProvider] 프로필 업데이트 완료');
 
     // 상태 업데이트
     setIsNewUser(false);
@@ -168,7 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * 로그아웃
    */
   const signOut = useCallback(async () => {
-    console.log('[AuthProvider] 로그아웃 시작');
     await supabase.auth.signOut();
     // onAuthStateChange에서 SIGNED_OUT 이벤트로 상태 업데이트됨
   }, [supabase]);
@@ -177,26 +167,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * 초기화 및 세션 구독
    */
   useEffect(() => {
-    console.log('[AuthProvider] 초기화 시작');
-
     // 초기 세션 확인
     const initSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error('[AuthProvider] 세션 조회 에러:', error.message);
-        } else if (session?.user) {
-          console.log('[AuthProvider] 초기 세션:', session.user.email);
+        if (!error && session?.user) {
           setSession(session);
           setUser(session.user);
           // 프로필 조회 (신규/기존 사용자 판별)
           await checkUserProfile(session.user);
-        } else {
-          console.log('[AuthProvider] 초기 세션 없음');
         }
-      } catch (err) {
-        console.error('[AuthProvider] 초기화 예외:', err);
       } finally {
         setIsLoading(false);
       }
@@ -207,8 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 세션 변경 구독
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[AuthProvider] Auth 변경:', event, newSession?.user?.email);
-
         // INITIAL_SESSION은 initSession에서 이미 처리함
         if (event === 'INITIAL_SESSION') {
           return;
@@ -232,16 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 클린업
     return () => {
-      console.log('[AuthProvider] 구독 해제');
       subscription.unsubscribe();
     };
   }, [supabase, checkUserProfile]);
 
   // 로그인 여부
   const isLoggedIn = !!user;
-
-  // 디버깅 로그
-  console.log('[AuthProvider] 상태:', { isLoading, isLoggedIn, isNewUser, email: userProfile?.email });
 
   const value: AuthContextType = {
     user,

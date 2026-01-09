@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    console.log('[Auth Callback] Session exchanged successfully, cookies set:', cookiesToSet.length)
 
     // 신규 사용자 체크: profiles 테이블에서 name 확인
     let redirectTo = next
@@ -51,7 +50,6 @@ export async function GET(request: NextRequest) {
         .single()
 
       const isNewUser = !profile || !profile.name
-      console.log('[Auth Callback] 신규 사용자:', isNewUser, 'profile:', profile)
 
       if (isNewUser) {
         redirectTo = '/onboarding'

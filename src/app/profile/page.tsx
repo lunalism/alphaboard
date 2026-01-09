@@ -41,8 +41,6 @@ export default function ProfilePage() {
     watchlist: 0,
   });
 
-  // 디버깅 로그
-  console.log('[Profile] 렌더링:', { isLoading, isLoggedIn, email: authProfile?.email });
 
   // Supabase에서 가입일과 활동 통계 가져오기
   useEffect(() => {

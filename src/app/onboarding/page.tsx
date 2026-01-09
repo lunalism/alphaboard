@@ -58,19 +58,15 @@ export default function OnboardingPage() {
     const supabase = createClient();
 
     const checkUser = async () => {
-      console.log('[Onboarding] 사용자 확인 시작');
-
       // 세션 확인
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.user) {
         // 비로그인 → 로그인 페이지로
-        console.log('[Onboarding] 비로그인 → /login');
         router.replace('/login');
         return;
       }
 
-      console.log('[Onboarding] 로그인 확인:', session.user.email);
       setUser(session.user);
       setUserAvatarUrl(
         (session.user.user_metadata?.avatar_url as string) ||
@@ -79,23 +75,19 @@ export default function OnboardingPage() {
       );
 
       // 프로필 확인 (직접 Supabase에서 조회)
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('name')
         .eq('id', session.user.id)
         .single();
 
-      console.log('[Onboarding] 프로필 확인:', { profile, error: profileError?.message });
-
       // 이미 닉네임이 있으면 홈으로
       if (profile?.name) {
-        console.log('[Onboarding] 이미 온보딩 완료, 홈으로 이동');
         router.replace('/');
         return;
       }
 
       // 닉네임 없음 → 온보딩 필요
-      console.log('[Onboarding] 온보딩 필요, 폼 표시');
       setNeedsOnboarding(true);
       setIsLoading(false);
     };
@@ -131,17 +123,14 @@ export default function OnboardingPage() {
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('[Onboarding] 저장 에러:', updateError);
         throw updateError;
       }
 
-      console.log('[Onboarding] 저장 완료, 홈으로 이동');
       showSuccess('환영합니다! 🎉');
 
       // 홈으로 이동 (전체 새로고침으로 AuthProvider 상태 갱신)
       window.location.href = '/';
-    } catch (err) {
-      console.error('[Onboarding] 저장 에러:', err);
+    } catch {
       showError('닉네임 저장에 실패했습니다');
     } finally {
       setIsSaving(false);

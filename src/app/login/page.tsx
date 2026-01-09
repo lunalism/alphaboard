@@ -45,7 +45,6 @@ export default function LoginPage() {
         name: profileName || user.user_metadata?.full_name || user.user_metadata?.name || '',
         avatarUrl: user.user_metadata?.avatar_url,
       });
-      console.log('[Login] useAuthStore 업데이트 완료');
     };
 
     // 현재 세션 확인 및 리다이렉트
@@ -53,8 +52,6 @@ export default function LoginPage() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        console.log('[Login] 이미 로그인됨, 리다이렉트 체크...');
-
         // 신규 사용자인지 확인
         const { data: profile } = await supabase
           .from('profiles')
@@ -66,10 +63,8 @@ export default function LoginPage() {
         updateAuthStore(session, profile?.name);
 
         if (!profile || !profile.name) {
-          console.log('[Login] 신규 사용자 → /onboarding');
           window.location.href = '/onboarding';
         } else {
-          console.log('[Login] 기존 사용자 → /');
           window.location.href = '/';
         }
       }
@@ -80,14 +75,8 @@ export default function LoginPage() {
     // auth 상태 변경 구독 (Google 로그인 완료 후 감지)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Login] Auth state changed:', event);
-
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('[Login] 로그인 감지, 리다이렉트 체크...');
-
           try {
-            console.log('[Login] profiles 조회 시작, userId:', session.user.id);
-
             // 신규 사용자인지 확인
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
@@ -95,26 +84,19 @@ export default function LoginPage() {
               .eq('id', session.user.id)
               .single();
 
-            console.log('[Login] profiles 조회 결과:', { profile, error: profileError });
-
             // useAuthStore 업데이트 (에러가 나도 진행)
             updateAuthStore(session, profile?.name);
 
             // 에러가 나거나 profile이 없으면 신규 사용자로 간주
             const isNewUser = profileError || !profile || !profile.name;
-            console.log('[Login] 신규 사용자 여부:', isNewUser, '(에러:', profileError?.message, ')');
 
             if (isNewUser) {
-              console.log('[Login] /onboarding으로 이동 (페이지 새로고침)');
               window.location.href = '/onboarding';
             } else {
-              console.log('[Login] /로 이동 (페이지 새로고침)');
               window.location.href = '/';
             }
-          } catch (err) {
-            console.error('[Login] 리다이렉트 에러:', err);
+          } catch {
             // 에러가 나도 온보딩으로 리다이렉트 (신규 사용자로 간주)
-            console.log('[Login] 에러 발생, /onboarding으로 이동');
             window.location.href = '/onboarding';
           }
         }
