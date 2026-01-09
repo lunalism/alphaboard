@@ -11,20 +11,26 @@
  * 2. Auth Callback에서 신규 사용자 감지 → /onboarding 리다이렉트
  * 3. 닉네임 입력 → profiles 테이블에 저장
  * 4. 홈으로 이동
+ *
+ * 주의: AuthProvider의 isNewUser 상태에 의존하지 않고,
+ * 직접 Supabase에서 프로필을 확인합니다.
+ * (callback과 클라이언트 상태 동기화 문제 방지)
  */
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 import { showSuccess, showError } from '@/lib/toast';
+import type { User } from '@supabase/supabase-js';
 
 export default function OnboardingPage() {
   const router = useRouter();
 
-  // 전역 인증 상태 사용
-  const { user, userProfile, isLoading, isLoggedIn, isNewUser, updateProfile } = useAuth();
-
   // 로컬 상태
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [nickname, setNickname] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,35 +49,67 @@ export default function OnboardingPage() {
   };
 
   /**
-   * 접근 권한 확인
+   * 컴포넌트 마운트 시 사용자 및 프로필 확인
    * - 비로그인 → /login
    * - 이미 닉네임 있음 → /
+   * - 닉네임 없음 → 온보딩 폼 표시
    */
   useEffect(() => {
-    if (isLoading) return;
+    const supabase = createClient();
 
-    if (!isLoggedIn) {
-      // 비로그인 사용자 → 로그인 페이지로
-      console.log('[Onboarding] 비로그인 → /login');
-      router.replace('/login');
-      return;
-    }
+    const checkUser = async () => {
+      console.log('[Onboarding] 사용자 확인 시작');
 
-    if (!isNewUser && userProfile?.name) {
-      // 이미 닉네임이 있는 사용자 → 홈으로
-      console.log('[Onboarding] 기존 사용자 → /');
-      router.replace('/');
-      return;
-    }
+      // 세션 확인
+      const { data: { session } } = await supabase.auth.getSession();
 
-    console.log('[Onboarding] 신규 사용자, 닉네임 입력 필요');
-  }, [isLoading, isLoggedIn, isNewUser, userProfile, router]);
+      if (!session?.user) {
+        // 비로그인 → 로그인 페이지로
+        console.log('[Onboarding] 비로그인 → /login');
+        router.replace('/login');
+        return;
+      }
+
+      console.log('[Onboarding] 로그인 확인:', session.user.email);
+      setUser(session.user);
+      setUserAvatarUrl(
+        (session.user.user_metadata?.avatar_url as string) ||
+        (session.user.user_metadata?.picture as string) ||
+        null
+      );
+
+      // 프로필 확인 (직접 Supabase에서 조회)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', session.user.id)
+        .single();
+
+      console.log('[Onboarding] 프로필 확인:', { profile, error: profileError?.message });
+
+      // 이미 닉네임이 있으면 홈으로
+      if (profile?.name) {
+        console.log('[Onboarding] 이미 온보딩 완료, 홈으로 이동');
+        router.replace('/');
+        return;
+      }
+
+      // 닉네임 없음 → 온보딩 필요
+      console.log('[Onboarding] 온보딩 필요, 폼 표시');
+      setNeedsOnboarding(true);
+      setIsLoading(false);
+    };
+
+    checkUser();
+  }, [router]);
 
   /**
    * 닉네임 저장 제출
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user || !nickname.trim()) return;
 
     // 유효성 검사
     const validationError = validateNickname(nickname);
@@ -84,12 +122,23 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      // AuthProvider의 updateProfile 사용
-      await updateProfile(nickname.trim());
+      const supabase = createClient();
 
+      // profiles 테이블 업데이트
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ name: nickname.trim() })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('[Onboarding] 저장 에러:', updateError);
+        throw updateError;
+      }
+
+      console.log('[Onboarding] 저장 완료, 홈으로 이동');
       showSuccess('환영합니다! 🎉');
 
-      // 홈으로 이동 (전체 새로고침으로 상태 동기화)
+      // 홈으로 이동 (전체 새로고침으로 AuthProvider 상태 갱신)
       window.location.href = '/';
     } catch (err) {
       console.error('[Onboarding] 저장 에러:', err);
@@ -120,8 +169,8 @@ export default function OnboardingPage() {
     );
   }
 
-  // 비로그인 상태 (리다이렉트 대기 중)
-  if (!isLoggedIn) {
+  // 온보딩이 필요하지 않으면 (이미 리다이렉트 처리됨)
+  if (!needsOnboarding) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -147,16 +196,16 @@ export default function OnboardingPage() {
 
           {/* 프로필 이미지 */}
           <div className="flex justify-center mb-8">
-            {userProfile?.avatarUrl ? (
+            {userAvatarUrl ? (
               <img
-                src={userProfile.avatarUrl}
+                src={userAvatarUrl}
                 alt="프로필"
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900"
               />
             ) : (
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900">
                 <span className="text-4xl text-white font-bold">
-                  {userProfile?.email?.charAt(0).toUpperCase() || '?'}
+                  {user?.email?.charAt(0).toUpperCase() || '?'}
                 </span>
               </div>
             )}
@@ -194,7 +243,7 @@ export default function OnboardingPage() {
             {/* 이메일 표시 (읽기 전용) */}
             <div className="mb-6">
               <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-                {userProfile?.email}
+                {user?.email}
               </p>
             </div>
 

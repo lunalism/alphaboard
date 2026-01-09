@@ -91,10 +91,10 @@ BEGIN
     VALUES (
         NEW.id,
         NEW.email,
-        -- Google OAuth의 경우 raw_user_meta_data에서 이름 추출
-        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+        -- name은 온보딩에서 설정하도록 NULL로 저장 (신규 사용자 감지용)
+        NULL,
         -- Google OAuth의 경우 raw_user_meta_data에서 아바타 URL 추출
-        NEW.raw_user_meta_data->>'avatar_url'
+        COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
     );
     RETURN NEW;
 END;

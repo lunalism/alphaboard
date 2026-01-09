@@ -115,13 +115,11 @@ export default function ProfilePage() {
     joinDate: joinDate || '알 수 없음',
   }), [authProfile, joinDate]);
 
+  /**
+   * 프로필 수정 모달 열기
+   */
   const handleEditProfile = () => {
     setShowEditModal(true);
-  };
-
-  const handleSaveProfile = async (name: string) => {
-    // TODO: profiles 테이블 업데이트 후 refreshProfile 호출
-    showSuccess('프로필이 저장되었습니다');
   };
 
   const handleLogoutClick = () => {
@@ -227,7 +225,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Edit Profile Modal */}
+      {/* Edit Profile Modal - 프로필 수정 모달 */}
       {authProfile && (
         <EditProfileModal
           isOpen={showEditModal}
@@ -235,7 +233,6 @@ export default function ProfilePage() {
           userId={authProfile.id}
           currentName={authProfile.name}
           currentAvatar={authProfile.avatarUrl}
-          onSave={handleSaveProfile}
         />
       )}
     </div>
