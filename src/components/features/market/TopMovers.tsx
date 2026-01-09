@@ -1,5 +1,18 @@
 'use client';
 
+/**
+ * TopMovers 컴포넌트
+ *
+ * 상승/하락 TOP 5 종목을 2열 그리드로 표시
+ * 등락률순위 API 데이터를 활용
+ *
+ * @description
+ * - 상승 TOP: 등락률 내림차순 상위 5개
+ * - 하락 TOP: 등락률 오름차순 상위 5개
+ * - 클릭 시 종목 상세 페이지로 이동
+ */
+
+import Link from 'next/link';
 import { TopMover } from '@/types';
 
 interface TopMoversProps {
@@ -10,6 +23,7 @@ interface TopMoversProps {
 /**
  * MoverList 컴포넌트
  * 상승/하락 TOP 종목 리스트를 표시
+ * 각 종목 클릭 시 종목 상세 페이지로 이동
  */
 function MoverList({ title, emoji, movers, isGainer }: {
   title: string;
@@ -28,11 +42,10 @@ function MoverList({ title, emoji, movers, isGainer }: {
       {/* 종목 리스트 */}
       <div className="space-y-3">
         {movers.map((mover, idx) => (
-          // key: ticker + index로 고유성 보장
-          // - ticker가 undefined인 경우 대비
-          // - 동일 ticker가 여러 번 나타날 수 있는 경우 대비
-          <div
+          // Link로 감싸서 클릭 시 종목 상세 페이지로 이동
+          <Link
             key={`${mover.ticker || 'mover'}-${idx}`}
+            href={`/market/${mover.ticker}`}
             className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
@@ -59,13 +72,22 @@ function MoverList({ title, emoji, movers, isGainer }: {
             }`}>
               {isGainer ? '+' : ''}{mover.changePercent.toFixed(2)}%
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
   );
 }
 
+/**
+ * TopMovers 메인 컴포넌트
+ *
+ * 상승 TOP 5와 하락 TOP 5를 2열 그리드로 표시
+ * 모바일에서는 1열로 변경
+ *
+ * @param gainers - 상승률 상위 5개 종목
+ * @param losers - 하락률 상위 5개 종목
+ */
 export function TopMovers({ gainers, losers }: TopMoversProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
