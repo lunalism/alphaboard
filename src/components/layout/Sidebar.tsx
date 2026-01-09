@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+/**
+ * Sidebar 컴포넌트
+ *
+ * 좌측 사이드바 네비게이션입니다.
+ * 전역 AuthContext를 사용하여 인증 상태를 표시합니다.
+ * 페이지 이동해도 상태가 유지됩니다.
+ */
+
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { menuItems } from '@/constants';
 import { MenuIcon } from '@/components/common';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface SidebarProps {
   activeMenu: string;
@@ -13,27 +21,23 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
-  // Hydration 문제 방지를 위한 mounted 상태
   const [mounted, setMounted] = useState(false);
-
-  // 인증 상태에서 로그인 여부와 사용자 정보 가져오기
-  const { isLoggedIn, user } = useAuthStore();
-  // 사용자 이름 (없으면 기본값)
-  const userName = user?.name || '사용자';
-  const userAvatar = user?.avatarUrl;
   const router = useRouter();
 
-  // 클라이언트 사이드에서만 auth 상태 표시
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // 전역 인증 상태 사용 (자체 세션 체크 없음)
+  const { userProfile, isLoading, isLoggedIn } = useAuth();
 
-  // 디버그: 인증 상태 변경 로깅
-  useEffect(() => {
-    if (mounted) {
-      console.log('[Sidebar] Auth state:', { isLoggedIn, user: user?.email });
-    }
-  }, [mounted, isLoggedIn, user]);
+  // 클라이언트 마운트 확인 (hydration 방지)
+  useState(() => {
+    setMounted(true);
+  });
+
+  // 디버깅 로그
+  console.log('[Sidebar] 렌더링:', { mounted, isLoading, isLoggedIn, userProfile: userProfile?.email });
+
+  // 사용자 정보
+  const userName = userProfile?.name || '사용자';
+  const userAvatar = userProfile?.avatarUrl;
 
   return (
     <aside className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 hidden md:flex flex-col py-4 z-50 transition-all duration-300 w-[72px] lg:w-60">
@@ -47,7 +51,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         </Link>
       </div>
 
-      {/* 검색 버튼 - 태블릿 (md~lg) 에서만 표시, 데스크톱(lg+)에서는 메인 콘텐츠에 검색바 있음 */}
+      {/* 검색 버튼 - 태블릿 (md~lg) 에서만 표시 */}
       <div className="px-3 mb-4 lg:hidden">
         <button
           type="button"
@@ -79,9 +83,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
       <nav className="flex-1 flex flex-col gap-1 px-3">
         {menuItems
           .filter((item) => item.id !== 'profile')
-          // 가격 알림과 관심종목은 로그인 시에만 표시 (mounted 후에만 체크)
-          .filter((item) => item.id !== 'alerts' || (mounted && isLoggedIn))
-          .filter((item) => item.id !== 'watchlist' || (mounted && isLoggedIn))
+          // 가격 알림과 관심종목은 로그인 시에만 표시 (로딩 완료 후에만 체크)
+          .filter((item) => item.id !== 'alerts' || (!isLoading && isLoggedIn))
+          .filter((item) => item.id !== 'watchlist' || (!isLoading && isLoggedIn))
           .map((item) => (
           <Link
             key={item.id}
@@ -110,7 +114,14 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
       {/* Login/User Section */}
       <div className="px-3 mt-auto">
-        {mounted && isLoggedIn ? (
+        {isLoading ? (
+          // 로딩 중 - 스켈레톤 UI
+          <div className="w-full h-12 rounded-xl flex items-center px-2">
+            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />
+            <div className="hidden lg:block ml-3 h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          </div>
+        ) : isLoggedIn && userProfile ? (
+          // 로그인됨 - 프로필 표시
           <Link
             href="/profile"
             className="group relative w-full h-12 rounded-xl flex items-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
@@ -125,16 +136,19 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
                 />
               ) : (
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">{userName.charAt(0)}</span>
+                  <span className="text-white font-bold text-sm">{userName.charAt(0).toUpperCase()}</span>
                 </div>
               )}
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block truncate max-w-[140px]">{userName}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block truncate max-w-[140px]">
+              {userName}
+            </span>
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
               {userName}
             </div>
           </Link>
         ) : (
+          // 비로그인 - 로그인 버튼
           <Link
             href="/login"
             className="group relative w-full h-12 rounded-xl flex items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

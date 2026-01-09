@@ -93,13 +93,16 @@ export const useAuthStore = create<AuthState>()(
       userName: '사용자',
 
       // 사용자 설정 (로그인 시) - 실제 세션이므로 테스트 모드 해제
-      setUser: (user: User) =>
+      setUser: (user: User) => {
+        console.log('[useAuthStore] setUser 호출:', user);
         set({
           isLoggedIn: true,
           user,
           userName: user.name,
-          isTestMode: false, // 실제 로그인 시 테스트 모드 해제
-        }),
+          isTestMode: false,
+        });
+        console.log('[useAuthStore] set 완료, 현재 상태:', useAuthStore.getState());
+      },
 
       // 로그아웃
       logout: () =>

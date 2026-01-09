@@ -24,7 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // 인증 스토어에서 상태 및 액션 가져오기
-  const { isLoggedIn, isTestMode, testLogin, testLogout } = useAuthStore();
+  const { isLoggedIn, isTestMode, testLogin, testLogout, setUser } = useAuthStore();
 
   // Server Action 실행 중 상태 (로딩 표시용)
   const [isPending, startTransition] = useTransition();
@@ -35,6 +35,18 @@ export default function LoginPage() {
   // 로그인 상태 체크 및 리다이렉트
   useEffect(() => {
     const supabase = createClient();
+
+    // 세션에서 사용자 정보를 useAuthStore에 저장하는 헬퍼 함수
+    const updateAuthStore = (session: { user: { id: string; email?: string; user_metadata?: { full_name?: string; avatar_url?: string; name?: string } } }, profileName?: string | null) => {
+      const user = session.user;
+      setUser({
+        id: user.id,
+        email: user.email || '',
+        name: profileName || user.user_metadata?.full_name || user.user_metadata?.name || '',
+        avatarUrl: user.user_metadata?.avatar_url,
+      });
+      console.log('[Login] useAuthStore 업데이트 완료');
+    };
 
     // 현재 세션 확인 및 리다이렉트
     const checkAuthAndRedirect = async () => {
@@ -50,12 +62,15 @@ export default function LoginPage() {
           .eq('id', session.user.id)
           .single();
 
+        // useAuthStore 업데이트
+        updateAuthStore(session, profile?.name);
+
         if (!profile || !profile.name) {
           console.log('[Login] 신규 사용자 → /onboarding');
-          router.replace('/onboarding');
+          window.location.href = '/onboarding';
         } else {
           console.log('[Login] 기존 사용자 → /');
-          router.replace('/');
+          window.location.href = '/';
         }
       }
     };
@@ -70,19 +85,37 @@ export default function LoginPage() {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('[Login] 로그인 감지, 리다이렉트 체크...');
 
-          // 신규 사용자인지 확인
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            console.log('[Login] profiles 조회 시작, userId:', session.user.id);
 
-          if (!profile || !profile.name) {
-            console.log('[Login] 신규 사용자 → /onboarding');
-            router.replace('/onboarding');
-          } else {
-            console.log('[Login] 기존 사용자 → /');
-            router.replace('/');
+            // 신규 사용자인지 확인
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', session.user.id)
+              .single();
+
+            console.log('[Login] profiles 조회 결과:', { profile, error: profileError });
+
+            // useAuthStore 업데이트 (에러가 나도 진행)
+            updateAuthStore(session, profile?.name);
+
+            // 에러가 나거나 profile이 없으면 신규 사용자로 간주
+            const isNewUser = profileError || !profile || !profile.name;
+            console.log('[Login] 신규 사용자 여부:', isNewUser, '(에러:', profileError?.message, ')');
+
+            if (isNewUser) {
+              console.log('[Login] /onboarding으로 이동 (페이지 새로고침)');
+              window.location.href = '/onboarding';
+            } else {
+              console.log('[Login] /로 이동 (페이지 새로고침)');
+              window.location.href = '/';
+            }
+          } catch (err) {
+            console.error('[Login] 리다이렉트 에러:', err);
+            // 에러가 나도 온보딩으로 리다이렉트 (신규 사용자로 간주)
+            console.log('[Login] 에러 발생, /onboarding으로 이동');
+            window.location.href = '/onboarding';
           }
         }
       }
@@ -91,7 +124,7 @@ export default function LoginPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, setUser]);
 
   /**
    * 테스트 모드 토글 핸들러

@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * 프로필 페이지
+ *
+ * 사용자 프로필 정보, 활동 통계, 설정을 표시합니다.
+ * 전역 AuthContext를 사용하여 인증 상태를 확인합니다.
+ */
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserSettings, UserProfile, ActivitySummary } from '@/types';
@@ -12,18 +19,21 @@ import {
   EditProfileModal,
 } from '@/components/features/profile';
 import { defaultUserSettings } from '@/constants';
-import { useAuthStore } from '@/stores';
 import { showSuccess, showError, showWarning, showInfo } from '@/lib/toast';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState('profile');
-  const { isLoggedIn, user, isTestMode, setUser, toggleLogin, login, logout } = useAuthStore();
+
+  // 전역 인증 상태 사용 (자체 세션 체크 없음)
+  const { userProfile: authProfile, isLoading, isLoggedIn, signOut } = useAuth();
+
+  // 로컬 상태
   const [settings, setSettings] = useState<UserSettings>(defaultUserSettings);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [joinDate, setJoinDate] = useState<string>('');
   const [activitySummary, setActivitySummary] = useState<ActivitySummary>({
     posts: 0,
@@ -31,20 +41,17 @@ export default function ProfilePage() {
     watchlist: 0,
   });
 
-  // Hydration 문제 방지
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // 디버깅 로그
+  console.log('[Profile] 렌더링:', { isLoading, isLoggedIn, email: authProfile?.email });
 
   // Supabase에서 가입일과 활동 통계 가져오기
   useEffect(() => {
-    if (user?.id) {
+    if (authProfile?.id) {
       const fetchUserData = async () => {
         const supabase = createClient();
 
         // 가입일 가져오기 (auth.users 또는 profiles 테이블에서)
         const { data, error } = await supabase.auth.getUser();
-        console.log('[Profile] getUser 결과:', { data, error });
 
         if (data.user?.created_at) {
           const date = new Date(data.user.created_at);
@@ -53,15 +60,13 @@ export default function ProfilePage() {
             month: 'long',
             day: 'numeric',
           });
-          console.log('[Profile] 가입일 설정:', formatted);
           setJoinDate(formatted);
         } else {
           // auth.users에서 가져오기 실패 시 profiles 테이블에서 시도
-          console.log('[Profile] auth.users에서 created_at 없음, profiles 테이블 조회');
           const { data: profile } = await supabase
             .from('profiles')
             .select('created_at')
-            .eq('id', user.id)
+            .eq('id', authProfile.id)
             .single();
 
           if (profile?.created_at) {
@@ -71,7 +76,6 @@ export default function ProfilePage() {
               month: 'long',
               day: 'numeric',
             });
-            console.log('[Profile] profiles 테이블에서 가입일:', formatted);
             setJoinDate(formatted);
           }
         }
@@ -81,15 +85,15 @@ export default function ProfilePage() {
           supabase
             .from('posts')
             .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id),
+            .eq('user_id', authProfile.id),
           supabase
             .from('comments')
             .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id),
+            .eq('user_id', authProfile.id),
           supabase
             .from('watchlist')
             .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id),
+            .eq('user_id', authProfile.id),
         ]);
 
         setActivitySummary({
@@ -100,48 +104,32 @@ export default function ProfilePage() {
       };
       fetchUserData();
     }
-  }, [user?.id]);
+  }, [authProfile?.id]);
 
-  // 실제 사용자 프로필 데이터 생성
+  // UI용 프로필 데이터 생성
   const userProfile: UserProfile = useMemo(() => ({
-    id: user?.id || '',
-    name: user?.name || '사용자',
-    email: user?.email || '',
-    avatar: user?.avatarUrl,
+    id: authProfile?.id || '',
+    name: authProfile?.name || '사용자',
+    email: authProfile?.email || '',
+    avatar: authProfile?.avatarUrl,
     joinDate: joinDate || '알 수 없음',
-  }), [user, joinDate]);
+  }), [authProfile, joinDate]);
 
   const handleEditProfile = () => {
     setShowEditModal(true);
   };
 
-  const handleSaveProfile = (name: string) => {
-    // Zustand 스토어의 user 정보 업데이트
-    if (user) {
-      setUser({
-        ...user,
-        name,
-      });
-    }
-  };
-
-  const handleTestToggle = () => {
-    if (isLoggedIn) {
-      // 로그인 상태에서 토글 OFF → 즉시 로그아웃 후 홈으로 이동
-      toggleLogin();
-      router.push('/');
-    } else {
-      // 비로그인 상태에서 토글 ON
-      toggleLogin();
-    }
+  const handleSaveProfile = async (name: string) => {
+    // TODO: profiles 테이블 업데이트 후 refreshProfile 호출
+    showSuccess('프로필이 저장되었습니다');
   };
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
 
-  const handleLogoutConfirm = () => {
-    logout();
+  const handleLogoutConfirm = async () => {
+    await signOut();
     setShowLogoutModal(false);
     showSuccess('로그아웃되었습니다');
     router.push('/');
@@ -153,11 +141,9 @@ export default function ProfilePage() {
 
   /**
    * 설정 변경 핸들러
-   * 설정이 변경되면 토스트로 알림을 표시합니다.
    */
   const handleSettingsChange = (newSettings: UserSettings) => {
     setSettings(newSettings);
-    // 설정 저장 완료 토스트
     showSuccess('설정이 저장되었습니다');
   };
 
@@ -178,30 +164,18 @@ export default function ProfilePage() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">프로필</h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm">계정 정보와 설정을 관리하세요</p>
             </div>
-
-            {/* Login Test Toggle - 테스트 모드일 때만 표시 (실제 로그인 시 숨김) */}
-            {mounted && isTestMode && (
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 dark:text-gray-400">테스트 모드</span>
-                <button
-                  onClick={handleTestToggle}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    isLoggedIn ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      isLoggedIn ? 'left-7' : 'left-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            )}
           </div>
 
-          {!(mounted && isLoggedIn) ? (
-            <ProfileLoginPrompt onLogin={login} />
+          {/* 로딩 중 */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : !isLoggedIn ? (
+            // 비로그인 상태
+            <ProfileLoginPrompt onLogin={() => router.push('/login')} />
           ) : (
+            // 로그인된 상태 - 프로필 표시
             <div className="space-y-6">
               {/* Profile Card */}
               <ProfileCard profile={userProfile} onEdit={handleEditProfile} onLogout={handleLogoutClick} />
@@ -209,13 +183,13 @@ export default function ProfilePage() {
               {/* Activity Summary */}
               <ActivitySummaryCard activity={activitySummary} />
 
-              {/* Settings - 설정 변경 시 토스트 표시 */}
+              {/* Settings */}
               <SettingsSection
                 settings={settings}
                 onSettingsChange={handleSettingsChange}
               />
 
-              {/* ========== 토스트 테스트 섹션 ========== */}
+              {/* 토스트 테스트 섹션 */}
               <ToastTestSection />
             </div>
           )}
@@ -254,13 +228,13 @@ export default function ProfilePage() {
       )}
 
       {/* Edit Profile Modal */}
-      {user && (
+      {authProfile && (
         <EditProfileModal
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
-          userId={user.id}
-          currentName={user.name}
-          currentAvatar={user.avatarUrl}
+          userId={authProfile.id}
+          currentName={authProfile.name}
+          currentAvatar={authProfile.avatarUrl}
           onSave={handleSaveProfile}
         />
       )}
@@ -270,17 +244,10 @@ export default function ProfilePage() {
 
 /**
  * 토스트 테스트 섹션 컴포넌트
- *
- * 4가지 타입의 토스트를 테스트할 수 있는 버튼을 제공합니다.
- * - 성공 (success): 초록색
- * - 에러 (error): 빨간색
- * - 경고 (warning): 노란색
- * - 정보 (info): 파란색
  */
 function ToastTestSection() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
-      {/* 섹션 헤더 */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
           <span className="text-xl">🔔</span>
@@ -291,9 +258,7 @@ function ToastTestSection() {
         </div>
       </div>
 
-      {/* 토스트 버튼들 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {/* 성공 토스트 버튼 */}
         <button
           onClick={() => showSuccess('작업이 성공적으로 완료되었습니다', '변경사항이 저장되었습니다')}
           className="flex flex-col items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
@@ -302,7 +267,6 @@ function ToastTestSection() {
           <span className="text-sm font-medium text-green-700 dark:text-green-400">성공</span>
         </button>
 
-        {/* 에러 토스트 버튼 */}
         <button
           onClick={() => showError('오류가 발생했습니다', '잠시 후 다시 시도해주세요')}
           className="flex flex-col items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
@@ -311,7 +275,6 @@ function ToastTestSection() {
           <span className="text-sm font-medium text-red-700 dark:text-red-400">에러</span>
         </button>
 
-        {/* 경고 토스트 버튼 */}
         <button
           onClick={() => showWarning('주의가 필요합니다', '저장 공간이 부족합니다')}
           className="flex flex-col items-center gap-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors"
@@ -320,7 +283,6 @@ function ToastTestSection() {
           <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">경고</span>
         </button>
 
-        {/* 정보 토스트 버튼 */}
         <button
           onClick={() => showInfo('새로운 기능 안내', '다크모드가 추가되었습니다')}
           className="flex flex-col items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"

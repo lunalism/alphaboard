@@ -8,11 +8,13 @@ import { showSuccess, showError } from '@/lib/toast';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, setUser, isLoggedIn } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [nickname, setNickname] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Supabase 세션에서 가져온 사용자 정보 (useAuthStore와 별도로 관리)
+  const [sessionUser, setSessionUser] = useState<{ email?: string; avatarUrl?: string } | null>(null);
 
   // 닉네임 유효성 검사
   const validateNickname = (value: string): string | null => {
@@ -30,10 +32,31 @@ export default function OnboardingPage() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
+      console.log('[Onboarding] 세션 확인:', session?.user?.id);
+
       if (!session) {
         // 로그인 안 한 사용자 → 로그인 페이지로
+        console.log('[Onboarding] 세션 없음 → /login');
         router.replace('/login');
         return;
+      }
+
+      // Supabase 세션에서 사용자 정보 추출하여 저장
+      const userMeta = session.user.user_metadata;
+      setSessionUser({
+        email: session.user.email,
+        avatarUrl: userMeta?.avatar_url || userMeta?.picture,
+      });
+
+      // useAuthStore도 업데이트 (아직 안 되어있을 수 있음)
+      if (!user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: '', // 닉네임은 이 페이지에서 설정할 예정
+          avatarUrl: userMeta?.avatar_url || userMeta?.picture,
+        });
+        console.log('[Onboarding] useAuthStore 업데이트');
       }
 
       // 이미 닉네임이 있는 사용자인지 확인
@@ -45,15 +68,17 @@ export default function OnboardingPage() {
 
       if (profile?.name) {
         // 이미 닉네임이 있으면 홈으로
+        console.log('[Onboarding] 이미 닉네임 있음 → /');
         router.replace('/');
         return;
       }
 
+      console.log('[Onboarding] 신규 사용자, 닉네임 입력 필요');
       setIsLoading(false);
     };
 
     checkAccess();
-  }, [router]);
+  }, [router, user, setUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,16 +167,16 @@ export default function OnboardingPage() {
 
           {/* 프로필 이미지 */}
           <div className="flex justify-center mb-8">
-            {user?.avatarUrl ? (
+            {(sessionUser?.avatarUrl || user?.avatarUrl) ? (
               <img
-                src={user.avatarUrl}
+                src={sessionUser?.avatarUrl || user?.avatarUrl}
                 alt="프로필"
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900"
               />
             ) : (
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900">
                 <span className="text-4xl text-white font-bold">
-                  {user?.email?.charAt(0).toUpperCase() || '?'}
+                  {(sessionUser?.email || user?.email)?.charAt(0).toUpperCase() || '?'}
                 </span>
               </div>
             )}
