@@ -25,7 +25,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   const router = useRouter();
 
   // 전역 인증 상태 사용 (자체 세션 체크 없음)
-  const { userProfile, isLoading, isLoggedIn } = useAuth();
+  const { userProfile, isLoading, isLoggedIn, isTestMode, isProfileLoading } = useAuth();
 
   // 클라이언트 마운트 확인 (hydration 방지)
   useState(() => {
@@ -112,7 +112,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
       {/* Login/User Section */}
       <div className="px-3 mt-auto">
-        {isLoading ? (
+        {isLoading || isProfileLoading ? (
           // 로딩 중 - 스켈레톤 UI
           <div className="w-full h-12 rounded-xl flex items-center px-2">
             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />
@@ -123,9 +123,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           <Link
             href="/profile"
             className="group relative w-full h-12 rounded-xl flex items-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-            title={userName}
+            title={isTestMode ? `${userName} (테스트 모드)` : userName}
           >
-            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 relative">
               {userAvatar ? (
                 <img
                   src={userAvatar}
@@ -133,16 +133,32 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isTestMode
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600'
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                }`}>
                   <span className="text-white font-bold text-sm">{userName.charAt(0).toUpperCase()}</span>
                 </div>
               )}
+              {/* 테스트 모드 배지 (아이콘용) */}
+              {isTestMode && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center lg:hidden">
+                  <span className="text-white text-[8px] font-bold">T</span>
+                </div>
+              )}
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block truncate max-w-[140px]">
-              {userName}
-            </span>
+            <div className="hidden lg:flex lg:flex-col lg:items-start lg:justify-center">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px]">
+                {userName}
+              </span>
+              {/* 테스트 모드 표시 (데스크톱) */}
+              {isTestMode && (
+                <span className="text-[10px] text-orange-500 font-medium">테스트 모드</span>
+              )}
+            </div>
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
-              {userName}
+              {userName}{isTestMode ? ' (테스트)' : ''}
             </div>
           </Link>
         ) : (

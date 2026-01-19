@@ -12,6 +12,7 @@
  * - 로그아웃 (signOut)
  * - Firestore에 사용자 프로필 저장/조회
  * - 신규 사용자 감지 및 온보딩 지원
+ * - 테스트 모드 로그인 지원 (Zustand 스토어 연동)
  *
  * Firebase SDK v9+ 모듈러 문법 사용
  */
@@ -31,6 +32,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 /**
  * 사용자 프로필 타입 (앱 내부용)
@@ -49,19 +51,33 @@ export interface UserProfile {
 }
 
 /**
+ * 테스트 사용자 프로필 (테스트 모드용 기본값)
+ */
+const TEST_USER_PROFILE: UserProfile = {
+  id: 'test-user-id',
+  email: 'test@alphaboard.com',
+  name: '테스트 유저',
+  avatarUrl: undefined,
+};
+
+/**
  * Context 타입 정의
  *
  * 컴포넌트에서 useAuth() 훅으로 접근할 수 있는 값들
  */
 interface AuthContextType {
-  // Firebase Auth 원본 User 객체
+  // Firebase Auth 원본 User 객체 (테스트 모드에서는 null)
   user: FirebaseUser | null;
-  // 앱 내부용 프로필 (Firestore에서 조회)
+  // 앱 내부용 프로필 (Firestore에서 조회 또는 테스트 유저)
   userProfile: UserProfile | null;
   // 로딩 상태 (초기 세션 확인 중)
   isLoading: boolean;
-  // 로그인 여부
+  // 프로필 로딩 상태 (Firestore 조회 중)
+  isProfileLoading: boolean;
+  // 로그인 여부 (Firebase 또는 테스트 모드)
   isLoggedIn: boolean;
+  // 테스트 모드 여부
+  isTestMode: boolean;
   // 신규 사용자 여부 (Firestore에 name이 없음)
   isNewUser: boolean;
   // Google 로그인 실행
@@ -112,10 +128,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   // 앱 내부용 프로필 (Firestore 데이터 포함)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  // 초기 로딩 상태
+  // 초기 로딩 상태 (Auth 상태 확인 중)
   const [isLoading, setIsLoading] = useState(true);
+  // 프로필 로딩 상태 (Firestore 조회 중)
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   // 신규 사용자 여부 (온보딩 필요)
   const [isNewUser, setIsNewUser] = useState(false);
+
+  // Zustand 스토어에서 테스트 모드 상태 가져오기
+  const {
+    isTestMode,
+    isLoggedIn: isTestLoggedIn,
+    user: testUser,
+    testLogout,
+  } = useAuthStore();
 
   /**
    * Firestore users 컬렉션에서 사용자 프로필 조회
@@ -127,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * @returns 신규 사용자 여부 (true: 신규, false: 기존)
    */
   const checkUserProfile = useCallback(async (firebaseUser: FirebaseUser): Promise<boolean> => {
+    setIsProfileLoading(true);
     try {
       // Firestore에서 users/{uid} 문서 조회
       const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -173,6 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[AuthProvider] 프로필 조회 에러:', err);
       setUserProfile(extractUserProfile(firebaseUser));
       return false;
+    } finally {
+      setIsProfileLoading(false);
     }
   }, []);
 
@@ -197,12 +226,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * 로그아웃 실행
    *
-   * Firebase Auth 세션 종료
+   * Firebase Auth 세션 종료 및 테스트 모드 해제
    * onAuthStateChanged에서 상태 초기화됨
    */
   const handleSignOut = useCallback(async () => {
     try {
       console.log('[AuthProvider] 로그아웃 시작...');
+
+      // 테스트 모드면 테스트 로그아웃
+      if (isTestMode) {
+        testLogout();
+        console.log('[AuthProvider] 테스트 모드 로그아웃 완료');
+        return;
+      }
+
+      // Firebase 로그아웃
       await firebaseSignOut(auth);
       // 성공 시 onAuthStateChanged가 자동으로 호출됨
       console.log('[AuthProvider] 로그아웃 완료');
@@ -210,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[AuthProvider] 로그아웃 에러:', err);
       throw err;
     }
-  }, []);
+  }, [isTestMode, testLogout]);
 
   /**
    * 프로필 업데이트 (온보딩에서 닉네임 저장 시 사용)
@@ -220,6 +258,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * @param name - 새 닉네임
    */
   const updateProfile = useCallback(async (name: string) => {
+    // 테스트 모드에서는 Firestore 업데이트 스킵
+    if (isTestMode) {
+      setUserProfile(prev => prev ? { ...prev, name } : null);
+      setIsNewUser(false);
+      console.log('[AuthProvider] 테스트 모드 프로필 업데이트:', name);
+      return;
+    }
+
     if (!user) {
       throw new Error('로그인이 필요합니다');
     }
@@ -240,15 +286,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[AuthProvider] 프로필 업데이트 에러:', err);
       throw err;
     }
-  }, [user]);
+  }, [user, isTestMode]);
 
   /**
    * 프로필 새로고침 (Firestore에서 최신 정보 가져오기)
    */
   const refreshProfile = useCallback(async () => {
+    if (isTestMode) return; // 테스트 모드에서는 스킵
     if (!user) return;
     await checkUserProfile(user);
-  }, [user, checkUserProfile]);
+  }, [user, checkUserProfile, isTestMode]);
 
   /**
    * Firebase Auth 상태 변경 감지
@@ -268,10 +315,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Firestore에서 프로필 조회 (신규/기존 사용자 판별)
         await checkUserProfile(firebaseUser);
       } else {
-        // 로그아웃 상태 - 모든 상태 초기화
+        // 로그아웃 상태 - Firebase 상태만 초기화 (테스트 모드는 유지)
         setUser(null);
-        setUserProfile(null);
-        setIsNewUser(false);
+        // 테스트 모드가 아닌 경우에만 프로필 초기화
+        if (!isTestMode) {
+          setUserProfile(null);
+          setIsNewUser(false);
+        }
       }
 
       // 초기 로딩 완료
@@ -283,17 +333,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthProvider] Auth 상태 감지 해제');
       unsubscribe();
     };
-  }, [checkUserProfile]);
+  }, [checkUserProfile, isTestMode]);
 
-  // 로그인 여부 (user가 있으면 true)
-  const isLoggedIn = !!user;
+  /**
+   * 테스트 모드 상태 변경 감지
+   *
+   * Zustand 스토어의 테스트 모드 상태가 변경되면 프로필 업데이트
+   */
+  useEffect(() => {
+    if (isTestMode && isTestLoggedIn && testUser) {
+      // 테스트 모드로 로그인됨 - 테스트 유저 프로필 설정
+      console.log('[AuthProvider] 테스트 모드 로그인 감지:', testUser.name);
+      setUserProfile({
+        id: testUser.id,
+        email: testUser.email,
+        name: testUser.name,
+        avatarUrl: testUser.avatarUrl,
+      });
+      setIsNewUser(false);
+    } else if (!isTestMode && !user) {
+      // 테스트 모드 해제 + Firebase 로그아웃 상태 - 프로필 초기화
+      setUserProfile(null);
+      setIsNewUser(false);
+    }
+  }, [isTestMode, isTestLoggedIn, testUser, user]);
+
+  // 로그인 여부 (Firebase user 또는 테스트 모드)
+  const isLoggedIn = !!user || (isTestMode && isTestLoggedIn);
+
+  // 최종 프로필 (테스트 모드면 테스트 유저, 아니면 Firebase 유저)
+  const effectiveProfile = isTestMode && isTestLoggedIn && testUser
+    ? {
+        id: testUser.id,
+        email: testUser.email,
+        name: testUser.name,
+        avatarUrl: testUser.avatarUrl,
+      }
+    : userProfile;
 
   // Context 값
   const value: AuthContextType = {
     user,
-    userProfile,
+    userProfile: effectiveProfile,
     isLoading,
+    isProfileLoading,
     isLoggedIn,
+    isTestMode,
     isNewUser,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
@@ -316,7 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * Sidebar, ProfilePage, OnboardingPage 등에서 사용합니다.
  *
  * @example
- * const { userProfile, isLoggedIn, isNewUser, signInWithGoogle, signOut } = useAuth();
+ * const { userProfile, isLoggedIn, isNewUser, isTestMode, signInWithGoogle, signOut } = useAuth();
  *
  * // Google 로그인
  * await signInWithGoogle();
@@ -327,6 +412,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * // 사용자 정보 표시
  * <p>{userProfile?.name}</p>
  * <img src={userProfile?.avatarUrl} />
+ *
+ * // 로딩 중 스켈레톤 표시
+ * if (isLoading) return <Skeleton />;
  */
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
