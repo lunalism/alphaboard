@@ -516,10 +516,10 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
       {/* 하단 네비게이션 - 모바일 */}
       <BottomNav activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
-      {/* 헤더 - 사이드바 영역 제외 */}
+      {/* 미니멀 헤더 - 뒤로가기 + 종목명만 */}
       <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 md:pl-[72px] lg:pl-60 transition-all duration-300">
-        <div className="max-w-[1200px] mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
             {/* 뒤로가기 버튼 */}
             <button
               onClick={() => router.back()}
@@ -530,50 +530,25 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
               </svg>
             </button>
 
-            {/* 종목 정보 */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
-                  {ticker}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">주식</span>
-                <span className="text-xs font-medium text-green-600 dark:text-green-400">실시간</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {stockInfo?.name || stock.stockName || ticker}
-                </h1>
-                {/* 관심종목 버튼 */}
-                <WatchlistButton
-                  isInWatchlist={inWatchlist}
-                  onToggle={handleToggleWatchlist}
-                />
-                {/* 알림 버튼 - Auth 로딩 완료 후에만 정확한 상태 표시 */}
-                <AlertButton
-                  hasAlert={hasAlert}
-                  onClick={handleAlertClick}
-                  isLoggedIn={!isAuthLoading && isLoggedIn}
-                />
-              </div>
+            {/* 종목명 + 티커 */}
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white">
+                {stockInfo?.name || stock.stockName || ticker}
+              </h1>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{ticker}</span>
             </div>
 
-            {/* 가격 정보 */}
-            <div className="text-right">
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
-                {stock.currentPrice.toLocaleString('ko-KR')}원
-              </p>
-              <div className="flex items-center justify-end gap-2 mt-1">
-                <span className={`text-sm font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {isPositive ? '+' : ''}{stock.change.toLocaleString('ko-KR')}원
-                </span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  isPositive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                </span>
-              </div>
+            {/* 우측 버튼들 */}
+            <div className="flex items-center gap-1 ml-auto">
+              <WatchlistButton
+                isInWatchlist={inWatchlist}
+                onToggle={handleToggleWatchlist}
+              />
+              <AlertButton
+                hasAlert={hasAlert}
+                onClick={handleAlertClick}
+                isLoggedIn={!isAuthLoading && isLoggedIn}
+              />
             </div>
           </div>
         </div>
@@ -603,170 +578,229 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
         onDelete={handleAlertDelete}
       />
 
-      {/* 메인 콘텐츠 - 사이드바 영역 제외 */}
+      {/* 메인 콘텐츠 - 토스증권 스타일 싱글 컬럼 */}
       <main className="md:pl-[72px] lg:pl-60 transition-all duration-300">
-        <div className="max-w-[1200px] mx-auto px-4 py-6 pb-24 md:pb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 왼쪽: 차트 + 관련 뉴스 */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 차트 섹션 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              {/* 기간 탭 */}
-              <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg w-fit">
-                {chartPeriods.map((period) => (
-                  <button
-                    key={period.id}
-                    onClick={() => setChartPeriod(period.id)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      chartPeriod === period.id
-                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {period.label}
-                  </button>
-                ))}
-              </div>
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6">
 
-              {/* 차트 */}
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPriceKr" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => {
-                        const date = new Date(value);
-                        return `${date.getMonth() + 1}/${date.getDate()}`;
-                      }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={[yMin, yMax]}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => {
-                        if (value > 10000) return (value / 10000).toFixed(1) + '만';
-                        return value.toLocaleString();
-                      }}
-                      width={60}
-                    />
-                    <Tooltip content={<CustomTooltip currency="KRW" />} />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke={isPositive ? '#22c55e' : '#ef4444'}
-                      strokeWidth={2}
-                      fill="url(#colorPriceKr)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+          {/* 가격 섹션 - 크게 중앙 정렬 */}
+          <section className="text-center py-4">
+            <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
+              {stock.currentPrice.toLocaleString('ko-KR')}
+              <span className="text-2xl md:text-3xl font-medium ml-1">원</span>
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-lg font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {isPositive ? '+' : ''}{stock.change.toLocaleString('ko-KR')}원
+              </span>
+              <span className={`text-sm font-semibold px-2.5 py-1 rounded-full ${
+                isPositive
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              }`}>
+                {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">실시간</p>
+          </section>
+
+          {/* 차트 섹션 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            {/* 기간 탭 */}
+            <div className="flex gap-1 mb-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-x-auto">
+              {chartPeriods.map((period) => (
+                <button
+                  key={period.id}
+                  onClick={() => setChartPeriod(period.id)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                    chartPeriod === period.id
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 차트 - 더 크게 */}
+            <div className="h-72 md:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorPriceKr" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    domain={[yMin, yMax]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickFormatter={(value) => {
+                      if (value > 10000) return (value / 10000).toFixed(1) + '만';
+                      return value.toLocaleString();
+                    }}
+                    width={50}
+                  />
+                  <Tooltip content={<CustomTooltip currency="KRW" />} />
+                  <Area
+                    type="monotone"
+                    dataKey="price"
+                    stroke={isPositive ? '#22c55e' : '#ef4444'}
+                    strokeWidth={2}
+                    fill="url(#colorPriceKr)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          {/* 오늘의 시세 (OHLC) */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">오늘의 시세</h2>
+            <div className="grid grid-cols-4 gap-2 md:gap-4">
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">시가</p>
+                <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.openPrice.toLocaleString('ko-KR')}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">고가</p>
+                <p className="text-sm md:text-base font-semibold text-red-600 dark:text-red-400">
+                  {stock.highPrice.toLocaleString('ko-KR')}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">저가</p>
+                <p className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400">
+                  {stock.lowPrice.toLocaleString('ko-KR')}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">현재가</p>
+                <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.currentPrice.toLocaleString('ko-KR')}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 52주 범위 */}
+          {stock.high52w && stock.low52w && (
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">52주 범위</h2>
+              {/* 프로그레스 바 */}
+              <div className="mb-3">
+                <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                  <div
+                    className="absolute h-2 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"
+                    style={{
+                      left: '0%',
+                      width: `${Math.min(100, Math.max(0, ((stock.currentPrice - stock.low52w) / (stock.high52w - stock.low52w)) * 100))}%`,
+                    }}
+                  />
+                  <div
+                    className="absolute w-4 h-4 bg-blue-600 rounded-full -top-1 border-2 border-white dark:border-gray-800 shadow-md"
+                    style={{
+                      left: `${Math.min(100, Math.max(0, ((stock.currentPrice - stock.low52w) / (stock.high52w - stock.low52w)) * 100))}%`,
+                      transform: 'translateX(-50%)',
+                    }}
+                  />
+                </div>
+              </div>
+              {/* 최저/최고 라벨 */}
+              <div className="flex justify-between text-sm">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">52주 최저</p>
+                  <p className="font-semibold text-blue-600 dark:text-blue-400">
+                    {stock.low52w.toLocaleString('ko-KR')}원
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">52주 최고</p>
+                  <p className="font-semibold text-red-600 dark:text-red-400">
+                    {stock.high52w.toLocaleString('ko-KR')}원
+                  </p>
+                </div>
               </div>
             </section>
+          )}
 
-            {/* 관련 뉴스 섹션 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
-              {news.length > 0 ? (
-                <div className="space-y-3">
-                  {news.map((item) => (
-                    <NewsItem key={item.id} news={item} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
-              )}
-            </section>
-          </div>
-
-          {/* 오른쪽: 핵심 지표 */}
-          <div className="space-y-6">
-            {/* OHLC */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">오늘의 시세</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <MetricCard label="시가" value={stock.openPrice.toLocaleString('ko-KR') + '원'} />
-                <MetricCard label="고가" value={stock.highPrice.toLocaleString('ko-KR') + '원'} />
-                <MetricCard label="저가" value={stock.lowPrice.toLocaleString('ko-KR') + '원'} />
-                <MetricCard label="현재가" value={stock.currentPrice.toLocaleString('ko-KR') + '원'} />
-              </div>
-            </section>
-
-            {/* 52주 고저 */}
-            {stock.high52w && stock.low52w && (
-              <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">52주 범위</h2>
-                <div className="mb-4">
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    <div
-                      className="absolute h-2 bg-blue-500 rounded-full"
-                      style={{
-                        left: '0%',
-                        width: `${((stock.currentPrice - stock.low52w) / (stock.high52w - stock.low52w)) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="absolute w-3 h-3 bg-blue-600 rounded-full -top-0.5 border-2 border-white dark:border-gray-800"
-                      style={{
-                        left: `${((stock.currentPrice - stock.low52w) / (stock.high52w - stock.low52w)) * 100}%`,
-                        transform: 'translateX(-50%)',
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <MetricCard label="52주 최저" value={stock.low52w.toLocaleString('ko-KR') + '원'} />
-                  <MetricCard label="52주 최고" value={stock.high52w.toLocaleString('ko-KR') + '원'} />
-                </div>
-              </section>
-            )}
-
-            {/* 거래 정보 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
-              <div className="grid grid-cols-1 gap-3">
-                <MetricCard
-                  label="거래량"
-                  value={stock.volume >= 1000000
+          {/* 거래 정보 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래량</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.volume >= 1000000
                     ? (stock.volume / 1000000).toFixed(1) + 'M'
                     : stock.volume >= 1000
                     ? (stock.volume / 1000).toFixed(1) + 'K'
-                    : stock.volume.toLocaleString()
-                  }
-                />
-                <MetricCard
-                  label="거래대금"
-                  value={stock.tradingValue
+                    : stock.volume.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래대금</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.tradingValue
                     ? (stock.tradingValue >= 100000000
                         ? (stock.tradingValue / 100000000).toFixed(1) + '억원'
                         : (stock.tradingValue / 10000).toFixed(1) + '만원')
-                    : '-'
-                  }
-                />
+                    : '-'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 투자 지표 */}
+          {(stock.per || stock.pbr) && (
+            <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">투자 지표</h2>
+              <div className="grid grid-cols-2 gap-4">
+                {stock.per && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PER</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.per.toFixed(2)}배</p>
+                  </div>
+                )}
+                {stock.pbr && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PBR</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.pbr.toFixed(2)}배</p>
+                  </div>
+                )}
               </div>
             </section>
+          )}
 
-            {/* 투자 지표 */}
-            {(stock.per || stock.pbr) && (
-              <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">투자 지표</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {stock.per && <MetricCard label="PER" value={stock.per.toFixed(2) + '배'} />}
-                  {stock.pbr && <MetricCard label="PBR" value={stock.pbr.toFixed(2) + '배'} />}
-                </div>
-              </section>
+          {/* 관련 뉴스 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
+            {news.length > 0 ? (
+              <div className="space-y-3">
+                {news.map((item) => (
+                  <NewsItem key={item.id} news={item} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
             )}
-          </div>
-        </div>
+          </section>
+
         </div>
       </main>
     </div>
@@ -1007,10 +1041,10 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
       {/* 하단 네비게이션 - 모바일 */}
       <BottomNav activeMenu={activeMenu} onMenuChange={setActiveMenu} />
 
-      {/* 헤더 - 사이드바 영역 제외 */}
+      {/* 미니멀 헤더 - 뒤로가기 + 종목명만 */}
       <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 md:pl-[72px] lg:pl-60 transition-all duration-300">
-        <div className="max-w-[1200px] mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
             {/* 뒤로가기 버튼 */}
             <button
               onClick={() => router.back()}
@@ -1021,60 +1055,25 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
               </svg>
             </button>
 
-            {/* 종목 정보 */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {/* 티커 심볼 배지 */}
-                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                  {ticker}
-                </span>
-                {/* 거래소 표시 */}
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
-                </span>
-                {/* 실시간 표시 */}
-                <span className="text-xs font-medium text-green-600 dark:text-green-400">실시간</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* 종목명 */}
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {stock.name}
-                </h1>
-                {/* 관심종목 버튼 */}
-                <WatchlistButton
-                  isInWatchlist={inWatchlist}
-                  onToggle={handleToggleWatchlist}
-                />
-                {/* 알림 버튼 - Auth 로딩 완료 후에만 정확한 상태 표시 */}
-                <AlertButton
-                  hasAlert={hasAlert}
-                  onClick={handleAlertClick}
-                  isLoggedIn={!isAuthLoading && isLoggedIn}
-                />
-              </div>
+            {/* 종목명 + 티커 */}
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white">
+                {stock.name}
+              </h1>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{ticker}</span>
             </div>
 
-            {/* 가격 정보 */}
-            <div className="text-right">
-              {/* 현재가 (USD) */}
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
-                ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              {/* 변동 정보 */}
-              <div className="flex items-center justify-end gap-2 mt-1">
-                {/* 변동폭 */}
-                <span className={`text-sm font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {isPositive ? '+' : ''}{stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
-                </span>
-                {/* 변동률 배지 */}
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  isPositive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                </span>
-              </div>
+            {/* 우측 버튼들 */}
+            <div className="flex items-center gap-1 ml-auto">
+              <WatchlistButton
+                isInWatchlist={inWatchlist}
+                onToggle={handleToggleWatchlist}
+              />
+              <AlertButton
+                hasAlert={hasAlert}
+                onClick={handleAlertClick}
+                isLoggedIn={!isAuthLoading && isLoggedIn}
+              />
             </div>
           </div>
         </div>
@@ -1104,126 +1103,150 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
         onDelete={handleAlertDelete}
       />
 
-      {/* 메인 콘텐츠 - 사이드바 영역 제외 */}
+      {/* 메인 콘텐츠 - 토스증권 스타일 싱글 컬럼 */}
       <main className="md:pl-[72px] lg:pl-60 transition-all duration-300">
-        <div className="max-w-[1200px] mx-auto px-4 py-6 pb-24 md:pb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 왼쪽: 차트 + 관련 뉴스 */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 차트 섹션 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              {/* 기간 탭 */}
-              <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg w-fit">
-                {chartPeriods.map((period) => (
-                  <button
-                    key={period.id}
-                    onClick={() => setChartPeriod(period.id)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      chartPeriod === period.id
-                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {period.label}
-                  </button>
-                ))}
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6">
+
+          {/* 가격 섹션 - 크게 중앙 정렬 */}
+          <section className="text-center py-4">
+            <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
+              <span className="text-2xl md:text-3xl font-medium mr-1">$</span>
+              {stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-lg font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {isPositive ? '+' : ''}{stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
+              </span>
+              <span className={`text-sm font-semibold px-2.5 py-1 rounded-full ${
+                isPositive
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              }`}>
+                {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'} · 실시간
+            </p>
+          </section>
+
+          {/* 차트 섹션 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            {/* 기간 탭 */}
+            <div className="flex gap-1 mb-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-x-auto">
+              {chartPeriods.map((period) => (
+                <button
+                  key={period.id}
+                  onClick={() => setChartPeriod(period.id)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                    chartPeriod === period.id
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 차트 - 더 크게 */}
+            <div className="h-72 md:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorPriceUs" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    domain={[yMin, yMax]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tickFormatter={(value) => '$' + value.toFixed(0)}
+                    width={50}
+                  />
+                  <Tooltip content={<CustomTooltip currency="USD" />} />
+                  <Area
+                    type="monotone"
+                    dataKey="price"
+                    stroke={isPositive ? '#22c55e' : '#ef4444'}
+                    strokeWidth={2}
+                    fill="url(#colorPriceUs)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          {/* 가격 정보 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">가격 정보</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">현재가</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
-
-              {/* 차트 */}
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPriceUs" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => {
-                        const date = new Date(value);
-                        return `${date.getMonth() + 1}/${date.getDate()}`;
-                      }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={[yMin, yMax]}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => '$' + value.toFixed(0)}
-                      width={60}
-                    />
-                    <Tooltip content={<CustomTooltip currency="USD" />} />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke={isPositive ? '#22c55e' : '#ef4444'}
-                      strokeWidth={2}
-                      fill="url(#colorPriceUs)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">변동폭</p>
+                <p className={`text-base font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {stock.change >= 0 ? '+' : ''}{stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
+                </p>
               </div>
-            </section>
+            </div>
+          </section>
 
-            {/* 관련 뉴스 섹션 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
-              {news.length > 0 ? (
-                <div className="space-y-3">
-                  {news.map((item) => (
-                    <NewsItem key={item.id} news={item} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
-              )}
-            </section>
-          </div>
-
-          {/* 오른쪽: 핵심 지표 */}
-          <div className="space-y-6">
-            {/* 가격 정보 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">가격 정보</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <MetricCard
-                  label="현재가"
-                  value={'$' + stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                />
-                <MetricCard
-                  label="변동폭"
-                  value={(stock.change >= 0 ? '+$' : '-$') + Math.abs(stock.change).toFixed(2)}
-                />
-              </div>
-            </section>
-
-            {/* 거래 정보 */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
-              <div className="grid grid-cols-1 gap-3">
-                <MetricCard
-                  label="거래량"
-                  value={stock.volume >= 1000000
+          {/* 거래 정보 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래량</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.volume >= 1000000
                     ? (stock.volume / 1000000).toFixed(1) + 'M'
                     : stock.volume >= 1000
                     ? (stock.volume / 1000).toFixed(1) + 'K'
-                    : stock.volume.toLocaleString()
-                  }
-                />
-                <MetricCard
-                  label="거래소"
-                  value={stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
-                />
+                    : stock.volume.toLocaleString()}
+                </p>
               </div>
-            </section>
-          </div>
-        </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래소</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">
+                  {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 관련 뉴스 */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
+            {news.length > 0 ? (
+              <div className="space-y-3">
+                {news.map((item) => (
+                  <NewsItem key={item.id} news={item} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
+            )}
+          </section>
+
         </div>
       </main>
     </div>
