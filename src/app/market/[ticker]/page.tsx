@@ -599,13 +599,13 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 ======================================== */}
             <div className="lg:col-span-3 space-y-6">
 
-              {/* 가격 섹션 - 크게 표시 (모바일: 중앙정렬, 데스크톱: 좌측정렬) */}
-              <section className="text-center lg:text-left py-4">
+              {/* 가격 섹션 - 항상 중앙 정렬 (토스 스타일) */}
+              <section className="text-center py-4">
                 <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
                   {stock.currentPrice.toLocaleString('ko-KR')}
                   <span className="text-2xl md:text-3xl font-medium ml-1">원</span>
                 </p>
-                <div className="flex items-center justify-center lg:justify-start gap-3">
+                <div className="flex items-center justify-center gap-3">
                   <span className={`text-lg font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {isPositive ? '+' : ''}{stock.change.toLocaleString('ko-KR')}원
                   </span>
@@ -1157,13 +1157,13 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                 ======================================== */}
             <div className="lg:col-span-3 space-y-6">
 
-              {/* 가격 섹션 - 크게 표시 (모바일: 중앙정렬, 데스크톱: 좌측정렬) */}
-              <section className="text-center lg:text-left py-4">
+              {/* 가격 섹션 - 항상 중앙 정렬 (토스 스타일) */}
+              <section className="text-center py-4">
                 <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
                   <span className="text-2xl md:text-3xl font-medium mr-1">$</span>
                   {stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <div className="flex items-center justify-center lg:justify-start gap-3">
+                <div className="flex items-center justify-center gap-3">
                   <span className={`text-lg font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {isPositive ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
                   </span>
