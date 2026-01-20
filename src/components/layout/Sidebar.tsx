@@ -12,7 +12,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { menuItems } from '@/constants';
-import { MenuIcon } from '@/components/common';
+import { MenuIcon, UserAvatar } from '@/components/common';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 interface SidebarProps {
@@ -121,33 +121,21 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           </div>
         ) : isLoggedIn && userProfile ? (
           // 로그인됨 - 프로필 표시
+          // UserAvatar 컴포넌트 사용 (avatarId 우선, 없으면 avatarUrl, 없으면 이니셜)
           <Link
             href="/profile"
             className="group relative w-full h-12 rounded-xl flex items-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
             title={isTestMode ? `${userName} (테스트 모드)` : userName}
           >
             <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 relative">
-              {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  isTestMode
-                    ? 'bg-gradient-to-br from-orange-500 to-orange-600'
-                    : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                }`}>
-                  <span className="text-white font-bold text-sm">{userName.charAt(0).toUpperCase()}</span>
-                </div>
-              )}
-              {/* 테스트 모드 배지 (아이콘용) */}
-              {isTestMode && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center lg:hidden">
-                  <span className="text-white text-[8px] font-bold">T</span>
-                </div>
-              )}
+              {/* UserAvatar 컴포넌트 사용 - avatarId > avatarUrl > 이니셜 우선순위 */}
+              <UserAvatar
+                avatarId={userProfile.avatarId}
+                photoURL={userAvatar}
+                name={userName}
+                size="sm"
+                isTestMode={isTestMode}
+              />
             </div>
             <div className="hidden lg:flex lg:flex-col lg:items-start lg:justify-center">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px]">

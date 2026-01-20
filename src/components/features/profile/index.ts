@@ -3,3 +3,4 @@ export { ProfileCard } from './ProfileCard';
 export { ActivitySummaryCard } from './ActivitySummaryCard';
 export { SettingsSection } from './SettingsSection';
 export { EditProfileModal } from './EditProfileModal';
+export { AvatarSelectModal } from './AvatarSelectModal';

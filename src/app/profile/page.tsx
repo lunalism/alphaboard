@@ -21,6 +21,7 @@ import {
   ActivitySummaryCard,
   SettingsSection,
   EditProfileModal,
+  AvatarSelectModal,
 } from '@/components/features/profile';
 import { defaultUserSettings } from '@/constants';
 import { showSuccess, showError, showWarning, showInfo } from '@/lib/toast';
@@ -33,12 +34,13 @@ export default function ProfilePage() {
   const [activeMenu, setActiveMenu] = useState('profile');
 
   // 전역 인증 상태 사용 (Firebase Auth)
-  const { user, userProfile: authProfile, isLoading, isLoggedIn, isTestMode, isProfileLoading, signOut } = useAuth();
+  const { user, userProfile: authProfile, isLoading, isLoggedIn, isTestMode, isProfileLoading, signOut, updateAvatarId } = useAuth();
 
   // 로컬 상태
   const [settings, setSettings] = useState<UserSettings>(defaultUserSettings);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false); // 아바타 선택 모달 상태
   const [joinDate, setJoinDate] = useState<string>('');
   const [activitySummary, setActivitySummary] = useState<ActivitySummary>({
     posts: 0,
@@ -127,11 +129,14 @@ export default function ProfilePage() {
 
   // UI용 프로필 데이터 생성
   // nickname을 최우선으로 사용, 없으면 displayName 사용
-  const userProfile: UserProfile = useMemo(() => ({
+  // avatarId가 있으면 동물 아바타 사용, 없으면 Google 프로필 사진 사용
+  const userProfile: UserProfile & { avatarId?: string } = useMemo(() => ({
     id: authProfile?.id || '',
     // 닉네임 표시 우선순위: nickname > displayName > 기본값
     name: authProfile?.nickname || authProfile?.displayName || '사용자',
     email: authProfile?.email || '',
+    // 아바타 표시: avatarId가 있으면 UserAvatar에서 처리, 없으면 Google 사진 사용
+    avatarId: authProfile?.avatarId,
     avatar: authProfile?.avatarUrl,
     joinDate: joinDate || '알 수 없음',
   }), [authProfile, joinDate]);
@@ -141,6 +146,25 @@ export default function ProfilePage() {
    */
   const handleEditProfile = () => {
     setShowEditModal(true);
+  };
+
+  /**
+   * 아바타 선택 모달 열기
+   */
+  const handleAvatarClick = () => {
+    setShowAvatarModal(true);
+  };
+
+  /**
+   * 아바타 저장 완료 핸들러
+   * AvatarSelectModal에서 저장 성공 시 호출됨
+   */
+  const handleAvatarSave = async (avatarId: string) => {
+    try {
+      await updateAvatarId(avatarId);
+    } catch (err) {
+      console.error('[ProfilePage] 아바타 저장 에러:', err);
+    }
   };
 
   const handleLogoutClick = () => {
@@ -203,8 +227,13 @@ export default function ProfilePage() {
           ) : (
             // 로그인된 상태 - 프로필 표시
             <div className="space-y-6">
-              {/* Profile Card */}
-              <ProfileCard profile={userProfile} onEdit={handleEditProfile} onLogout={handleLogoutClick} />
+              {/* Profile Card - 아바타 클릭 시 아바타 선택 모달 열림 */}
+              <ProfileCard
+                profile={userProfile}
+                onEdit={handleEditProfile}
+                onLogout={handleLogoutClick}
+                onAvatarClick={handleAvatarClick}
+              />
 
               {/* Activity Summary */}
               <ActivitySummaryCard activity={activitySummary} />
@@ -262,6 +291,18 @@ export default function ProfilePage() {
           userId={authProfile.id}
           currentName={authProfile.nickname || authProfile.displayName || ''}
           currentAvatar={authProfile.avatarUrl}
+        />
+      )}
+
+      {/* Avatar Select Modal - 아바타 선택 모달 */}
+      {authProfile && (
+        <AvatarSelectModal
+          isOpen={showAvatarModal}
+          onClose={() => setShowAvatarModal(false)}
+          userId={authProfile.id}
+          currentAvatarId={authProfile.avatarId}
+          onSave={handleAvatarSave}
+          isTestMode={isTestMode}
         />
       )}
     </div>

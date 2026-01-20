@@ -44,6 +44,11 @@ import { OnboardingModal } from '@/components/features/onboarding';
  * 1. nickname (AlphaBoard 전용 닉네임) - 최우선
  * 2. displayName (Google 이름) - 닉네임 없을 때 fallback
  * 3. email의 @ 앞부분 - 둘 다 없을 때 fallback
+ *
+ * 아바타 표시 우선순위:
+ * 1. avatarId가 있으면 → /avatars/avatar-{id}.png 표시
+ * 2. avatarUrl이 있으면 → Google 프로필 사진 표시
+ * 3. 둘 다 없으면 → 닉네임 첫 글자로 이니셜 아바타 표시
  */
 export interface UserProfile {
   // Firebase Auth uid (Firestore 문서 ID와 동일)
@@ -54,7 +59,9 @@ export interface UserProfile {
   nickname: string;
   // Google displayName (참고용, 닉네임 없을 때 fallback)
   displayName: string;
-  // 프로필 이미지 URL (Google 프로필 사진)
+  // 선택한 아바타 ID (예: 'bull', 'bear' 등) - 최우선 표시
+  avatarId?: string;
+  // 프로필 이미지 URL (Google 프로필 사진) - avatarId 없을 때 fallback
   avatarUrl?: string;
   // 온보딩 완료 여부
   onboardingCompleted: boolean;
@@ -103,6 +110,8 @@ interface AuthContextType {
   completeOnboarding: (nickname: string) => Promise<void>;
   // 닉네임 업데이트 (프로필 수정에서 사용)
   updateNickname: (nickname: string) => Promise<void>;
+  // 아바타 업데이트 (아바타 선택에서 사용)
+  updateAvatarId: (avatarId: string) => Promise<void>;
 }
 
 // Context 생성 (기본값 undefined)
@@ -119,6 +128,7 @@ interface FirestoreUserData {
   displayName?: string;
   nickname?: string;
   photoURL?: string;
+  avatarId?: string; // 선택한 아바타 ID
   onboardingCompleted?: boolean;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -141,6 +151,9 @@ const createUserProfile = (
   nickname: firestoreData?.nickname || '',
   // Google displayName (fallback용)
   displayName: user.displayName || user.email?.split('@')[0] || '사용자',
+  // 선택한 아바타 ID (최우선 표시)
+  avatarId: firestoreData?.avatarId || undefined,
+  // Google 프로필 사진 URL (avatarId 없을 때 fallback)
   avatarUrl: firestoreData?.photoURL || user.photoURL || undefined,
   // 온보딩 완료 여부 (기본값 false)
   onboardingCompleted: firestoreData?.onboardingCompleted ?? false,
@@ -370,6 +383,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, isTestMode]);
 
   /**
+   * 아바타 ID 업데이트 (아바타 선택에서 사용)
+   *
+   * Firestore users/{uid} 문서의 avatarId 필드 업데이트
+   *
+   * @param avatarId - 새 아바타 ID (예: 'bull', 'bear' 등)
+   */
+  const updateAvatarId = useCallback(async (avatarId: string) => {
+    // 테스트 모드에서는 Firestore 업데이트 스킵
+    if (isTestMode) {
+      setUserProfile(prev => prev ? { ...prev, avatarId } : null);
+      console.log('[AuthProvider] 테스트 모드 아바타 업데이트:', avatarId);
+      return;
+    }
+
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    try {
+      // Firestore 업데이트
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        avatarId: avatarId,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      // 상태 업데이트
+      setUserProfile(prev => prev ? { ...prev, avatarId } : null);
+      console.log('[AuthProvider] 아바타 업데이트 완료:', avatarId);
+    } catch (err) {
+      console.error('[AuthProvider] 아바타 업데이트 에러:', err);
+      throw err;
+    }
+  }, [user, isTestMode]);
+
+  /**
    * 프로필 새로고침 (Firestore에서 최신 정보 가져오기)
    */
   const refreshProfile = useCallback(async () => {
@@ -454,6 +503,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 테스트 유저는 nickname으로 testUser.name 사용
         nickname: testUser.name,
         displayName: testUser.name,
+        // 테스트 모드에서 userProfile의 avatarId 사용 (선택한 경우)
+        avatarId: userProfile?.avatarId,
         avatarUrl: testUser.avatarUrl,
         // 테스트 모드는 온보딩 완료 상태
         onboardingCompleted: true,
@@ -477,6 +528,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshProfile,
     completeOnboarding,
     updateNickname,
+    updateAvatarId,
   };
 
   return (

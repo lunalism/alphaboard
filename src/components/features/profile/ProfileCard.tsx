@@ -1,31 +1,62 @@
 'use client';
 
+/**
+ * ProfileCard - 프로필 카드 컴포넌트
+ *
+ * 사용자 프로필 정보를 표시하는 카드 컴포넌트입니다.
+ * 아바타, 닉네임, 이메일, 가입일 등을 표시합니다.
+ *
+ * 아바타 표시 우선순위:
+ * 1. avatarId가 있으면 → /avatars/avatar-{id}.png 표시
+ * 2. avatar(photoURL)이 있으면 → Google 프로필 사진 표시
+ * 3. 둘 다 없으면 → 닉네임 첫 글자로 이니셜 아바타 표시
+ */
+
+import { UserAvatar } from '@/components/common';
 import { UserProfile } from '@/types';
 
+/**
+ * ProfileCard 컴포넌트 Props
+ */
 interface ProfileCardProps {
-  profile: UserProfile;
+  /** 사용자 프로필 정보 */
+  profile: UserProfile & { avatarId?: string };
+  /** 프로필 수정 버튼 클릭 핸들러 */
   onEdit: () => void;
+  /** 로그아웃 버튼 클릭 핸들러 */
   onLogout: () => void;
+  /** 아바타 클릭 핸들러 (아바타 선택 모달 열기) */
+  onAvatarClick?: () => void;
 }
 
-export function ProfileCard({ profile, onEdit, onLogout }: ProfileCardProps) {
+export function ProfileCard({ profile, onEdit, onLogout, onAvatarClick }: ProfileCardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        {/* Avatar */}
-        {profile.avatar ? (
-          <img
-            src={profile.avatar}
-            alt={profile.name}
-            className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+        {/* Avatar - 클릭하여 아바타 변경 가능 */}
+        <div
+          className="relative group cursor-pointer"
+          onClick={onAvatarClick}
+        >
+          {/* 아바타 이미지 (UserAvatar 컴포넌트 사용) */}
+          <UserAvatar
+            avatarId={profile.avatarId}
+            photoURL={profile.avatar}
+            name={profile.name}
+            size="xl"
           />
-        ) : (
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-4xl text-white font-bold">
-              {profile.name.charAt(0)}
-            </span>
+
+          {/* 호버 시 "변경" 오버레이 */}
+          <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="text-white text-center">
+              <svg className="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-xs font-medium">변경</span>
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Profile Info */}
         <div className="flex-1 text-center sm:text-left">
