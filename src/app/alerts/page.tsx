@@ -17,10 +17,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Sidebar, BottomNav } from '@/components/layout';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useAlerts } from '@/hooks';
 import { PriceAlert } from '@/types/priceAlert';
 import { showSuccess, showError } from '@/lib/toast';
@@ -366,11 +366,36 @@ export default function AlertsPage() {
   const [activeMenu, setActiveMenu] = useState('alerts');
   const [activeTab, setActiveTab] = useState<AlertTab>('active');
 
-  // 인증 상태
-  const { isLoggedIn } = useAuthStore();
+  /**
+   * 인증 상태 - useAuth() 훅 사용
+   *
+   * useAuthStore 대신 useAuth()를 사용하는 이유:
+   * - useAuth()는 Firebase Auth 상태와 테스트 모드를 모두 고려하여 isLoggedIn 계산
+   * - isLoggedIn = !!user || (isTestMode && isTestLoggedIn)
+   * - isLoading은 Firebase Auth 초기화 상태를 나타냄 (초기화 중에는 로그인 여부 판단 불가)
+   *
+   * Sidebar도 동일하게 useAuth()를 사용하므로 일관성 유지
+   */
+  const { isLoggedIn, isLoading: isAuthLoading, isTestMode } = useAuth();
+
+  // 디버그 로그: 인증 상태 확인
+  useEffect(() => {
+    console.log('[AlertsPage] 인증 상태:', {
+      isLoggedIn,
+      isAuthLoading,
+      isTestMode,
+    });
+  }, [isLoggedIn, isAuthLoading, isTestMode]);
 
   // 알림 데이터 및 액션
-  const { alerts, isLoading, error, toggleAlert, deleteAlert, refetch } = useAlerts();
+  const { alerts, isLoading: isAlertsLoading, error, toggleAlert, deleteAlert, refetch } = useAlerts();
+
+  /**
+   * 전체 로딩 상태
+   * - Auth 로딩 중이거나 알림 데이터 로딩 중일 때 true
+   * - Auth 로딩이 완료되지 않으면 "로그인 필요" 메시지를 표시하지 않음
+   */
+  const isLoading = isAuthLoading || isAlertsLoading;
 
   /**
    * 알림 토글 핸들러
@@ -465,8 +490,8 @@ export default function AlertsPage() {
                 설정한 가격에 도달하면 알림을 받습니다
               </p>
             </div>
-            {/* 새로고침 버튼 */}
-            {isLoggedIn && (
+            {/* 새로고침 버튼 - 로딩 완료 후 로그인 상태에서만 표시 */}
+            {!isAuthLoading && isLoggedIn && (
               <button
                 onClick={() => refetch()}
                 className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -489,18 +514,21 @@ export default function AlertsPage() {
             )}
           </div>
 
-          {/* 비로그인 상태 */}
-          {!isLoggedIn && <EmptyState tab={activeTab} isLoggedIn={false} />}
-
-          {/* 로딩 상태 */}
-          {isLoggedIn && isLoading && (
-            <div className="flex items-center justify-center py-12">
+          {/* 로딩 상태 - Auth 로딩 중이면 로그인 여부와 관계없이 로딩 표시 */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                {isAuthLoading ? '인증 상태 확인 중...' : '알림 목록 로딩 중...'}
+              </p>
             </div>
           )}
 
-          {/* 에러 상태 */}
-          {isLoggedIn && error && (
+          {/* 비로그인 상태 - Auth 로딩이 완료된 후에만 표시 */}
+          {!isLoading && !isLoggedIn && <EmptyState tab={activeTab} isLoggedIn={false} />}
+
+          {/* 에러 상태 - Auth 로딩 완료 후 로그인 상태에서만 표시 */}
+          {!isLoading && isLoggedIn && error && (
             <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
               <p className="text-red-600 dark:text-red-400">{error}</p>
               <button
@@ -512,8 +540,8 @@ export default function AlertsPage() {
             </div>
           )}
 
-          {/* 알림 목록 */}
-          {isLoggedIn && !isLoading && !error && (
+          {/* 알림 목록 - Auth 로딩 완료 후 로그인 상태에서만 표시 */}
+          {!isLoading && isLoggedIn && !error && (
             <>
               {/* 탭 네비게이션 */}
               <div className="mb-6">
