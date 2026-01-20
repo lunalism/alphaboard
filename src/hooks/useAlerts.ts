@@ -19,7 +19,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 import {
   PriceAlert,
   CreateAlertRequest,
@@ -64,22 +64,50 @@ export function useAlerts(): UseAlertsReturn {
   // 에러 상태
   const [error, setError] = useState<string | null>(null);
 
-  // 인증 상태 확인
-  const { isLoggedIn } = useAuthStore();
+  /**
+   * 인증 상태 확인 - useAuth() 훅 사용
+   *
+   * useAuthStore 대신 useAuth()를 사용하는 이유:
+   * - useAuth()는 Firebase Auth 상태와 테스트 모드를 모두 고려
+   * - isLoggedIn = !!user || (isTestMode && isTestLoggedIn)
+   * - Sidebar와 동일한 방식으로 로그인 상태 체크
+   *
+   * isLoading: Firebase Auth 초기화 로딩 상태
+   * - 로딩 중에는 아직 로그인 여부를 판단할 수 없음
+   */
+  const { isLoggedIn, isLoading: isAuthLoading, isTestMode } = useAuth();
+
+  // 디버그 로그: 인증 상태 확인
+  useEffect(() => {
+    console.log('[useAlerts] 인증 상태:', {
+      isLoggedIn,
+      isAuthLoading,
+      isTestMode,
+    });
+  }, [isLoggedIn, isAuthLoading, isTestMode]);
 
   /**
    * 알림 목록 조회
    *
    * API를 호출하여 현재 사용자의 알림 목록을 가져옴
+   * Auth 로딩이 완료된 후에만 실행
    */
   const fetchAlerts = useCallback(async () => {
+    // Auth 로딩 중에는 대기
+    if (isAuthLoading) {
+      console.log('[useAlerts] Auth 로딩 중 - 알림 조회 대기');
+      return;
+    }
+
     // 비로그인 상태에서는 조회하지 않음
     if (!isLoggedIn) {
+      console.log('[useAlerts] 비로그인 상태 - 알림 목록 초기화');
       setAlerts([]);
       setIsLoading(false);
       return;
     }
 
+    console.log('[useAlerts] 알림 목록 조회 시작');
     setIsLoading(true);
     setError(null);
 
@@ -88,19 +116,20 @@ export function useAlerts(): UseAlertsReturn {
       const result: AlertListResponse = await response.json();
 
       if (result.success && result.data) {
+        console.log('[useAlerts] 알림 목록 조회 성공:', result.data.length, '개');
         setAlerts(result.data);
       } else {
         setError(result.error || '알림 목록을 불러오는데 실패했습니다');
         setAlerts([]);
       }
     } catch (err) {
-      console.error('알림 조회 에러:', err);
+      console.error('[useAlerts] 알림 조회 에러:', err);
       setError('네트워크 에러가 발생했습니다');
       setAlerts([]);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isAuthLoading, isLoggedIn]);
 
   // 컴포넌트 마운트 및 로그인 상태 변경 시 알림 조회
   useEffect(() => {
@@ -115,7 +144,16 @@ export function useAlerts(): UseAlertsReturn {
    */
   const addAlert = useCallback(
     async (request: CreateAlertRequest): Promise<{ success: boolean; error?: string }> => {
+      console.log('[useAlerts] addAlert 호출:', { isLoggedIn, isAuthLoading, request });
+
+      // Auth 로딩 중이면 대기 필요
+      if (isAuthLoading) {
+        console.log('[useAlerts] Auth 로딩 중 - 알림 추가 대기');
+        return { success: false, error: '인증 상태 확인 중입니다. 잠시 후 다시 시도해주세요.' };
+      }
+
       if (!isLoggedIn) {
+        console.log('[useAlerts] 비로그인 상태 - 알림 추가 실패');
         return { success: false, error: '로그인이 필요합니다' };
       }
 
@@ -129,18 +167,20 @@ export function useAlerts(): UseAlertsReturn {
         const result: AlertApiResponse = await response.json();
 
         if (result.success && result.data) {
+          console.log('[useAlerts] 알림 추가 성공:', result.data);
           // 새 알림을 목록 맨 앞에 추가
           setAlerts((prev) => [result.data!, ...prev]);
           return { success: true };
         }
 
+        console.log('[useAlerts] 알림 추가 실패:', result.error);
         return { success: false, error: result.error || '알림 추가에 실패했습니다' };
       } catch (err) {
-        console.error('알림 추가 에러:', err);
+        console.error('[useAlerts] 알림 추가 에러:', err);
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn]
+    [isLoggedIn, isAuthLoading]
   );
 
   /**
@@ -152,6 +192,10 @@ export function useAlerts(): UseAlertsReturn {
    */
   const toggleAlert = useCallback(
     async (id: string, isActive: boolean): Promise<{ success: boolean; error?: string }> => {
+      if (isAuthLoading) {
+        return { success: false, error: '인증 상태 확인 중입니다. 잠시 후 다시 시도해주세요.' };
+      }
+
       if (!isLoggedIn) {
         return { success: false, error: '로그인이 필요합니다' };
       }
@@ -175,11 +219,11 @@ export function useAlerts(): UseAlertsReturn {
 
         return { success: false, error: result.error || '알림 수정에 실패했습니다' };
       } catch (err) {
-        console.error('알림 토글 에러:', err);
+        console.error('[useAlerts] 알림 토글 에러:', err);
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn]
+    [isLoggedIn, isAuthLoading]
   );
 
   /**
@@ -190,6 +234,10 @@ export function useAlerts(): UseAlertsReturn {
    */
   const deleteAlert = useCallback(
     async (id: string): Promise<{ success: boolean; error?: string }> => {
+      if (isAuthLoading) {
+        return { success: false, error: '인증 상태 확인 중입니다. 잠시 후 다시 시도해주세요.' };
+      }
+
       if (!isLoggedIn) {
         return { success: false, error: '로그인이 필요합니다' };
       }
@@ -209,11 +257,11 @@ export function useAlerts(): UseAlertsReturn {
 
         return { success: false, error: result.error || '알림 삭제에 실패했습니다' };
       } catch (err) {
-        console.error('알림 삭제 에러:', err);
+        console.error('[useAlerts] 알림 삭제 에러:', err);
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn]
+    [isLoggedIn, isAuthLoading]
   );
 
   /**

@@ -33,12 +33,12 @@
 
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useAlerts } from './useAlerts';
 import { PriceAlert, AlertMarket } from '@/types/priceAlert';
 
@@ -108,8 +108,24 @@ export function usePriceAlertCheck(): UsePriceAlertCheckReturn {
   // useRef를 사용하여 리렌더링 없이 값 유지
   const triggeredAlertIds = useRef<Set<string>>(new Set());
 
-  // 인증 상태
-  const { isLoggedIn, isTestMode } = useAuthStore();
+  /**
+   * 인증 상태 - useAuth() 훅 사용
+   *
+   * useAuthStore 대신 useAuth()를 사용하는 이유:
+   * - useAuth()는 Firebase Auth 상태와 테스트 모드를 모두 고려
+   * - isLoggedIn = !!user || (isTestMode && isTestLoggedIn)
+   * - Sidebar와 동일한 방식으로 로그인 상태 체크
+   */
+  const { isLoggedIn, isTestMode, isLoading: isAuthLoading } = useAuth();
+
+  // 디버그 로그: 인증 상태 확인
+  useEffect(() => {
+    console.log('[usePriceAlertCheck] 인증 상태:', {
+      isLoggedIn,
+      isAuthLoading,
+      isTestMode,
+    });
+  }, [isLoggedIn, isAuthLoading, isTestMode]);
 
   // 알림 목록 조회 (이미 발동된 알림 제외됨)
   const { alerts, refetch } = useAlerts();
@@ -230,6 +246,12 @@ export function usePriceAlertCheck(): UsePriceAlertCheckReturn {
    * @param prices 시세 데이터 배열
    */
   const checkPriceAlerts = useCallback(async (prices: PriceData[]) => {
+    // Auth 로딩 중에는 체크하지 않음
+    if (isAuthLoading) {
+      console.log('[PriceAlertCheck] Auth 로딩 중 - 체크 스킵');
+      return;
+    }
+
     // 비로그인 상태에서는 체크하지 않음
     if (!isLoggedIn) {
       console.log('[PriceAlertCheck] 비로그인 상태 - 체크 스킵');
@@ -339,7 +361,7 @@ export function usePriceAlertCheck(): UsePriceAlertCheckReturn {
     } finally {
       setIsChecking(false);
     }
-  }, [isLoggedIn, alerts, checkAlertCondition, showAlertToast, triggerAlertInFirestore, refetch]);
+  }, [isAuthLoading, isLoggedIn, alerts, checkAlertCondition, showAlertToast, triggerAlertInFirestore, refetch]);
 
   /**
    * 단일 종목의 가격 알림 체크
