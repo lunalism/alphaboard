@@ -106,8 +106,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   // Firestore에서 프로필 새로고침
   refreshProfile: () => Promise<void>;
-  // 온보딩 완료 (닉네임 저장)
-  completeOnboarding: (nickname: string) => Promise<void>;
+  // 온보딩 완료 (닉네임 + 아바타 저장)
+  completeOnboarding: (nickname: string, avatarId: string) => Promise<void>;
   // 닉네임 업데이트 (프로필 수정에서 사용)
   updateNickname: (nickname: string) => Promise<void>;
   // 아바타 업데이트 (아바타 선택에서 사용)
@@ -299,23 +299,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isTestMode, testLogout]);
 
   /**
-   * 온보딩 완료 처리 (닉네임 설정)
+   * 온보딩 완료 처리 (닉네임 + 아바타 설정)
    *
-   * Firestore users/{uid} 문서에 nickname과 onboardingCompleted 저장
+   * Firestore users/{uid} 문서에 nickname, avatarId, onboardingCompleted 저장
    * 온보딩 모달에서 호출
    *
    * @param nickname - AlphaBoard 전용 닉네임
+   * @param avatarId - 선택한 아바타 ID (예: 'bull', 'bear' 등)
    */
-  const completeOnboarding = useCallback(async (nickname: string) => {
+  const completeOnboarding = useCallback(async (nickname: string, avatarId: string) => {
     // 테스트 모드에서는 Firestore 업데이트 스킵
     if (isTestMode) {
       setUserProfile(prev => prev ? {
         ...prev,
         nickname,
+        avatarId,
         onboardingCompleted: true,
       } : null);
       setNeedsOnboarding(false);
-      console.log('[AuthProvider] 테스트 모드 온보딩 완료:', nickname);
+      console.log('[AuthProvider] 테스트 모드 온보딩 완료:', nickname, avatarId);
       return;
     }
 
@@ -324,10 +326,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Firestore 업데이트 - nickname과 onboardingCompleted 저장
+      // Firestore 업데이트 - nickname, avatarId, onboardingCompleted 저장
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         nickname: nickname,
+        avatarId: avatarId,
         onboardingCompleted: true,
         updatedAt: serverTimestamp(),
       }, { merge: true }); // merge: 기존 필드 유지하고 업데이트
@@ -337,9 +340,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserProfile(prev => prev ? {
         ...prev,
         nickname,
+        avatarId,
         onboardingCompleted: true,
       } : null);
-      console.log('[AuthProvider] 온보딩 완료:', nickname);
+      console.log('[AuthProvider] 온보딩 완료:', nickname, avatarId);
     } catch (err) {
       console.error('[AuthProvider] 온보딩 완료 에러:', err);
       throw err;

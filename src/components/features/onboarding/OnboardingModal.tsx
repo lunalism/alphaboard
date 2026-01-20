@@ -3,14 +3,15 @@
 /**
  * OnboardingModal - 신규 사용자 온보딩 모달
  *
- * 신규 사용자가 처음 로그인 시 AlphaBoard 전용 닉네임을 설정하는 모달입니다.
+ * 신규 사용자가 처음 로그인 시 AlphaBoard 전용 닉네임과 아바타를 설정하는 모달입니다.
  * 이 모달은 필수 입력이므로 배경 클릭이나 ESC 키로 닫을 수 없습니다.
  *
  * 기능:
  * - AlphaBoard 전용 닉네임 입력
  * - Google displayName을 기본값으로 제공 (수정 가능)
  * - 실시간 유효성 검사 (2-20자, 한글/영문/숫자만)
- * - 온보딩 완료 시 Firestore에 nickname, onboardingCompleted 저장
+ * - 10종 동물 아바타 선택 (5x2 그리드)
+ * - 온보딩 완료 시 Firestore에 nickname, avatarId, onboardingCompleted 저장
  *
  * 표시 조건:
  * - isLoggedIn === true (로그인 상태)
@@ -19,8 +20,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { showSuccess, showError } from '@/lib/toast';
+import { AVATARS, DEFAULT_AVATAR_ID } from '@/constants/avatars';
 
 /**
  * 닉네임 유효성 검사 함수
@@ -71,6 +74,9 @@ export function OnboardingModal() {
 
   /** 닉네임 입력값 */
   const [nickname, setNickname] = useState('');
+
+  /** 선택한 아바타 ID */
+  const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATAR_ID);
 
   /** 저장 중 로딩 상태 */
   const [isSaving, setIsSaving] = useState(false);
@@ -152,9 +158,9 @@ export function OnboardingModal() {
 
     try {
       // AuthProvider의 completeOnboarding 호출
-      // - Firestore에 nickname, onboardingCompleted 저장
+      // - Firestore에 nickname, avatarId, onboardingCompleted 저장
       // - needsOnboarding 상태 업데이트 → 모달 자동 닫힘
-      await completeOnboarding(nickname.trim());
+      await completeOnboarding(nickname.trim(), selectedAvatar);
 
       showSuccess('환영합니다!', `${nickname.trim()}님, AlphaBoard에 오신 것을 환영합니다!`);
     } catch (err) {
@@ -162,7 +168,7 @@ export function OnboardingModal() {
       showError('오류가 발생했습니다', '잠시 후 다시 시도해주세요');
       setIsSaving(false);
     }
-  }, [nickname, completeOnboarding]);
+  }, [nickname, selectedAvatar, completeOnboarding]);
 
   // ========================================
   // 렌더링 조건 체크
@@ -299,6 +305,50 @@ export function OnboardingModal() {
               2-20자, 한글/영문/숫자만 사용 가능
             </p>
           )}
+        </div>
+
+        {/* 아바타 선택 섹션 */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            프로필 아바타
+          </label>
+          <div className="grid grid-cols-5 gap-2">
+            {AVATARS.map((avatar) => (
+              <button
+                key={avatar.id}
+                type="button"
+                onClick={() => setSelectedAvatar(avatar.id)}
+                disabled={isSaving}
+                className={`relative aspect-square rounded-xl overflow-hidden transition-all duration-200 ${
+                  selectedAvatar === avatar.id
+                    ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800 scale-105'
+                    : 'hover:scale-105 hover:ring-2 hover:ring-gray-300 dark:hover:ring-gray-600'
+                } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={avatar.name}
+              >
+                <Image
+                  src={avatar.path}
+                  alt={avatar.name}
+                  fill
+                  sizes="(max-width: 768px) 50px, 60px"
+                  className="object-cover"
+                />
+                {/* 선택 표시 체크마크 */}
+                {selectedAvatar === avatar.id && (
+                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            프로필에 표시될 아바타를 선택하세요
+          </p>
         </div>
 
         {/* 시작하기 버튼 */}
