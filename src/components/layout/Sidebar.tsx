@@ -33,8 +33,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   });
 
 
-  // 사용자 정보
-  const userName = userProfile?.name || '사용자';
+  // 사용자 정보 (우선순위: nickname > displayName > 기본값)
+  // AlphaBoard 닉네임이 있으면 최우선, 없으면 Google displayName 사용
+  const userName = userProfile?.nickname || userProfile?.displayName || '사용자';
   const userAvatar = userProfile?.avatarUrl;
 
   return (

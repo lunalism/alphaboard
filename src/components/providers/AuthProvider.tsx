@@ -11,7 +11,7 @@
  * - Google 팝업 로그인 (signInWithPopup)
  * - 로그아웃 (signOut)
  * - Firestore에 사용자 프로필 저장/조회
- * - 신규 사용자 감지 및 온보딩 지원
+ * - 신규 사용자 온보딩 (닉네임 설정)
  * - 테스트 모드 로그인 지원 (Zustand 스토어 연동)
  *
  * Firebase SDK v9+ 모듈러 문법 사용
@@ -33,31 +33,44 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { OnboardingModal } from '@/components/features/onboarding';
 
 /**
  * 사용자 프로필 타입 (앱 내부용)
  *
  * Firebase Auth의 User 객체와 Firestore users 컬렉션 데이터를 조합
+ *
+ * 닉네임 표시 우선순위:
+ * 1. nickname (AlphaBoard 전용 닉네임) - 최우선
+ * 2. displayName (Google 이름) - 닉네임 없을 때 fallback
+ * 3. email의 @ 앞부분 - 둘 다 없을 때 fallback
  */
 export interface UserProfile {
   // Firebase Auth uid (Firestore 문서 ID와 동일)
   id: string;
   // 사용자 이메일
   email: string;
-  // 표시 이름 (Google OAuth에서 가져오거나 온보딩에서 설정)
-  name: string;
+  // AlphaBoard 전용 닉네임 (온보딩에서 설정, 최우선 표시)
+  nickname: string;
+  // Google displayName (참고용, 닉네임 없을 때 fallback)
+  displayName: string;
   // 프로필 이미지 URL (Google 프로필 사진)
   avatarUrl?: string;
+  // 온보딩 완료 여부
+  onboardingCompleted: boolean;
 }
 
 /**
  * 테스트 사용자 프로필 (테스트 모드용 기본값)
+ * 테스트 모드에서는 온보딩이 이미 완료된 것으로 처리
  */
 const TEST_USER_PROFILE: UserProfile = {
   id: 'test-user-id',
   email: 'test@alphaboard.com',
-  name: '테스트 유저',
+  nickname: '테스트 유저',
+  displayName: 'Test User',
   avatarUrl: undefined,
+  onboardingCompleted: true,
 };
 
 /**
@@ -78,18 +91,18 @@ interface AuthContextType {
   isLoggedIn: boolean;
   // 테스트 모드 여부
   isTestMode: boolean;
-  // 신규 사용자 여부 (Firestore에 name이 없음)
-  isNewUser: boolean;
+  // 온보딩 필요 여부 (nickname이 없거나 onboardingCompleted가 false)
+  needsOnboarding: boolean;
   // Google 로그인 실행
   signInWithGoogle: () => Promise<void>;
   // 로그아웃 실행
   signOut: () => Promise<void>;
   // Firestore에서 프로필 새로고침
   refreshProfile: () => Promise<void>;
-  // 프로필 업데이트 (온보딩에서 닉네임 저장)
-  updateProfile: (name: string) => Promise<void>;
-  // 신규 사용자 상태 수동 설정
-  setIsNewUser: (value: boolean) => void;
+  // 온보딩 완료 (닉네임 저장)
+  completeOnboarding: (nickname: string) => Promise<void>;
+  // 닉네임 업데이트 (프로필 수정에서 사용)
+  updateNickname: (nickname: string) => Promise<void>;
 }
 
 // Context 생성 (기본값 undefined)
@@ -99,20 +112,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Firebase User에서 기본 UserProfile 추출
- *
- * Firestore 조회 전 임시 프로필 또는 Firestore에 name이 없을 때 사용
+ * Firestore 사용자 데이터 타입 (내부용)
+ */
+interface FirestoreUserData {
+  email?: string;
+  displayName?: string;
+  nickname?: string;
+  photoURL?: string;
+  onboardingCompleted?: boolean;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+/**
+ * Firebase User와 Firestore 데이터에서 UserProfile 생성
  *
  * @param user - Firebase Auth User 객체
- * @param profileName - Firestore에서 조회한 name (있으면 사용)
+ * @param firestoreData - Firestore에서 조회한 데이터 (선택)
  * @returns UserProfile 객체
  */
-const extractUserProfile = (user: FirebaseUser, profileName?: string | null): UserProfile => ({
+const createUserProfile = (
+  user: FirebaseUser,
+  firestoreData?: FirestoreUserData | null
+): UserProfile => ({
   id: user.uid,
   email: user.email || '',
-  // 우선순위: Firestore name > displayName > 이메일 앞부분
-  name: profileName || user.displayName || user.email?.split('@')[0] || '사용자',
-  avatarUrl: user.photoURL || undefined,
+  // AlphaBoard 닉네임 (온보딩에서 설정, 없으면 빈 문자열)
+  nickname: firestoreData?.nickname || '',
+  // Google displayName (fallback용)
+  displayName: user.displayName || user.email?.split('@')[0] || '사용자',
+  avatarUrl: firestoreData?.photoURL || user.photoURL || undefined,
+  // 온보딩 완료 여부 (기본값 false)
+  onboardingCompleted: firestoreData?.onboardingCompleted ?? false,
 });
 
 /**
@@ -132,8 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   // 프로필 로딩 상태 (Firestore 조회 중)
   const [isProfileLoading, setIsProfileLoading] = useState(false);
-  // 신규 사용자 여부 (온보딩 필요)
-  const [isNewUser, setIsNewUser] = useState(false);
+  // 온보딩 필요 여부 (nickname이 없거나 onboardingCompleted가 false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Zustand 스토어에서 테스트 모드 상태 가져오기
   const {
@@ -146,11 +177,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Firestore users 컬렉션에서 사용자 프로필 조회
    *
-   * - 프로필이 없거나 name이 없으면 신규 사용자로 판단
-   * - 로그인 시 호출되어 신규/기존 사용자 판별
+   * - 프로필이 없으면 신규 사용자 → Firestore에 기본 정보 생성
+   * - onboardingCompleted가 false이거나 nickname이 없으면 온보딩 필요
+   * - 로그인 시 호출되어 온보딩 필요 여부 판별
    *
    * @param firebaseUser - Firebase Auth User 객체
-   * @returns 신규 사용자 여부 (true: 신규, false: 기존)
+   * @returns 온보딩 필요 여부 (true: 필요, false: 불필요)
    */
   const checkUserProfile = useCallback(async (firebaseUser: FirebaseUser): Promise<boolean> => {
     setIsProfileLoading(true);
@@ -162,43 +194,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!userDoc.exists()) {
         // 문서가 없으면 신규 사용자 → Firestore에 기본 정보 저장
         console.log('[AuthProvider] 신규 사용자 - Firestore에 프로필 생성');
+        const initialData: FirestoreUserData = {
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || '',
+          photoURL: firebaseUser.photoURL || '',
+          nickname: '', // 닉네임은 온보딩에서 설정
+          onboardingCompleted: false, // 온보딩 미완료 상태로 생성
+        };
         await setDoc(userDocRef, {
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
+          ...initialData,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          // name은 온보딩에서 설정 (여기서는 저장하지 않음)
         });
-        setIsNewUser(true);
-        setUserProfile(extractUserProfile(firebaseUser));
+        setNeedsOnboarding(true);
+        setUserProfile(createUserProfile(firebaseUser, initialData));
         return true;
       }
 
-      // 문서가 있으면 name 필드 확인
-      const userData = userDoc.data();
-      if (!userData.name) {
-        // name이 없으면 신규 사용자 (온보딩 미완료)
-        console.log('[AuthProvider] name 없음 - 온보딩 필요');
-        setIsNewUser(true);
-        setUserProfile(extractUserProfile(firebaseUser));
+      // 문서가 있으면 onboardingCompleted와 nickname 확인
+      const userData = userDoc.data() as FirestoreUserData;
+
+      // 온보딩 완료 여부 확인: onboardingCompleted가 true이고 nickname이 있으면 완료
+      const isOnboardingComplete = userData.onboardingCompleted === true && !!userData.nickname;
+
+      if (!isOnboardingComplete) {
+        // 온보딩 미완료
+        console.log('[AuthProvider] 온보딩 필요 - nickname 또는 onboardingCompleted 없음');
+        setNeedsOnboarding(true);
+        setUserProfile(createUserProfile(firebaseUser, userData));
         return true;
       }
 
-      // 기존 사용자 - Firestore의 name 사용
-      console.log('[AuthProvider] 기존 사용자:', userData.name);
-      setIsNewUser(false);
-      setUserProfile({
-        id: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        name: userData.name,
-        avatarUrl: userData.photoURL || firebaseUser.photoURL || undefined,
-      });
+      // 기존 사용자 - 온보딩 완료됨
+      console.log('[AuthProvider] 기존 사용자:', userData.nickname);
+      setNeedsOnboarding(false);
+      setUserProfile(createUserProfile(firebaseUser, userData));
       return false;
     } catch (err) {
       // 에러 시에도 기본 프로필 설정 (앱 사용은 가능하게)
       console.error('[AuthProvider] 프로필 조회 에러:', err);
-      setUserProfile(extractUserProfile(firebaseUser));
+      setUserProfile(createUserProfile(firebaseUser, null));
       return false;
     } finally {
       setIsProfileLoading(false);
@@ -251,18 +286,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isTestMode, testLogout]);
 
   /**
-   * 프로필 업데이트 (온보딩에서 닉네임 저장 시 사용)
+   * 온보딩 완료 처리 (닉네임 설정)
    *
-   * Firestore users/{uid} 문서의 name 필드 업데이트
+   * Firestore users/{uid} 문서에 nickname과 onboardingCompleted 저장
+   * 온보딩 모달에서 호출
    *
-   * @param name - 새 닉네임
+   * @param nickname - AlphaBoard 전용 닉네임
    */
-  const updateProfile = useCallback(async (name: string) => {
+  const completeOnboarding = useCallback(async (nickname: string) => {
     // 테스트 모드에서는 Firestore 업데이트 스킵
     if (isTestMode) {
-      setUserProfile(prev => prev ? { ...prev, name } : null);
-      setIsNewUser(false);
-      console.log('[AuthProvider] 테스트 모드 프로필 업데이트:', name);
+      setUserProfile(prev => prev ? {
+        ...prev,
+        nickname,
+        onboardingCompleted: true,
+      } : null);
+      setNeedsOnboarding(false);
+      console.log('[AuthProvider] 테스트 모드 온보딩 완료:', nickname);
+      return;
+    }
+
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    try {
+      // Firestore 업데이트 - nickname과 onboardingCompleted 저장
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        nickname: nickname,
+        onboardingCompleted: true,
+        updatedAt: serverTimestamp(),
+      }, { merge: true }); // merge: 기존 필드 유지하고 업데이트
+
+      // 상태 업데이트
+      setNeedsOnboarding(false);
+      setUserProfile(prev => prev ? {
+        ...prev,
+        nickname,
+        onboardingCompleted: true,
+      } : null);
+      console.log('[AuthProvider] 온보딩 완료:', nickname);
+    } catch (err) {
+      console.error('[AuthProvider] 온보딩 완료 에러:', err);
+      throw err;
+    }
+  }, [user, isTestMode]);
+
+  /**
+   * 닉네임 업데이트 (프로필 수정에서 사용)
+   *
+   * Firestore users/{uid} 문서의 nickname 필드 업데이트
+   *
+   * @param nickname - 새 닉네임
+   */
+  const updateNickname = useCallback(async (nickname: string) => {
+    // 테스트 모드에서는 Firestore 업데이트 스킵
+    if (isTestMode) {
+      setUserProfile(prev => prev ? { ...prev, nickname } : null);
+      console.log('[AuthProvider] 테스트 모드 닉네임 업데이트:', nickname);
       return;
     }
 
@@ -274,16 +356,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Firestore 업데이트
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
-        name: name,
+        nickname: nickname,
         updatedAt: serverTimestamp(),
-      }, { merge: true }); // merge: 기존 필드 유지하고 업데이트
+      }, { merge: true });
 
       // 상태 업데이트
-      setIsNewUser(false);
-      setUserProfile(prev => prev ? { ...prev, name } : null);
-      console.log('[AuthProvider] 프로필 업데이트 완료:', name);
+      setUserProfile(prev => prev ? { ...prev, nickname } : null);
+      console.log('[AuthProvider] 닉네임 업데이트 완료:', nickname);
     } catch (err) {
-      console.error('[AuthProvider] 프로필 업데이트 에러:', err);
+      console.error('[AuthProvider] 닉네임 업데이트 에러:', err);
       throw err;
     }
   }, [user, isTestMode]);
@@ -320,7 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 테스트 모드가 아닌 경우에만 프로필 초기화
         if (!isTestMode) {
           setUserProfile(null);
-          setIsNewUser(false);
+          setNeedsOnboarding(false);
         }
       }
 
@@ -347,14 +428,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserProfile({
         id: testUser.id,
         email: testUser.email,
-        name: testUser.name,
+        // 테스트 유저는 nickname으로 testUser.name 사용
+        nickname: testUser.name,
+        displayName: testUser.name,
         avatarUrl: testUser.avatarUrl,
+        // 테스트 모드는 온보딩 완료 상태
+        onboardingCompleted: true,
       });
-      setIsNewUser(false);
+      setNeedsOnboarding(false);
     } else if (!isTestMode && !user) {
       // 테스트 모드 해제 + Firebase 로그아웃 상태 - 프로필 초기화
       setUserProfile(null);
-      setIsNewUser(false);
+      setNeedsOnboarding(false);
     }
   }, [isTestMode, isTestLoggedIn, testUser, user]);
 
@@ -366,10 +451,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ? {
         id: testUser.id,
         email: testUser.email,
-        name: testUser.name,
+        // 테스트 유저는 nickname으로 testUser.name 사용
+        nickname: testUser.name,
+        displayName: testUser.name,
         avatarUrl: testUser.avatarUrl,
+        // 테스트 모드는 온보딩 완료 상태
+        onboardingCompleted: true,
       }
     : userProfile;
+
+  // 최종 온보딩 필요 여부 (테스트 모드에서는 항상 false)
+  const effectiveNeedsOnboarding = isTestMode ? false : needsOnboarding;
 
   // Context 값
   const value: AuthContextType = {
@@ -379,17 +471,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isProfileLoading,
     isLoggedIn,
     isTestMode,
-    isNewUser,
+    needsOnboarding: effectiveNeedsOnboarding,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
     refreshProfile,
-    updateProfile,
-    setIsNewUser,
+    completeOnboarding,
+    updateNickname,
   };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {/* 온보딩 모달 - 신규 사용자에게 닉네임 설정 요청 */}
+      {/* needsOnboarding이 true일 때만 표시됨 (테스트 모드 제외) */}
+      <OnboardingModal />
     </AuthContext.Provider>
   );
 }
@@ -398,10 +493,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * useAuth 훅
  *
  * AuthProvider 내부에서 인증 상태에 접근하기 위한 훅입니다.
- * Sidebar, ProfilePage, OnboardingPage 등에서 사용합니다.
+ * Sidebar, ProfilePage, OnboardingModal 등에서 사용합니다.
  *
  * @example
- * const { userProfile, isLoggedIn, isNewUser, isTestMode, signInWithGoogle, signOut } = useAuth();
+ * const { userProfile, isLoggedIn, needsOnboarding, isTestMode, signInWithGoogle, signOut, completeOnboarding } = useAuth();
  *
  * // Google 로그인
  * await signInWithGoogle();
@@ -409,8 +504,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * // 로그아웃
  * await signOut();
  *
- * // 사용자 정보 표시
- * <p>{userProfile?.name}</p>
+ * // 온보딩 완료
+ * await completeOnboarding('닉네임');
+ *
+ * // 사용자 이름 표시 (우선순위: nickname > displayName)
+ * <p>{userProfile?.nickname || userProfile?.displayName}</p>
  * <img src={userProfile?.avatarUrl} />
  *
  * // 로딩 중 스켈레톤 표시

@@ -126,9 +126,11 @@ export default function ProfilePage() {
   }, [authProfile?.id, user, isTestMode]);
 
   // UI용 프로필 데이터 생성
+  // nickname을 최우선으로 사용, 없으면 displayName 사용
   const userProfile: UserProfile = useMemo(() => ({
     id: authProfile?.id || '',
-    name: authProfile?.name || '사용자',
+    // 닉네임 표시 우선순위: nickname > displayName > 기본값
+    name: authProfile?.nickname || authProfile?.displayName || '사용자',
     email: authProfile?.email || '',
     avatar: authProfile?.avatarUrl,
     joinDate: joinDate || '알 수 없음',
@@ -252,12 +254,13 @@ export default function ProfilePage() {
       )}
 
       {/* Edit Profile Modal - 프로필 수정 모달 */}
+      {/* currentName에 nickname 우선 사용 (nickname이 없으면 displayName 사용) */}
       {authProfile && (
         <EditProfileModal
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
           userId={authProfile.id}
-          currentName={authProfile.name}
+          currentName={authProfile.nickname || authProfile.displayName || ''}
           currentAvatar={authProfile.avatarUrl}
         />
       )}

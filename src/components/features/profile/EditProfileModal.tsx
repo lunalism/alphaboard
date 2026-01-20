@@ -134,9 +134,10 @@ export function EditProfileModal({
 
     try {
       // Firestore users/{uid} 문서 업데이트
+      // nickname 필드를 업데이트 (AlphaBoard 전용 닉네임)
       const userDocRef = doc(db, 'users', userId);
       await setDoc(userDocRef, {
-        name: name.trim(),
+        nickname: name.trim(),
         updatedAt: serverTimestamp(),
       }, { merge: true }); // merge: 기존 필드 유지하고 업데이트
 
