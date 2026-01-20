@@ -35,7 +35,7 @@ import {
   PostComposer,
 } from '@/components/features/community';
 import { hotPosts, discussionStocks, activeUsers } from '@/constants';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useCommunity } from '@/hooks';
 
 /**
@@ -97,7 +97,9 @@ export default function CommunityPage() {
   const [activeMenu, setActiveMenu] = useState('community');
   const [activeTab, setActiveTab] = useState<CommunityCategory>('all');
   const [sortType, setSortType] = useState<SortType>('latest');
-  const { isLoggedIn, login } = useAuthStore();
+  // AuthProvider의 useAuth 훅 사용 (Firebase Auth 연동)
+  // useAuthStore(Zustand)가 아닌 useAuth(Context)를 사용해야 Firebase 로그인 상태를 인식함
+  const { isLoggedIn, signInWithGoogle } = useAuth();
 
   // Supabase 연동 커뮤니티 훅
   const {
@@ -194,7 +196,7 @@ export default function CommunityPage() {
               <div className="hidden md:block">
                 <PostComposer
                   isLoggedIn={isLoggedIn}
-                  onLoginRequest={login}
+                  onLoginRequest={signInWithGoogle}
                   onSubmit={async (content: string) => {
                     // 해시태그 추출
                     const hashtagMatches = content.match(/#([^\s#]+)/g);
