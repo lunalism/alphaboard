@@ -27,7 +27,7 @@ export default function LoginPage() {
   const {
     isLoggedIn,
     isLoading,
-    isNewUser,
+    needsOnboarding,
     signInWithGoogle,
   } = useAuth();
 
@@ -53,13 +53,13 @@ export default function LoginPage() {
 
     // 로그인 상태면 리다이렉트
     if (isLoggedIn) {
-      if (isNewUser) {
+      if (needsOnboarding) {
         router.replace('/onboarding');
       } else {
         router.replace('/');
       }
     }
-  }, [isLoggedIn, isLoading, isNewUser, router]);
+  }, [isLoggedIn, isLoading, needsOnboarding, router]);
 
   /**
    * Google 로그인 버튼 클릭 핸들러

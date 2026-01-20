@@ -29,12 +29,12 @@ export default function OnboardingPage() {
     userProfile,
     isLoading,
     isLoggedIn,
-    isNewUser,
-    updateProfile,
+    needsOnboarding,
+    updateNickname,
   } = useAuth();
 
   // 로컬 상태
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [showOnboardingForm, setShowOnboardingForm] = useState(false);
   const [nickname, setNickname] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +69,14 @@ export default function OnboardingPage() {
     }
 
     // 이미 닉네임이 있으면 (기존 사용자) → 홈으로
-    if (!isNewUser) {
+    if (!needsOnboarding) {
       router.replace('/');
       return;
     }
 
     // 신규 사용자 → 온보딩 폼 표시
-    setNeedsOnboarding(true);
-  }, [isLoading, isLoggedIn, isNewUser, router]);
+    setShowOnboardingForm(true);
+  }, [isLoading, isLoggedIn, needsOnboarding, router]);
 
   /**
    * 닉네임 저장 제출
@@ -97,8 +97,8 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      // AuthProvider의 updateProfile 호출 (Firestore 업데이트)
-      await updateProfile(nickname.trim());
+      // AuthProvider의 updateNickname 호출 (Firestore 업데이트)
+      await updateNickname(nickname.trim());
 
       showSuccess('환영합니다! 🎉');
 
@@ -124,7 +124,7 @@ export default function OnboardingPage() {
   };
 
   // 로딩 중
-  if (isLoading || !needsOnboarding) {
+  if (isLoading || !showOnboardingForm) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />

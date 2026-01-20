@@ -182,10 +182,6 @@ export function usePriceAlertCheck(): UsePriceAlertCheckReturn {
           router.push('/alerts');
         },
       },
-      // 클릭 시에도 가격 알림 페이지로 이동
-      onClick: () => {
-        router.push('/alerts');
-      },
     });
   }, [formatPrice, router]);
 

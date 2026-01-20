@@ -75,7 +75,7 @@ export function useAlerts(): UseAlertsReturn {
    * isLoading: Firebase Auth 초기화 로딩 상태
    * - 로딩 중에는 아직 로그인 여부를 판단할 수 없음
    */
-  const { isLoggedIn, isLoading: isAuthLoading, isTestMode } = useAuth();
+  const { isLoggedIn, isLoading: isAuthLoading, isTestMode, userProfile } = useAuth();
 
   // 디버그 로그: 인증 상태 확인
   useEffect(() => {
@@ -112,7 +112,9 @@ export function useAlerts(): UseAlertsReturn {
     setError(null);
 
     try {
-      const response = await fetch('/api/alerts');
+      const response = await fetch('/api/alerts', {
+        headers: userProfile?.id ? { 'x-user-id': userProfile.id } : {},
+      });
       const result: AlertListResponse = await response.json();
 
       if (result.success && result.data) {
@@ -129,7 +131,7 @@ export function useAlerts(): UseAlertsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthLoading, isLoggedIn]);
+  }, [isAuthLoading, isLoggedIn, userProfile?.id]);
 
   // 컴포넌트 마운트 및 로그인 상태 변경 시 알림 조회
   useEffect(() => {
@@ -160,7 +162,10 @@ export function useAlerts(): UseAlertsReturn {
       try {
         const response = await fetch('/api/alerts', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(userProfile?.id ? { 'x-user-id': userProfile.id } : {}),
+          },
           body: JSON.stringify(request),
         });
 
@@ -180,7 +185,7 @@ export function useAlerts(): UseAlertsReturn {
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn, isAuthLoading]
+    [isLoggedIn, isAuthLoading, userProfile?.id]
   );
 
   /**
@@ -203,7 +208,10 @@ export function useAlerts(): UseAlertsReturn {
       try {
         const response = await fetch(`/api/alerts/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(userProfile?.id ? { 'x-user-id': userProfile.id } : {}),
+          },
           body: JSON.stringify({ isActive }),
         });
 
@@ -223,7 +231,7 @@ export function useAlerts(): UseAlertsReturn {
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn, isAuthLoading]
+    [isLoggedIn, isAuthLoading, userProfile?.id]
   );
 
   /**
@@ -245,6 +253,7 @@ export function useAlerts(): UseAlertsReturn {
       try {
         const response = await fetch(`/api/alerts/${id}`, {
           method: 'DELETE',
+          headers: userProfile?.id ? { 'x-user-id': userProfile.id } : {},
         });
 
         const result: AlertApiResponse<null> = await response.json();
@@ -261,7 +270,7 @@ export function useAlerts(): UseAlertsReturn {
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn, isAuthLoading]
+    [isLoggedIn, isAuthLoading, userProfile?.id]
   );
 
   /**

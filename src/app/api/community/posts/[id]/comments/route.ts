@@ -28,6 +28,7 @@ import {
   type FirestorePost,
   type FirestoreComment,
 } from '@/lib/firestore';
+import type { QueryConstraint } from 'firebase/firestore';
 import { CommunityComment, CreateCommentRequest, CommunityApiResponse } from '@/types/community';
 import { increment } from 'firebase/firestore';
 
@@ -85,7 +86,7 @@ export async function GET(
     }
 
     // 쿼리 조건 구성
-    const constraints = [
+    const constraints: QueryConstraint[] = [
       orderBy('createdAt', 'asc'),
     ];
 
