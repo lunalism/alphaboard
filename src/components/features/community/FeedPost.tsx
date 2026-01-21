@@ -25,6 +25,7 @@ import { useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { FeedPost as FeedPostType, StockTag, CommunityComment } from '@/types/community';
 import { GlossaryText } from '@/components/ui';
+import { StockCardWithPrice } from './StockCardWithPrice';
 
 interface FeedPostProps {
   post: FeedPostType;
@@ -42,9 +43,21 @@ interface FeedPostProps {
    * - false: 가격 숨김 (/market/[ticker] 페이지 커뮤니티 섹션용 - 위에 가격 있어서 중복 방지)
    */
   showTickerPrice?: boolean;
+  /**
+   * 티커 카드 표시 여부
+   * - true: 티커 카드 표시 (기본값)
+   * - false: 티커 카드 완전 숨김 (/market/[ticker] 페이지 - 이미 종목 페이지에 있으므로)
+   */
+  showTickerCard?: boolean;
+  /**
+   * 티커 카드에서 실시간 가격 API 호출 여부
+   * - true: 실시간 시세 API 호출하여 가격 표시 (/community 페이지용)
+   * - false: 정적 가격 표시 또는 "시세 보기 →" (기본값)
+   */
+  fetchPrices?: boolean;
 }
 
-export function FeedPost({ post, postId, onLikeToggle, onLoadComments, onAddComment, showTickerPrice = true }: FeedPostProps) {
+export function FeedPost({ post, postId, onLikeToggle, onLoadComments, onAddComment, showTickerPrice = true, showTickerCard = true, fetchPrices = false }: FeedPostProps) {
   const router = useRouter();
 
   // 인터랙션 상태
@@ -342,9 +355,21 @@ export function FeedPost({ post, postId, onLikeToggle, onLoadComments, onAddComm
             </div>
 
             {/* 종목 미니 카드 (태그된 종목이 있을 때) */}
-            {post.stockTags.length > 0 && (
+            {/* 종목 태그 카드 - showTickerCard=false면 숨김 */}
+            {showTickerCard && post.stockTags.length > 0 && (
               <div className="space-y-2 mb-3">
-                {post.stockTags.map(renderStockCard)}
+                {fetchPrices
+                  ? /* 실시간 가격 API 호출하여 표시 */
+                    post.stockTags.map((stock) => (
+                      <StockCardWithPrice
+                        key={stock.ticker}
+                        ticker={stock.ticker}
+                        name={stock.name}
+                      />
+                    ))
+                  : /* 정적 가격 표시 */
+                    post.stockTags.map(renderStockCard)
+                }
               </div>
             )}
 

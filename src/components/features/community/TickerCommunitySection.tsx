@@ -332,6 +332,7 @@ export function TickerCommunitySection({
               onLoadComments={handleLoadComments}
               onAddComment={handleAddComment}
               showTickerPrice={false}  // 시세 페이지에서는 가격 숨김 (위에 이미 표시됨)
+              showTickerCard={false}   // 시세 페이지에서는 티커 카드 숨김 (이미 종목 페이지에 있으므로)
             />
           ))}
           {/* 더보기 버튼 (하단) */}

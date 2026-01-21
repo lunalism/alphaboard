@@ -15,7 +15,7 @@
  * - 삼성전자(005930), SK하이닉스(000660) 등
  */
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   XAxis,
@@ -307,6 +307,10 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   const [isEditAlertModalOpen, setIsEditAlertModalOpen] = useState(false);
   const [editingAlert, setEditingAlert] = useState<PriceAlert | null>(null);
 
+  // 헤더 가격 표시 상태 (스크롤 시 메인 가격 영역이 화면에서 사라지면 true)
+  const [showHeaderPrice, setShowHeaderPrice] = useState(false);
+  const priceRef = useRef<HTMLElement>(null);
+
   // 한국 종목 실시간 데이터
   const { stock, isLoading: isStockLoading, error, refetch } = useKoreanStockPrice(ticker);
   const stockInfo = getKoreanStockInfo(ticker);
@@ -422,6 +426,36 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
       checkSingleAlert(ticker, stock.currentPrice, 'KR');
     }
   }, [isAuthLoading, isLoggedIn, isStockLoading, stock, ticker, checkSingleAlert]);
+
+  // ========================================
+  // 헤더 가격 표시 - Intersection Observer
+  // 메인 가격 영역이 화면에서 사라지면 헤더에 가격 표시
+  // ========================================
+  useEffect(() => {
+    const priceElement = priceRef.current;
+    if (!priceElement) return;
+
+    // Intersection Observer 설정
+    // threshold: 0 = 요소가 완전히 화면에서 벗어나면 트리거
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // isIntersecting: true = 가격 영역이 화면에 보임
+        // false = 화면에서 사라짐 (스크롤 내림)
+        setShowHeaderPrice(!entry.isIntersecting);
+      },
+      {
+        root: null, // viewport 기준
+        threshold: 0, // 요소가 0% 보일 때 트리거 (완전히 사라지면)
+        rootMargin: '-60px 0px 0px 0px', // 헤더 높이만큼 상단 마진
+      }
+    );
+
+    observer.observe(priceElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   // 관심종목 토글 핸들러 (Supabase 연동, 로그인 필수)
   const handleToggleWatchlist = async () => {
@@ -539,19 +573,21 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
               </h1>
               <span className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">{ticker}</span>
 
-              {/* 헤더 가격 표시 - 스크롤해도 현재가 확인 가능 */}
-              <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {stock.currentPrice.toLocaleString('ko-KR')}
-                </span>
-                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                  isPositive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                </span>
-              </div>
+              {/* 헤더 가격 표시 - 메인 가격 영역이 화면에서 사라지면 표시 */}
+              {showHeaderPrice && (
+                <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 animate-fade-in">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {stock.currentPrice.toLocaleString('ko-KR')}
+                  </span>
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                    isPositive
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 우측 버튼들 */}
@@ -616,7 +652,8 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
             <div className="lg:col-span-3 space-y-6">
 
               {/* 가격 섹션 - 항상 중앙 정렬 (토스 스타일) */}
-              <section className="text-center py-4">
+              {/* ref: Intersection Observer로 화면 이탈 감지 → 헤더에 가격 표시 */}
+              <section ref={priceRef} className="text-center py-4">
                 <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
                   {stock.currentPrice.toLocaleString('ko-KR')}
                   <span className="text-2xl md:text-3xl font-medium ml-1">원</span>
@@ -889,6 +926,10 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
   const [isEditAlertModalOpen, setIsEditAlertModalOpen] = useState(false);
   const [editingAlert, setEditingAlert] = useState<PriceAlert | null>(null);
 
+  // 헤더 가격 표시 상태 (스크롤 시 메인 가격 영역이 화면에서 사라지면 true)
+  const [showHeaderPrice, setShowHeaderPrice] = useState(false);
+  const priceRef = useRef<HTMLElement>(null);
+
   // 미국 주식 실시간 데이터 조회
   const { stock, isLoading: isStockLoading, error, refetch } = useUSStockPrice(ticker);
   const news = getRelatedNews(ticker);
@@ -1002,6 +1043,34 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
       checkSingleAlert(ticker, stock.currentPrice, 'US');
     }
   }, [isAuthLoading, isLoggedIn, isStockLoading, stock, ticker, checkSingleAlert]);
+
+  // ========================================
+  // 헤더 가격 표시 - Intersection Observer
+  // 메인 가격 영역이 화면에서 사라지면 헤더에 가격 표시
+  // ========================================
+  useEffect(() => {
+    const priceElement = priceRef.current;
+    if (!priceElement) return;
+
+    // Intersection Observer 설정
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // isIntersecting: true = 가격 영역이 화면에 보임
+        setShowHeaderPrice(!entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0,
+        rootMargin: '-60px 0px 0px 0px',
+      }
+    );
+
+    observer.observe(priceElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   /**
    * 관심종목 토글 핸들러 (Supabase 연동, 로그인 필수)
@@ -1122,19 +1191,21 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
               </h1>
               <span className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">{ticker}</span>
 
-              {/* 헤더 가격 표시 - 스크롤해도 현재가 확인 가능 */}
-              <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                  isPositive
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                </span>
-              </div>
+              {/* 헤더 가격 표시 - 메인 가격 영역이 화면에서 사라지면 표시 */}
+              {showHeaderPrice && (
+                <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 animate-fade-in">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                    isPositive
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 우측 버튼들 */}
@@ -1199,7 +1270,8 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
             <div className="lg:col-span-3 space-y-6">
 
               {/* 가격 섹션 - 항상 중앙 정렬 (토스 스타일) */}
-              <section className="text-center py-4">
+              {/* ref: Intersection Observer로 화면 이탈 감지 → 헤더에 가격 표시 */}
+              <section ref={priceRef} className="text-center py-4">
                 <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
                   <span className="text-2xl md:text-3xl font-medium mr-1">$</span>
                   {stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

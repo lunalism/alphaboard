@@ -294,6 +294,7 @@ export default function CommunityPage() {
                       onLikeToggle={handleLikeToggle}
                       onLoadComments={handleLoadComments}
                       onAddComment={handleAddComment}
+                      fetchPrices={true}  // 커뮤니티 페이지에서는 실시간 가격 API 호출
                     />
                   ))
                 ) : (
