@@ -209,7 +209,7 @@ export default function CommunityPage() {
           {tickerFilter && (
             <div className="mb-4 flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
               <span className="text-blue-700 dark:text-blue-300 text-sm">
-                <span className="font-medium">${tickerFilter}</span> 관련 게시글만 표시 중
+                <span className="font-medium">#{tickerFilter}</span> 관련 게시글만 표시 중
               </span>
               <button
                 onClick={clearTickerFilter}

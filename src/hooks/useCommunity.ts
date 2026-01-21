@@ -38,7 +38,10 @@ interface CommentsListResponse {
  * API 호출 시 x-user-id, x-user-name, x-user-photo 헤더에 사용자 정보 전달
  */
 export function useCommunity(options: UseCommunityOptions = {}) {
-  const { category = 'all', sort = 'latest', ticker, autoFetch = true } = options;
+  const { category = 'all', sort = 'latest', ticker: rawTicker, autoFetch = true } = options;
+
+  // 티커 필터를 대문자로 정규화 (Firestore 쿼리 일관성)
+  const ticker = rawTicker?.toUpperCase();
 
   // AuthProvider의 useAuth 훅으로 사용자 정보 가져오기
   // user: Firebase Auth User 객체 (uid 포함)
@@ -522,7 +525,10 @@ interface UseTickerCommunityOptions {
  * ```
  */
 export function useTickerCommunity(options: UseTickerCommunityOptions) {
-  const { ticker, market, stockName, limit = 5, autoFetch = true } = options;
+  const { ticker: rawTicker, market, stockName, limit = 5, autoFetch = true } = options;
+
+  // 티커를 대문자로 정규화 (저장/조회 시 일관성 유지)
+  const ticker = rawTicker.toUpperCase();
 
   // AuthProvider의 useAuth 훅으로 사용자 정보 가져오기
   const { user, userProfile } = useAuth();

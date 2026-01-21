@@ -226,7 +226,7 @@ export function TickerCommunitySection({
               종목 토론
             </h2>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              ${ticker}
+              #{ticker}
             </span>
           </div>
           {/* 더보기 링크 */}
@@ -293,7 +293,7 @@ export function TickerCommunitySection({
         {/* 자동 태깅 안내 */}
         {isLoggedIn && (
           <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 pl-12">
-            작성 시 ${ticker} 태그가 자동으로 추가됩니다
+            작성 시 #{ticker} 태그가 자동으로 추가됩니다
           </p>
         )}
       </div>
