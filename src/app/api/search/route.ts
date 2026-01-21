@@ -76,18 +76,6 @@ interface ErrorResponse {
 // ==================== 검색 유틸리티 ====================
 
 /**
- * 문자열이 검색어를 포함하는지 확인 (대소문자 무시)
- *
- * @param text 검색 대상 텍스트
- * @param query 검색어
- * @returns 포함 여부
- */
-function matchesQuery(text: string, query: string): boolean {
-  if (!text || !query) return false;
-  return text.toLowerCase().includes(query.toLowerCase());
-}
-
-/**
  * 한국 종목 검색
  *
  * 종목코드, 종목명에서 검색합니다.

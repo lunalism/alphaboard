@@ -26,7 +26,7 @@ import {
   AreaChart,
 } from 'recharts';
 import { getAssetDetail, getRelatedNews } from '@/constants';
-import { ChartPeriod, AssetDetail, RelatedNews } from '@/types/market';
+import { ChartPeriod, RelatedNews } from '@/types/market';
 import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed, useAlerts, usePriceAlertCheck } from '@/hooks';
 import { showSuccess, showError } from '@/lib/toast';
 import { debug } from '@/lib/debug';
@@ -34,7 +34,7 @@ import { RecentlyViewedMarket } from '@/types/recentlyViewed';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { AddAlertModal } from '@/components/features/alert/AddAlertModal';
 import { EditAlertModal } from '@/components/features/alert/EditAlertModal';
-import { AlertMarket, PriceAlert } from '@/types/priceAlert';
+import { PriceAlert } from '@/types/priceAlert';
 import { Sidebar, BottomNav } from '@/components/layout';
 
 // 차트 기간 탭 정의

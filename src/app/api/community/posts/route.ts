@@ -35,11 +35,8 @@ import {
   query,
   addDoc,
   serverTimestamp,
-  getDoc,
-  doc,
   type FirestorePost,
 } from '@/lib/firestore';
-import { db, auth } from '@/lib/firebase';
 import {
   CommunityPost,
   CommunityApiResponse,

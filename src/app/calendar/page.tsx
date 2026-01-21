@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Sidebar, BottomNav } from '@/components/layout';
 import { MobileSearchHeader, GlobalSearch } from '@/components/features/search';
-import { CompanyLogo, FlagLogo } from '@/components/common';
 import {
   MonthlyCalendar,
   WeeklyCalendar,
@@ -142,32 +141,6 @@ export default function CalendarPage() {
     const day = date.getDate();
     const weekday = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
     return { day, weekday };
-  };
-
-  const getCategoryEmoji = (category: EventCategory) => {
-    switch (category) {
-      case 'institution':
-        return '🏛️';
-      case 'earnings':
-        return '📊';
-      case 'corporate':
-        return '🎉';
-      case 'crypto':
-        return '🪙';
-    }
-  };
-
-  const getImportanceColor = (importance: string) => {
-    switch (importance) {
-      case 'high':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
-      case 'medium':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400';
-      case 'low':
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-    }
   };
 
   /**
