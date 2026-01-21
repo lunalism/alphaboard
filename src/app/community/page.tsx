@@ -18,6 +18,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   CommunityCategory,
   SortType,
@@ -108,12 +109,23 @@ function toFeedPost(post: CommunityPost): FeedPostType {
 }
 
 export default function CommunityPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeMenu, setActiveMenu] = useState('community');
   const [activeTab, setActiveTab] = useState<CommunityCategory>('all');
   const [sortType, setSortType] = useState<SortType>('latest');
   // AuthProvider의 useAuth 훅 사용 (Firebase Auth 연동)
   // useAuthStore(Zustand)가 아닌 useAuth(Context)를 사용해야 Firebase 로그인 상태를 인식함
   const { isLoggedIn, signInWithGoogle } = useAuth();
+
+  // URL 쿼리 파라미터에서 종목 필터 가져오기
+  // /community?ticker=AAPL 형태로 접근 시 해당 종목 글만 표시
+  const tickerFilter = searchParams.get('ticker') || undefined;
+
+  // 종목 필터 해제 핸들러
+  const clearTickerFilter = () => {
+    router.push('/community');
+  };
 
   // Supabase 연동 커뮤니티 훅
   const {
@@ -128,6 +140,7 @@ export default function CommunityPage() {
   } = useCommunity({
     category: activeTab,
     sort: sortType,
+    ticker: tickerFilter,
   });
 
   /**
@@ -191,6 +204,21 @@ export default function CommunityPage() {
               투자자들과 생각을 나누고 토론하세요
             </p>
           </div>
+
+          {/* 종목 필터 배지 (ticker 쿼리 파라미터가 있을 때 표시) */}
+          {tickerFilter && (
+            <div className="mb-4 flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
+              <span className="text-blue-700 dark:text-blue-300 text-sm">
+                <span className="font-medium">${tickerFilter}</span> 관련 게시글만 표시 중
+              </span>
+              <button
+                onClick={clearTickerFilter}
+                className="ml-auto px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 rounded-lg transition-colors"
+              >
+                필터 해제
+              </button>
+            </div>
+          )}
 
           {/* 콘텐츠 그리드: 피드 + 사이드바 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

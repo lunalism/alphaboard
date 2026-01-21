@@ -20,6 +20,8 @@ import { useAuth } from '@/components/providers/AuthProvider';
 interface UseCommunityOptions {
   category?: CommunityCategory;
   sort?: SortType;
+  /** 종목 필터 (특정 종목 태그가 있는 글만 조회) */
+  ticker?: string;
   autoFetch?: boolean;
 }
 
@@ -36,7 +38,7 @@ interface CommentsListResponse {
  * API 호출 시 x-user-id, x-user-name, x-user-photo 헤더에 사용자 정보 전달
  */
 export function useCommunity(options: UseCommunityOptions = {}) {
-  const { category = 'all', sort = 'latest', autoFetch = true } = options;
+  const { category = 'all', sort = 'latest', ticker, autoFetch = true } = options;
 
   // AuthProvider의 useAuth 훅으로 사용자 정보 가져오기
   // user: Firebase Auth User 객체 (uid 포함)
@@ -113,6 +115,7 @@ export function useCommunity(options: UseCommunityOptions = {}) {
    * 게시글 목록 조회
    *
    * 로그인 사용자인 경우 인증 헤더 포함 (좋아요 여부 확인용)
+   * ticker가 설정된 경우 해당 종목이 태그된 글만 조회
    */
   const fetchPosts = useCallback(async (reset: boolean = true) => {
     setIsLoading(true);
@@ -124,6 +127,11 @@ export function useCommunity(options: UseCommunityOptions = {}) {
         sort,
         limit: '20',
       });
+
+      // 종목 필터 추가 (특정 종목 태그가 있는 글만 조회)
+      if (ticker) {
+        params.set('ticker', ticker);
+      }
 
       if (!reset && nextCursor) {
         params.set('cursor', nextCursor);
@@ -154,7 +162,7 @@ export function useCommunity(options: UseCommunityOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [category, sort, nextCursor, getAuthHeaders]);
+  }, [category, sort, ticker, nextCursor, getAuthHeaders]);
 
   /**
    * 더 많은 게시글 로드 (무한 스크롤)
@@ -273,11 +281,11 @@ export function useCommunity(options: UseCommunityOptions = {}) {
   }, [getAuthHeaders]);
 
   /**
-   * 카테고리나 정렬이 변경되면 다시 로드
+   * 카테고리, 정렬, 종목 필터가 변경되면 다시 로드
    *
    * fetchPosts를 의존성 배열에 포함하지 않는 이유:
    * - fetchPosts는 nextCursor에 의존하므로 매 렌더링마다 새로 생성됨
-   * - 이 useEffect는 category/sort 변경 시에만 reset=true로 호출해야 함
+   * - 이 useEffect는 category/sort/ticker 변경 시에만 reset=true로 호출해야 함
    * - reset=true일 때 nextCursor는 사용되지 않으므로 의존성 불필요
    */
   useEffect(() => {
@@ -287,7 +295,7 @@ export function useCommunity(options: UseCommunityOptions = {}) {
     }
   // fetchPosts는 nextCursor 의존성으로 인해 안정적이지 않음 - 의도적 제외
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, sort, autoFetch]);
+  }, [category, sort, ticker, autoFetch]);
 
   return {
     posts,
@@ -474,5 +482,253 @@ export function useComments(postId: string) {
     fetchComments,
     loadMore,
     createComment,
+  };
+}
+
+// =====================================================
+// 종목별 커뮤니티 훅
+// =====================================================
+
+interface UseTickerCommunityOptions {
+  /** 조회할 종목 코드 (ticker) */
+  ticker: string;
+  /** 시장 코드 ('KR' | 'US') */
+  market: 'KR' | 'US';
+  /** 종목명 (글 작성 시 태그에 사용) */
+  stockName: string;
+  /** 최대 조회 개수 (기본: 5) */
+  limit?: number;
+  /** 자동 조회 여부 (기본: true) */
+  autoFetch?: boolean;
+}
+
+/**
+ * 종목별 커뮤니티 게시글 관리 훅
+ *
+ * 특정 종목이 태그된 게시글만 필터링하여 조회합니다.
+ * 글 작성 시 현재 종목을 자동으로 태깅합니다.
+ *
+ * @param options 옵션
+ * @returns 게시글 목록 및 CRUD 함수
+ *
+ * @example
+ * ```tsx
+ * const { posts, createPost, isLoading } = useTickerCommunity({
+ *   ticker: 'AAPL',
+ *   market: 'US',
+ *   stockName: 'Apple Inc.',
+ *   limit: 5,
+ * });
+ * ```
+ */
+export function useTickerCommunity(options: UseTickerCommunityOptions) {
+  const { ticker, market, stockName, limit = 5, autoFetch = true } = options;
+
+  // AuthProvider의 useAuth 훅으로 사용자 정보 가져오기
+  const { user, userProfile } = useAuth();
+
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+
+  /**
+   * API 요청 시 사용할 인증 헤더 생성
+   * (useCommunity의 getAuthHeaders와 동일한 로직)
+   */
+  const getAuthHeaders = useCallback((): HeadersInit => {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (user?.uid) {
+      headers['x-user-id'] = user.uid;
+
+      // 사용자 이름(닉네임) 설정
+      const userName =
+        (userProfile?.nickname && userProfile.nickname.trim()) ||
+        (userProfile?.displayName && userProfile.displayName.trim()) ||
+        user.displayName ||
+        userProfile?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        '사용자';
+      headers['x-user-name'] = encodeURIComponent(userName);
+
+      // 사용자 핸들(@아이디) 설정
+      const userHandle =
+        userProfile?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        user.uid.slice(0, 8);
+      headers['x-user-handle'] = encodeURIComponent(userHandle);
+
+      // 프로필 이미지 설정
+      const photoUrl = userProfile?.avatarUrl || user.photoURL;
+      if (photoUrl) {
+        headers['x-user-photo'] = encodeURIComponent(photoUrl);
+      }
+    }
+
+    return headers;
+  }, [user, userProfile]);
+
+  /**
+   * 종목별 게시글 목록 조회
+   *
+   * Firestore에서 tickers 배열에 현재 종목이 포함된 글만 조회
+   * (array-contains 쿼리 사용)
+   */
+  const fetchPosts = useCallback(async () => {
+    if (!ticker) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ticker 파라미터로 종목별 필터링
+      const params = new URLSearchParams({
+        ticker,
+        sort: 'latest',
+        limit: String(limit),
+      });
+
+      const response = await fetch(`/api/community/posts?${params}`, {
+        headers: getAuthHeaders(),
+      });
+      const result: CommunityApiResponse<PostsListResponse> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || '게시글을 불러오는데 실패했습니다.');
+      }
+
+      setPosts(result.data.posts);
+      setHasMore(result.data.hasMore);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [ticker, limit, getAuthHeaders]);
+
+  /**
+   * 게시글 새로고침
+   */
+  const refetch = useCallback(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  /**
+   * 새 게시글 작성
+   *
+   * 현재 종목을 자동으로 태깅합니다.
+   * - tickers: 종목 코드 배열에 현재 종목 추가
+   * - markets: 시장 코드 배열에 현재 시장 추가
+   * - tickerNames: 종목명 배열에 현재 종목명 추가
+   *
+   * @param content 게시글 내용
+   * @returns 생성된 게시글
+   */
+  const createPost = useCallback(async (content: string): Promise<CommunityPost | null> => {
+    try {
+      // 해시태그 추출
+      const hashtagMatches = content.match(/#([^\s#]+)/g);
+      const hashtags = hashtagMatches
+        ? hashtagMatches.map(tag => tag.slice(1))
+        : [];
+
+      // 본문에서 추가 티커 추출
+      const tickerMatches = content.match(/\$([A-Za-z0-9]+)/g);
+      const contentTickers = tickerMatches
+        ? tickerMatches.map(tag => tag.slice(1).toUpperCase())
+        : [];
+
+      // 현재 종목을 포함한 티커 배열 생성 (중복 제거)
+      const allTickers = [...new Set([ticker, ...contentTickers])];
+
+      // 요청 데이터 생성
+      const postData: CreatePostRequest = {
+        content,
+        category: 'stock',
+        tickers: allTickers,
+        markets: [market],
+        tickerNames: [stockName],
+        hashtags,
+      };
+
+      const response = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(postData),
+      });
+
+      const result: CommunityApiResponse<CommunityPost> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || '게시글 작성에 실패했습니다.');
+      }
+
+      // 새 게시글을 목록 맨 앞에 추가
+      setPosts(prev => [result.data!, ...prev.slice(0, limit - 1)]);
+
+      return result.data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '게시글 작성에 실패했습니다.');
+      return null;
+    }
+  }, [ticker, market, stockName, limit, getAuthHeaders]);
+
+  /**
+   * 좋아요 토글
+   */
+  const toggleLike = useCallback(async (postId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+
+      const result: CommunityApiResponse<{ liked: boolean; likesCount: number }> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || '좋아요 처리에 실패했습니다.');
+      }
+
+      // 게시글 목록에서 좋아요 상태 업데이트
+      setPosts(prev =>
+        prev.map(post =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: result.data!.liked,
+                likesCount: result.data!.likesCount,
+              }
+            : post
+        )
+      );
+
+      return result.data.liked;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders]);
+
+  /**
+   * ticker가 변경되면 게시글 다시 로드
+   */
+  useEffect(() => {
+    if (autoFetch && ticker) {
+      fetchPosts();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker, autoFetch]);
+
+  return {
+    posts,
+    isLoading,
+    error,
+    hasMore,
+    fetchPosts,
+    refetch,
+    createPost,
+    toggleLike,
   };
 }

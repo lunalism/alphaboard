@@ -60,4 +60,4 @@ export { useAlerts } from './useAlerts';
 export { usePriceAlertCheck, type PriceData } from './usePriceAlertCheck';
 
 // 커뮤니티 훅
-export { useCommunity, useComments } from './useCommunity';
+export { useCommunity, useComments, useTickerCommunity } from './useCommunity';

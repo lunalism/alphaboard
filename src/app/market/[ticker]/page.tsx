@@ -36,6 +36,7 @@ import { AddAlertModal } from '@/components/features/alert/AddAlertModal';
 import { EditAlertModal } from '@/components/features/alert/EditAlertModal';
 import { PriceAlert } from '@/types/priceAlert';
 import { Sidebar, BottomNav } from '@/components/layout';
+import { TickerCommunitySection } from '@/components/features/community';
 
 // 차트 기간 탭 정의
 const chartPeriods: { id: ChartPeriod; label: string }[] = [
@@ -699,6 +700,17 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 )}
               </section>
 
+              {/* ========================================
+                  커뮤니티 섹션 - 종목 토론
+                  해당 종목이 태그된 게시글 표시
+                  ======================================== */}
+              <TickerCommunitySection
+                ticker={ticker}
+                market="KR"
+                stockName={stockInfo?.name || stock.stockName || ticker}
+                limit={5}
+              />
+
             </div>
 
             {/* ========================================
@@ -1255,6 +1267,17 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                   <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
                 )}
               </section>
+
+              {/* ========================================
+                  커뮤니티 섹션 - 종목 토론
+                  해당 종목이 태그된 게시글 표시
+                  ======================================== */}
+              <TickerCommunitySection
+                ticker={ticker}
+                market="US"
+                stockName={stock.name}
+                limit={5}
+              />
 
             </div>
 

@@ -4,3 +4,4 @@ export { CommunitySidebar } from './CommunitySidebar';
 export { WriteButton } from './WriteButton';
 export { FeedPost } from './FeedPost';
 export { PostComposer } from './PostComposer';
+export { TickerCommunitySection } from './TickerCommunitySection';
