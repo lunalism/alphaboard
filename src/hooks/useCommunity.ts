@@ -83,13 +83,20 @@ export function useCommunity(options: UseCommunityOptions = {}) {
         (userProfile?.nickname && userProfile.nickname.trim()) ||
         (userProfile?.displayName && userProfile.displayName.trim()) ||
         user.displayName ||
+        userProfile?.email?.split('@')[0] ||
         user.email?.split('@')[0] ||
         '사용자';
       headers['x-user-name'] = encodeURIComponent(userName);
 
       // 사용자 핸들(@아이디) 설정 - 고유 식별자
-      // 이메일 앞부분 또는 uid 앞 8자리
-      const userHandle = user.email?.split('@')[0] || user.uid.slice(0, 8);
+      // 우선순위:
+      // 1. userProfile.email 앞부분 (Firestore에서 가져온 이메일)
+      // 2. user.email 앞부분 (Firebase Auth - fallback)
+      // 3. user.uid 앞 8자리 (최후 fallback)
+      const userHandle =
+        userProfile?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        user.uid.slice(0, 8);
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
       // 프로필 이미지 설정 (userProfile → user.photoURL 순서)
@@ -335,12 +342,20 @@ export function useComments(postId: string) {
         (userProfile?.nickname && userProfile.nickname.trim()) ||
         (userProfile?.displayName && userProfile.displayName.trim()) ||
         user.displayName ||
+        userProfile?.email?.split('@')[0] ||
         user.email?.split('@')[0] ||
         '사용자';
       headers['x-user-name'] = encodeURIComponent(userName);
 
       // 사용자 핸들(@아이디) 설정 - 고유 식별자
-      const userHandle = user.email?.split('@')[0] || user.uid.slice(0, 8);
+      // 우선순위:
+      // 1. userProfile.email 앞부분 (Firestore에서 가져온 이메일)
+      // 2. user.email 앞부분 (Firebase Auth - fallback)
+      // 3. user.uid 앞 8자리 (최후 fallback)
+      const userHandle =
+        userProfile?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        user.uid.slice(0, 8);
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
       // 프로필 이미지 설정
