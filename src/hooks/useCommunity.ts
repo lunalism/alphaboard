@@ -16,6 +16,7 @@ import {
   PostsListResponse,
 } from '@/types/community';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { getAvatarPath, isValidAvatarId } from '@/constants/avatars';
 
 interface UseCommunityOptions {
   category?: CommunityCategory;
@@ -104,8 +105,20 @@ export function useCommunity(options: UseCommunityOptions = {}) {
         user.uid.slice(0, 8);
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
-      // 프로필 이미지 설정 (userProfile → user.photoURL 순서)
-      const photoUrl = userProfile?.avatarUrl || user.photoURL;
+      // 프로필 이미지 설정
+      // 우선순위:
+      // 1. userProfile.avatarId (온보딩에서 선택한 동물 아바타) → 경로로 변환
+      // 2. userProfile.avatarUrl (Google 프로필 사진 - fallback)
+      // 3. user.photoURL (Firebase Auth - 최후 fallback)
+      let photoUrl: string | null = null;
+      if (userProfile?.avatarId && isValidAvatarId(userProfile.avatarId)) {
+        // 온보딩 아바타 ID를 경로로 변환 (예: 'shark' → '/avatars/avatar-shark.png')
+        photoUrl = getAvatarPath(userProfile.avatarId);
+      } else if (userProfile?.avatarUrl) {
+        photoUrl = userProfile.avatarUrl;
+      } else if (user.photoURL) {
+        photoUrl = user.photoURL;
+      }
       if (photoUrl) {
         headers['x-user-photo'] = encodeURIComponent(photoUrl);
       }
@@ -370,7 +383,19 @@ export function useComments(postId: string) {
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
       // 프로필 이미지 설정
-      const photoUrl = userProfile?.avatarUrl || user.photoURL;
+      // 우선순위:
+      // 1. userProfile.avatarId (온보딩에서 선택한 동물 아바타) → 경로로 변환
+      // 2. userProfile.avatarUrl (Google 프로필 사진 - fallback)
+      // 3. user.photoURL (Firebase Auth - 최후 fallback)
+      let photoUrl: string | null = null;
+      if (userProfile?.avatarId && isValidAvatarId(userProfile.avatarId)) {
+        // 온보딩 아바타 ID를 경로로 변환 (예: 'shark' → '/avatars/avatar-shark.png')
+        photoUrl = getAvatarPath(userProfile.avatarId);
+      } else if (userProfile?.avatarUrl) {
+        photoUrl = userProfile.avatarUrl;
+      } else if (user.photoURL) {
+        photoUrl = user.photoURL;
+      }
       if (photoUrl) {
         headers['x-user-photo'] = encodeURIComponent(photoUrl);
       }
@@ -568,7 +593,19 @@ export function useTickerCommunity(options: UseTickerCommunityOptions) {
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
       // 프로필 이미지 설정
-      const photoUrl = userProfile?.avatarUrl || user.photoURL;
+      // 우선순위:
+      // 1. userProfile.avatarId (온보딩에서 선택한 동물 아바타) → 경로로 변환
+      // 2. userProfile.avatarUrl (Google 프로필 사진 - fallback)
+      // 3. user.photoURL (Firebase Auth - 최후 fallback)
+      let photoUrl: string | null = null;
+      if (userProfile?.avatarId && isValidAvatarId(userProfile.avatarId)) {
+        // 온보딩 아바타 ID를 경로로 변환 (예: 'shark' → '/avatars/avatar-shark.png')
+        photoUrl = getAvatarPath(userProfile.avatarId);
+      } else if (userProfile?.avatarUrl) {
+        photoUrl = userProfile.avatarUrl;
+      } else if (user.photoURL) {
+        photoUrl = user.photoURL;
+      }
       if (photoUrl) {
         headers['x-user-photo'] = encodeURIComponent(photoUrl);
       }

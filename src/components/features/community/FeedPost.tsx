@@ -334,15 +334,16 @@ export function FeedPost({
       <div className="p-4">
         {/* 상단: 프로필 + 닉네임 + 시간 */}
         <div className="flex items-start gap-3">
-          {/* 프로필 아바타 - URL이면 이미지, 아니면 이모지 텍스트 또는 이니셜 */}
+          {/* 프로필 아바타 - 이미지 URL이면 이미지, 아니면 이모지 텍스트 또는 이니셜 */}
           {/* 이미지 로딩 실패 시 이니셜 아바타로 fallback */}
+          {/* 이미지 URL 판별: http로 시작하거나 /avatars/로 시작하는 경우 (온보딩 아바타) */}
           <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
             {/* 이니셜 fallback - 이미지 로딩 실패 시 보임 */}
             <span className="text-white font-bold text-base">
               {post.author?.charAt(0).toUpperCase() || '?'}
             </span>
-            {/* 이미지가 있으면 이니셜 위에 오버레이 */}
-            {post.authorAvatar?.startsWith('http') && (
+            {/* 이미지가 있으면 이니셜 위에 오버레이 (http:// 또는 /avatars/ 경로) */}
+            {(post.authorAvatar?.startsWith('http') || post.authorAvatar?.startsWith('/avatars/')) && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={post.authorAvatar}
@@ -354,8 +355,8 @@ export function FeedPost({
                 }}
               />
             )}
-            {/* URL이 아닌 경우 (이모지 등) */}
-            {post.authorAvatar && !post.authorAvatar.startsWith('http') && (
+            {/* URL이 아닌 경우 (이모지 등) - http나 /avatars/로 시작하지 않는 경우 */}
+            {post.authorAvatar && !post.authorAvatar.startsWith('http') && !post.authorAvatar.startsWith('/avatars/') && (
               <span className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-xl">
                 {post.authorAvatar}
               </span>
@@ -498,14 +499,15 @@ export function FeedPost({
             ) : comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-                  {/* 댓글 작성자 아바타 - URL이면 이미지, 로딩 실패 시 이니셜 fallback */}
+                  {/* 댓글 작성자 아바타 - 이미지 URL이면 이미지, 로딩 실패 시 이니셜 fallback */}
+                  {/* 이미지 URL 판별: http로 시작하거나 /avatars/로 시작하는 경우 (온보딩 아바타) */}
                   <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
                     {/* 이니셜 fallback - 이미지 로딩 실패 시 보임 */}
                     <span className="text-white font-bold">
                       {comment.author.name?.charAt(0).toUpperCase() || '?'}
                     </span>
-                    {/* 이미지가 있으면 이니셜 위에 오버레이 */}
-                    {comment.author.avatarUrl?.startsWith('http') && (
+                    {/* 이미지가 있으면 이니셜 위에 오버레이 (http:// 또는 /avatars/ 경로) */}
+                    {(comment.author.avatarUrl?.startsWith('http') || comment.author.avatarUrl?.startsWith('/avatars/')) && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={comment.author.avatarUrl}
