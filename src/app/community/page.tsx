@@ -124,6 +124,19 @@ export default function CommunityPage() {
    * (useCommunity의 getAuthHeaders와 동일한 로직)
    *
    * 댓글 작성 시 사용자 정보를 서버에 전달하기 위해 필요
+   *
+   * 사용자 이름(닉네임) 우선순위:
+   * 1. userProfile.nickname (AlphaBoard 닉네임)
+   * 2. userProfile.displayName (Google displayName, Firestore 저장됨)
+   * 3. user.displayName (Firebase Auth)
+   * 4. userProfile.email 앞부분
+   * 5. user.email 앞부분
+   * 6. '사용자' (기본값)
+   *
+   * 사용자 핸들(@아이디) 우선순위:
+   * 1. userProfile.email 앞부분
+   * 2. user.email 앞부분
+   * 3. user.uid 앞 8자리
    */
   const getAuthHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = {
@@ -134,21 +147,28 @@ export default function CommunityPage() {
       headers['x-user-id'] = user.uid;
 
       // 사용자 이름(닉네임) 설정 - 표시용
+      // nickname이 빈 문자열('')인 경우도 falsy로 처리됨
       const userName =
         (userProfile?.nickname && userProfile.nickname.trim()) ||
+        (userProfile?.displayName && userProfile.displayName.trim()) ||
         user.displayName ||
+        userProfile?.email?.split('@')[0] ||
         user.email?.split('@')[0] ||
         '사용자';
       headers['x-user-name'] = encodeURIComponent(userName);
 
       // 사용자 핸들(@아이디) 설정 - 고유 식별자
-      const userHandle = user.email?.split('@')[0] || user.uid.slice(0, 8);
+      // userProfile.email이 더 정확하므로 우선 사용
+      const userHandle =
+        userProfile?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        user.uid.slice(0, 8);
       headers['x-user-handle'] = encodeURIComponent(userHandle);
 
-      // 프로필 이미지 URL
-      const photoURL = userProfile?.avatarUrl || user.photoURL;
-      if (photoURL) {
-        headers['x-user-photo'] = encodeURIComponent(photoURL);
+      // 프로필 이미지 설정 (userProfile → user.photoURL 순서)
+      const photoUrl = userProfile?.avatarUrl || user.photoURL;
+      if (photoUrl) {
+        headers['x-user-photo'] = encodeURIComponent(photoUrl);
       }
     }
 

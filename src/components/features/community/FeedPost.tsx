@@ -484,14 +484,28 @@ export function FeedPost({
             ) : comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm flex-shrink-0">
-                    {comment.author.avatarUrl || '👤'}
+                  {/* 댓글 작성자 아바타 - URL이면 이미지, 없으면 기본 아이콘 */}
+                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
+                    {comment.author.avatarUrl?.startsWith('http') ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={comment.author.avatarUrl}
+                        alt={comment.author.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      '👤'
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-medium text-sm text-gray-900 dark:text-white">
                         {comment.author.name}
                       </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        @{comment.author.handle}
+                      </span>
+                      <span className="text-gray-400 dark:text-gray-500">·</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatCommentTime(comment.createdAt)}
                       </span>
