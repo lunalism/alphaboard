@@ -430,13 +430,17 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   // ========================================
   // 헤더 가격 표시 - Intersection Observer
   // 메인 가격 영역이 화면에서 사라지면 헤더에 가격 표시
+  // 주의: stock 데이터 로딩 후 ref가 연결되므로 stock 의존성 필요
   // ========================================
   useEffect(() => {
+    // stock 데이터가 없으면 가격 섹션이 렌더링되지 않음
+    if (!stock) return;
+
     const priceElement = priceRef.current;
     if (!priceElement) return;
 
     // Intersection Observer 설정
-    // threshold: 0 = 요소가 완전히 화면에서 벗어나면 트리거
+    // threshold: 0 = 요소의 일부라도 보이면/사라지면 트리거
     const observer = new IntersectionObserver(
       ([entry]) => {
         // isIntersecting: true = 가격 영역이 화면에 보임
@@ -445,8 +449,8 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
       },
       {
         root: null, // viewport 기준
-        threshold: 0, // 요소가 0% 보일 때 트리거 (완전히 사라지면)
-        rootMargin: '-60px 0px 0px 0px', // 헤더 높이만큼 상단 마진
+        threshold: 0, // 요소가 조금이라도 사라지면 트리거
+        rootMargin: '-80px 0px 0px 0px', // 헤더 높이(약 60px) + 여유분
       }
     );
 
@@ -455,7 +459,7 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [stock]); // stock 로딩 완료 후 observer 설정
 
   // 관심종목 토글 핸들러 (Supabase 연동, 로그인 필수)
   const handleToggleWatchlist = async () => {
@@ -1047,8 +1051,12 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
   // ========================================
   // 헤더 가격 표시 - Intersection Observer
   // 메인 가격 영역이 화면에서 사라지면 헤더에 가격 표시
+  // 주의: stock 데이터 로딩 후 ref가 연결되므로 stock 의존성 필요
   // ========================================
   useEffect(() => {
+    // stock 데이터가 없으면 가격 섹션이 렌더링되지 않음
+    if (!stock) return;
+
     const priceElement = priceRef.current;
     if (!priceElement) return;
 
@@ -1061,7 +1069,7 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
       {
         root: null,
         threshold: 0,
-        rootMargin: '-60px 0px 0px 0px',
+        rootMargin: '-80px 0px 0px 0px', // 헤더 높이(약 60px) + 여유분
       }
     );
 
@@ -1070,7 +1078,7 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [stock]); // stock 로딩 완료 후 observer 설정
 
   /**
    * 관심종목 토글 핸들러 (Supabase 연동, 로그인 필수)
