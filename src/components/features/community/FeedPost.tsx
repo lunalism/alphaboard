@@ -334,17 +334,31 @@ export function FeedPost({
       <div className="p-4">
         {/* 상단: 프로필 + 닉네임 + 시간 */}
         <div className="flex items-start gap-3">
-          {/* 프로필 아바타 - URL이면 이미지, 아니면 이모지 텍스트 */}
-          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
-            {post.authorAvatar?.startsWith('http') ? (
+          {/* 프로필 아바타 - URL이면 이미지, 아니면 이모지 텍스트 또는 이니셜 */}
+          {/* 이미지 로딩 실패 시 이니셜 아바타로 fallback */}
+          <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+            {/* 이니셜 fallback - 이미지 로딩 실패 시 보임 */}
+            <span className="text-white font-bold text-base">
+              {post.author?.charAt(0).toUpperCase() || '?'}
+            </span>
+            {/* 이미지가 있으면 이니셜 위에 오버레이 */}
+            {post.authorAvatar?.startsWith('http') && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={post.authorAvatar}
                 alt={post.author}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  // 이미지 로딩 실패 시 숨김 → 이니셜이 보임
+                  e.currentTarget.style.display = 'none';
+                }}
               />
-            ) : (
-              post.authorAvatar
+            )}
+            {/* URL이 아닌 경우 (이모지 등) */}
+            {post.authorAvatar && !post.authorAvatar.startsWith('http') && (
+              <span className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-xl">
+                {post.authorAvatar}
+              </span>
             )}
           </div>
 
@@ -484,17 +498,24 @@ export function FeedPost({
             ) : comments.length > 0 ? (
               comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-                  {/* 댓글 작성자 아바타 - URL이면 이미지, 없으면 기본 아이콘 */}
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
-                    {comment.author.avatarUrl?.startsWith('http') ? (
+                  {/* 댓글 작성자 아바타 - URL이면 이미지, 로딩 실패 시 이니셜 fallback */}
+                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
+                    {/* 이니셜 fallback - 이미지 로딩 실패 시 보임 */}
+                    <span className="text-white font-bold">
+                      {comment.author.name?.charAt(0).toUpperCase() || '?'}
+                    </span>
+                    {/* 이미지가 있으면 이니셜 위에 오버레이 */}
+                    {comment.author.avatarUrl?.startsWith('http') && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={comment.author.avatarUrl}
                         alt={comment.author.name}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          // 이미지 로딩 실패 시 숨김 → 이니셜이 보임
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
-                    ) : (
-                      '👤'
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
