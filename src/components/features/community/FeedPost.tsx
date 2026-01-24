@@ -22,6 +22,7 @@
  */
 
 import { useState, useEffect, useRef, ReactNode, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { FeedPost as FeedPostType, StockTag, CommunityComment } from '@/types/community';
 import { GlossaryText } from '@/components/ui';
@@ -109,45 +110,102 @@ function canEditOrDelete(createdAtRaw: string): boolean {
 
 /**
  * 드롭다운 메뉴 컴포넌트
+ *
+ * React Portal을 사용하여 body에 렌더링합니다.
+ * 이렇게 하면 부모 요소의 overflow 설정에 영향받지 않습니다.
+ *
+ * @param isOpen - 메뉴 열림 상태
+ * @param onClose - 메뉴 닫기 콜백
+ * @param anchorRef - ⋮ 버튼 ref (위치 계산용)
+ * @param timeRemaining - 남은 시간 (mm:ss 형식)
+ * @param onEdit - 수정 버튼 클릭 콜백
+ * @param onDelete - 삭제 버튼 클릭 콜백
  */
 function DropdownMenu({
   isOpen,
   onClose,
+  anchorRef,
   timeRemaining,
   onEdit,
   onDelete,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
   timeRemaining: string | null;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  // 드롭다운 위치 상태
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  // 클라이언트 사이드 렌더링 확인 (Portal용)
+  const [mounted, setMounted] = useState(false);
+
+  // 클라이언트 마운트 확인
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // ⋮ 버튼 위치 기준으로 드롭다운 위치 계산
+  useEffect(() => {
+    if (!isOpen || !anchorRef.current) return;
+
+    const updatePosition = () => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (rect) {
+        setPosition({
+          // 버튼 바로 아래에 위치
+          top: rect.bottom + window.scrollY + 4,
+          // 오른쪽 정렬 (버튼 오른쪽 끝에 맞춤)
+          left: rect.right + window.scrollX - 150, // 메뉴 너비 150px
+        });
+      }
+    };
+
+    updatePosition();
+    // 스크롤/리사이즈 시 위치 업데이트
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, anchorRef]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, anchorRef]);
 
-  if (!isOpen) return null;
+  // 서버 사이드 또는 닫힌 상태면 렌더링 안함
+  if (!isOpen || !mounted) return null;
 
-  return (
+  // Portal로 body에 렌더링
+  return createPortal(
     <div
       ref={menuRef}
-      className="absolute right-0 top-full mt-1 z-[100] bg-white dark:bg-gray-800 rounded-xl
-                 shadow-lg border border-gray-200 dark:border-gray-700 py-2 min-w-[150px]
-                 overflow-visible"
-      style={{ animation: 'fadeIn 0.15s ease-out' }}
+      className="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xl
+                 shadow-lg border border-gray-200 dark:border-gray-700 py-2 min-w-[150px]"
+      style={{
+        top: position.top,
+        left: position.left,
+        animation: 'fadeIn 0.15s ease-out',
+      }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* 수정 버튼 - 남은 시간 표시 */}
@@ -181,7 +239,8 @@ function DropdownMenu({
         <span>🗑️</span>
         <span>삭제</span>
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -299,6 +358,11 @@ export function FeedPost({
   const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
   const [showDeleteCommentModal, setShowDeleteCommentModal] = useState<string | null>(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
+
+  // ⋮ 메뉴 버튼 refs (드롭다운 위치 계산용)
+  const postMenuButtonRef = useRef<HTMLButtonElement>(null);
+  // 댓글 메뉴 버튼 refs (댓글 ID를 키로 사용)
+  const commentMenuButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // 남은 시간 상태 (실시간 업데이트)
   const [postTimeRemaining, setPostTimeRemaining] = useState<string | null>(null);
@@ -708,6 +772,7 @@ export function FeedPost({
               {canEditPost && (
                 <div className="relative ml-auto">
                   <button
+                    ref={postMenuButtonRef}
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowPostMenu(!showPostMenu);
@@ -720,6 +785,7 @@ export function FeedPost({
                   <DropdownMenu
                     isOpen={showPostMenu}
                     onClose={() => setShowPostMenu(false)}
+                    anchorRef={postMenuButtonRef}
                     timeRemaining={postTimeRemaining}
                     onEdit={() => {
                       setIsEditingPost(true);
@@ -936,6 +1002,14 @@ export function FeedPost({
                         {canEditComment && !isEditingThisComment && (
                           <div className="relative ml-auto">
                             <button
+                              ref={(el) => {
+                                // callback ref로 댓글별 버튼 ref 저장
+                                if (el) {
+                                  commentMenuButtonRefs.current.set(comment.id, el);
+                                } else {
+                                  commentMenuButtonRefs.current.delete(comment.id);
+                                }
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setShowCommentMenu(showCommentMenu === comment.id ? null : comment.id);
@@ -948,6 +1022,7 @@ export function FeedPost({
                             <DropdownMenu
                               isOpen={showCommentMenu === comment.id}
                               onClose={() => setShowCommentMenu(null)}
+                              anchorRef={{ current: commentMenuButtonRefs.current.get(comment.id) || null }}
                               timeRemaining={commentTimeRemaining[comment.id] || null}
                               onEdit={() => handleStartEditComment(comment)}
                               onDelete={() => {
