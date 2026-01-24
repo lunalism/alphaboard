@@ -291,6 +291,58 @@ function NewsItem({ news }: { news: RelatedNews }) {
 }
 
 /**
+ * 회사 정보 섹션 컴포넌트
+ *
+ * Wikipedia API에서 가져온 회사 소개를 표시합니다.
+ * - 기본: 3줄만 표시
+ * - "더보기" 클릭 시 전체 내용 표시
+ * - 로딩 중: 스피너 표시
+ */
+function CompanyInfoSection({
+  isLoading,
+  description,
+}: {
+  isLoading: boolean;
+  description: string | null;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!isLoading && !description) return null;
+
+  return (
+    <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+      <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">회사 소개</h2>
+      {isLoading ? (
+        /* 로딩 상태 */
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span className="text-sm">회사 정보를 불러오는 중...</span>
+        </div>
+      ) : (
+        /* 회사 소개 텍스트 */
+        <div>
+          <p className={`text-sm text-gray-600 dark:text-gray-300 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+            {description}
+          </p>
+          {/* 더보기/접기 버튼 - 텍스트가 3줄 이상일 때만 표시 */}
+          {description && description.length > 150 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {isExpanded ? '접기' : '더보기'}
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
  * 한국 종목 상세 페이지 컴포넌트
  * 한국투자증권 Open API 실시간 데이터 사용
  */
@@ -316,6 +368,12 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   const { stock, isLoading: isStockLoading, error, refetch } = useKoreanStockPrice(ticker);
   const stockInfo = getKoreanStockInfo(ticker);
   const news = getRelatedNews(ticker);
+
+  // 회사 정보 (Wikipedia API)
+  // 한국 종목의 경우 종목명으로 검색
+  const { description: companyDescription, isLoading: isCompanyInfoLoading } = useCompanyInfo(
+    stockInfo?.name || stock?.stockName || ticker
+  );
 
   // 관심종목 관리
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
@@ -652,7 +710,8 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 왼쪽 메인 컬럼 (lg:col-span-3)
                 - 가격 섹션
                 - 차트 섹션
-                - 관련 뉴스 섹션
+                - 오늘의 시세 / 52주 범위 / 거래정보 / 투자지표
+                - 회사 정보
                 ======================================== */}
             <div className="lg:col-span-3 space-y-6">
 
@@ -743,70 +802,32 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 </div>
               </section>
 
-              {/* 관련 뉴스 - 데스크톱에서는 왼쪽 컬럼 하단에 배치 */}
-              <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
-                {news.length > 0 ? (
-                  <div className="space-y-3">
-                    {news.map((item) => (
-                      <NewsItem key={item.id} news={item} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
-                )}
-              </section>
-
-              {/* ========================================
-                  커뮤니티 섹션 - 종목 토론
-                  해당 종목이 태그된 게시글 표시
-                  ======================================== */}
-              <TickerCommunitySection
-                ticker={ticker}
-                market="KR"
-                stockName={stockInfo?.name || stock.stockName || ticker}
-                limit={5}
-              />
-
-            </div>
-
-            {/* ========================================
-                오른쪽 사이드바 컬럼 (lg:col-span-2)
-                - 오늘의 시세 (OHLC)
-                - 52주 범위
-                - 거래 정보
-                - 투자 지표
-                - sticky: 데스크톱에서 스크롤 시 고정
-                ======================================== */}
-            <div className="lg:col-span-2 space-y-6 mt-6 lg:mt-0 lg:sticky lg:top-20 lg:h-fit">
-
-              {/* 오늘의 시세 (OHLC) */}
+              {/* 오늘의 시세 (OHLC) - 2x2 그리드 */}
               <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">오늘의 시세</h2>
-                {/* 모바일: 4컬럼, 데스크톱: 2x2 그리드 */}
-                <div className="grid grid-cols-4 lg:grid-cols-2 gap-2 md:gap-4">
-                  <div className="text-center lg:text-left">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">시가</p>
-                    <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-                      {stock.openPrice.toLocaleString('ko-KR')}
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      {stock.openPrice.toLocaleString('ko-KR')}원
                     </p>
                   </div>
-                  <div className="text-center lg:text-left">
+                  <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">고가</p>
-                    <p className="text-sm md:text-base font-semibold text-red-600 dark:text-red-400">
-                      {stock.highPrice.toLocaleString('ko-KR')}
+                    <p className="text-base font-semibold text-red-600 dark:text-red-400">
+                      {stock.highPrice.toLocaleString('ko-KR')}원
                     </p>
                   </div>
-                  <div className="text-center lg:text-left">
+                  <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">저가</p>
-                    <p className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400">
-                      {stock.lowPrice.toLocaleString('ko-KR')}
+                    <p className="text-base font-semibold text-blue-600 dark:text-blue-400">
+                      {stock.lowPrice.toLocaleString('ko-KR')}원
                     </p>
                   </div>
-                  <div className="text-center lg:text-left">
+                  <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">현재가</p>
-                    <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-                      {stock.currentPrice.toLocaleString('ko-KR')}
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      {stock.currentPrice.toLocaleString('ko-KR')}원
                     </p>
                   </div>
                 </div>
@@ -853,10 +874,10 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 </section>
               )}
 
-              {/* 거래 정보 */}
+              {/* 거래 정보 + 투자 지표 - 2컬럼 그리드 */}
               <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래량</p>
                     <p className="text-base font-semibold text-gray-900 dark:text-white">
@@ -877,29 +898,62 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                         : '-'}
                     </p>
                   </div>
+                  {stock.per && (
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PER</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.per.toFixed(2)}배</p>
+                    </div>
+                  )}
+                  {stock.pbr && (
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PBR</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.pbr.toFixed(2)}배</p>
+                    </div>
+                  )}
                 </div>
               </section>
 
-              {/* 투자 지표 */}
-              {(stock.per || stock.pbr) && (
-                <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">투자 지표</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {stock.per && (
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PER</p>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.per.toFixed(2)}배</p>
-                      </div>
-                    )}
-                    {stock.pbr && (
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">PBR</p>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{stock.pbr.toFixed(2)}배</p>
-                      </div>
-                    )}
-                  </div>
-                </section>
+              {/* 회사 정보 - Wikipedia API 연동 */}
+              {(isCompanyInfoLoading || companyDescription) && (
+                <CompanyInfoSection
+                  isLoading={isCompanyInfoLoading}
+                  description={companyDescription}
+                />
               )}
+
+            </div>
+
+            {/* ========================================
+                오른쪽 사이드바 컬럼 (lg:col-span-2)
+                - 관련 뉴스
+                - 종목 토론
+                ======================================== */}
+            <div className="lg:col-span-2 space-y-6 mt-6 lg:mt-0">
+
+              {/* 관련 뉴스 */}
+              <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
+                {news.length > 0 ? (
+                  <div className="space-y-3">
+                    {news.map((item) => (
+                      <NewsItem key={item.id} news={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
+                )}
+              </section>
+
+              {/* ========================================
+                  커뮤니티 섹션 - 종목 토론
+                  해당 종목이 태그된 게시글 표시
+                  ======================================== */}
+              <TickerCommunitySection
+                ticker={ticker}
+                market="KR"
+                stockName={stockInfo?.name || stock.stockName || ticker}
+                limit={5}
+              />
 
             </div>
 
@@ -1284,7 +1338,8 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                 왼쪽 메인 컬럼 (lg:col-span-3)
                 - 가격 섹션
                 - 차트 섹션
-                - 관련 뉴스 섹션
+                - 가격정보 / 거래정보
+                - 회사 정보
                 ======================================== */}
             <div className="lg:col-span-3 space-y-6">
 
@@ -1374,7 +1429,59 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                 </div>
               </section>
 
-              {/* 관련 뉴스 - 데스크톱에서는 왼쪽 컬럼 하단에 배치 */}
+              {/* 가격 정보 + 거래 정보 - 2x2 그리드 */}
+              <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">현재가</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">변동폭</p>
+                    <p className={`text-base font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래량</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      {stock.volume >= 1000000
+                        ? (stock.volume / 1000000).toFixed(1) + 'M'
+                        : stock.volume >= 1000
+                        ? (stock.volume / 1000).toFixed(1) + 'K'
+                        : stock.volume.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래소</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* 회사 정보 - Wikipedia API 연동 */}
+              {(isCompanyInfoLoading || companyDescription) && (
+                <CompanyInfoSection
+                  isLoading={isCompanyInfoLoading}
+                  description={companyDescription}
+                />
+              )}
+
+            </div>
+
+            {/* ========================================
+                오른쪽 사이드바 컬럼 (lg:col-span-2)
+                - 관련 뉴스
+                - 종목 토론
+                ======================================== */}
+            <div className="lg:col-span-2 space-y-6 mt-6 lg:mt-0">
+
+              {/* 관련 뉴스 */}
               <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">관련 뉴스</h2>
                 {news.length > 0 ? (
@@ -1398,78 +1505,6 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                 stockName={stock.name}
                 limit={5}
               />
-
-            </div>
-
-            {/* ========================================
-                오른쪽 사이드바 컬럼 (lg:col-span-2)
-                - 가격 정보
-                - 거래 정보
-                - sticky: 데스크톱에서 스크롤 시 고정
-                ======================================== */}
-            <div className="lg:col-span-2 space-y-6 mt-6 lg:mt-0 lg:sticky lg:top-20 lg:h-fit">
-
-              {/* 가격 정보 */}
-              <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">가격 정보</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">현재가</p>
-                    <p className="text-base font-semibold text-gray-900 dark:text-white">
-                      ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">변동폭</p>
-                    <p className={`text-base font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {stock.change >= 0 ? '+' : ''}${Math.abs(stock.change).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              {/* 거래 정보 */}
-              <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">거래 정보</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래량</p>
-                    <p className="text-base font-semibold text-gray-900 dark:text-white">
-                      {stock.volume >= 1000000
-                        ? (stock.volume / 1000000).toFixed(1) + 'M'
-                        : stock.volume >= 1000
-                        ? (stock.volume / 1000).toFixed(1) + 'K'
-                        : stock.volume.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">거래소</p>
-                    <p className="text-base font-semibold text-gray-900 dark:text-white">
-                      {stock.exchange === 'NAS' ? 'NASDAQ' : stock.exchange === 'NYS' ? 'NYSE' : 'AMEX'}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              {/* 회사 소개 - AI 생성 (Claude) */}
-              {(isCompanyInfoLoading || companyDescription) && (
-                <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">회사 소개</h2>
-                  {isCompanyInfoLoading ? (
-                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span className="text-sm">회사 정보 생성 중...</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {companyDescription}
-                    </p>
-                  )}
-                </section>
-              )}
 
             </div>
 
