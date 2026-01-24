@@ -37,24 +37,25 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   const userAvatar = userProfile?.avatarUrl;
 
   return (
-    <aside className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 hidden md:flex flex-col py-4 z-50 transition-all duration-300 w-[72px] lg:w-60">
-      {/* Logo */}
-      <div className="px-4 mb-6">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-lg">A</span>
-          </div>
-          <span className="text-xl font-bold text-gray-900 dark:text-white hidden lg:block">AlphaBoard</span>
-        </Link>
-      </div>
-
+    <aside className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 hidden md:flex md:flex-col z-50 transition-all duration-300 w-[72px] lg:w-60">
       {/* ========================================
-          메뉴 영역
-          - flex-1: 남은 공간 차지
-          - overflow-y-auto: 메뉴가 많으면 스크롤
-          - 로그인 버튼은 항상 하단에 고정
+          스크롤 가능 영역 (로고 + 메뉴)
+          - flex-1: 남은 공간 모두 차지
+          - overflow-y-auto: 메뉴 많으면 스크롤
           ======================================== */}
-      <nav className="flex-1 flex flex-col gap-1 px-3 overflow-y-auto scrollbar-hide">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Logo */}
+        <div className="px-4 py-4 mb-2">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-lg">A</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white hidden lg:block">AlphaBoard</span>
+          </Link>
+        </div>
+
+        {/* 메뉴 영역 */}
+        <nav className="flex flex-col gap-1 px-3 pb-4">
         {menuItems
           .filter((item) => item.id !== 'profile')
           // 가격 알림과 관심종목은 로그인 시에만 표시 (로딩 완료 후에만 체크)
@@ -84,14 +85,15 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
             </div>
           </Link>
         ))}
-      </nav>
+        </nav>
+      </div>
 
       {/* ========================================
           로그인/프로필 섹션
-          - mt-auto: 항상 하단으로 밀어냄
-          - flex-shrink-0: 절대 축소되지 않음
+          - flex-shrink-0: 절대 축소 안됨
+          - 스크롤 영역 밖에 있어서 항상 하단 고정
           ======================================== */}
-      <div className="px-3 pt-2 mt-auto flex-shrink-0 border-t border-gray-100 dark:border-gray-800">
+      <div className="flex-shrink-0 px-3 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
         {isLoading || isProfileLoading ? (
           // 로딩 중 - 스켈레톤 UI
           <div className="w-full h-12 rounded-xl flex items-center px-2">
