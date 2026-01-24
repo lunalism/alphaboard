@@ -38,8 +38,9 @@ let redis: Redis | null = null;
 function getRedisClient(): Redis | null {
   if (redis) return redis;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Vercel KV 통합 시 자동 추가되는 이름과 Upstash 기본 이름 모두 지원
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
     console.log('[TokenCache] Redis 환경변수 미설정, 파일 캐시 사용');
