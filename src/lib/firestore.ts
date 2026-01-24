@@ -76,6 +76,14 @@ export const commentsCollection = (postId: string) =>
   collection(db, 'posts', postId, 'comments');
 
 /**
+ * 특정 댓글 문서 참조
+ * @param postId - 게시글 ID
+ * @param commentId - 댓글 ID
+ */
+export const commentDoc = (postId: string, commentId: string) =>
+  doc(db, 'posts', postId, 'comments', commentId);
+
+/**
  * 특정 게시글의 likes 서브컬렉션 참조
  * @param postId - 게시글 ID
  */

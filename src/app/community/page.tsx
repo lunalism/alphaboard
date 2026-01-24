@@ -48,6 +48,8 @@ import { getAvatarPath, isValidAvatarId } from '@/constants/avatars';
  * 작성자 정보 표시:
  * - author: 닉네임 (표시용)
  * - username: @handle (고유 식별자, 이메일 앞부분)
+ * - userId: 작성자 ID (수정/삭제 권한 확인용)
+ * - createdAtRaw: ISO 형식 원본 시간 (수정 가능 시간 계산용)
  */
 function toFeedPost(post: CommunityPost): FeedPostType {
   // 상대 시간 계산
@@ -89,6 +91,7 @@ function toFeedPost(post: CommunityPost): FeedPostType {
     author: authorName,
     username: authorHandle,  // @handle 사용 (닉네임 대신 고유 식별자)
     authorAvatar: authorAvatar,  // null이면 FeedPost에서 이니셜 표시
+    userId: post.userId,  // 작성자 ID (수정/삭제 권한 확인용)
     content: post.content,
     hashtags: post.hashtags,
     stockTags: post.tickers.map(ticker => ({
@@ -99,6 +102,7 @@ function toFeedPost(post: CommunityPost): FeedPostType {
     })),
     category: post.category,
     createdAt: timeAgo,
+    createdAtRaw: post.createdAt,  // ISO 형식 원본 시간 (수정 가능 시간 계산용)
     likes: post.likesCount,
     comments: post.commentsCount,
     reposts: post.repostsCount,
@@ -264,6 +268,91 @@ export default function CommunityPage() {
     }
   }, [getAuthHeaders]);
 
+  /**
+   * 게시글 수정 핸들러
+   * - 수정 후 목록 새로고침
+   */
+  const handleEditPost = useCallback(async (postId: string, content: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      const result: CommunityApiResponse<CommunityPost> = await response.json();
+      if (result.success) {
+        // 목록 새로고침
+        refetch();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders, refetch]);
+
+  /**
+   * 게시글 삭제 핸들러
+   * - 삭제 후 목록 새로고침
+   */
+  const handleDeletePost = useCallback(async (postId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const result: CommunityApiResponse<{ deleted: boolean }> = await response.json();
+      if (result.success) {
+        // 목록 새로고침
+        refetch();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders, refetch]);
+
+  /**
+   * 댓글 수정 핸들러
+   */
+  const handleEditComment = useCallback(async (
+    postId: string,
+    commentId: string,
+    content: string
+  ): Promise<CommunityComment | null> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments/${commentId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      const result: CommunityApiResponse<CommunityComment> = await response.json();
+      if (result.success && result.data) {
+        return result.data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, [getAuthHeaders]);
+
+  /**
+   * 댓글 삭제 핸들러
+   */
+  const handleDeleteComment = useCallback(async (postId: string, commentId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const result: CommunityApiResponse<{ deleted: boolean }> = await response.json();
+      return result.success;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders]);
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* Sidebar - 모바일에서 숨김 */}
@@ -369,9 +458,14 @@ export default function CommunityPage() {
                       key={post.id}
                       post={toFeedPost(post)}
                       postId={post.id}
+                      currentUserId={user?.uid}  // 현재 로그인한 사용자 ID (수정/삭제 권한 확인용)
                       onLikeToggle={handleLikeToggle}
                       onLoadComments={handleLoadComments}
                       onAddComment={handleAddComment}
+                      onEditPost={handleEditPost}  // 게시글 수정 핸들러
+                      onDeletePost={handleDeletePost}  // 게시글 삭제 핸들러
+                      onEditComment={handleEditComment}  // 댓글 수정 핸들러
+                      onDeleteComment={handleDeleteComment}  // 댓글 삭제 핸들러
                       fetchPrices={true}  // 커뮤니티 페이지에서는 실시간 가격 API 호출
                       isLoggedIn={isLoggedIn}  // 로그인 상태 전달 (좋아요/댓글 기능 활성화용)
                       onLoginRequired={handleLoginRequired}  // 비로그인 시 토스트 표시

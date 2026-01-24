@@ -35,6 +35,7 @@ export interface FeedPost {
   author: string;
   username: string; // @아이디
   authorAvatar: string; // 이모지 또는 이미지 URL
+  userId?: string; // 작성자 ID (수정/삭제 권한 확인용)
   // 콘텐츠
   content: string; // 본문 (최대 280자)
   hashtags: string[]; // #해시태그
@@ -43,6 +44,7 @@ export interface FeedPost {
   // 메타 정보
   category: CommunityCategory;
   createdAt: string;
+  createdAtRaw?: string; // ISO 형식 원본 시간 (수정 가능 시간 계산용)
   // 인터랙션 카운트
   likes: number;
   comments: number;

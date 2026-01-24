@@ -7,7 +7,7 @@
  *
  * 구조:
  * ┌─────────────────────────────────────────┐
- * │ 👤 프로필사진  닉네임 · @아이디 · 5분 전  │
+ * │ 👤 프로필사진  닉네임 · @아이디 · 5분 전  ⋮│ ← 본인 글만 메뉴 표시 (1시간 내)
  * │                                         │
  * │ 본문 내용 (최대 280자)                   │
  * │ $NVDA $TSLA 같은 종목 태그는 파란색 링크  │
@@ -21,22 +21,35 @@
  * └─────────────────────────────────────────┘
  */
 
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FeedPost as FeedPostType, StockTag, CommunityComment } from '@/types/community';
 import { GlossaryText } from '@/components/ui';
 import { StockCardWithPrice } from './StockCardWithPrice';
 
+// 1시간 (밀리초)
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
 interface FeedPostProps {
   post: FeedPostType;
   /** 실제 게시글 ID (Supabase UUID) - 없으면 API 호출 안함 */
   postId?: string;
+  /** 현재 로그인한 사용자 ID (수정/삭제 권한 확인용) */
+  currentUserId?: string;
   /** 좋아요 토글 콜백 */
   onLikeToggle?: (postId: string) => Promise<boolean>;
   /** 댓글 목록 조회 콜백 */
   onLoadComments?: (postId: string) => Promise<CommunityComment[]>;
   /** 댓글 작성 콜백 */
   onAddComment?: (postId: string, content: string) => Promise<CommunityComment | null>;
+  /** 게시글 수정 콜백 */
+  onEditPost?: (postId: string, content: string) => Promise<boolean>;
+  /** 게시글 삭제 콜백 */
+  onDeletePost?: (postId: string) => Promise<boolean>;
+  /** 댓글 수정 콜백 */
+  onEditComment?: (postId: string, commentId: string, content: string) => Promise<CommunityComment | null>;
+  /** 댓글 삭제 콜백 */
+  onDeleteComment?: (postId: string, commentId: string) => Promise<boolean>;
   /**
    * 티커 카드에 가격 표시 여부
    * - true: 가격 표시 (기본값, /community 페이지용)
@@ -68,12 +81,180 @@ interface FeedPostProps {
   onLoginRequired?: () => void;
 }
 
+/**
+ * 남은 시간 계산 (mm:ss 형식)
+ * @param createdAtRaw - ISO 형식 생성 시간
+ * @returns 남은 시간 문자열 또는 null (시간 만료)
+ */
+function getTimeRemaining(createdAtRaw: string): string | null {
+  const now = Date.now();
+  const created = new Date(createdAtRaw).getTime();
+  const remaining = created + ONE_HOUR_MS - now;
+
+  if (remaining <= 0) return null; // 시간 만료
+
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * 수정/삭제 가능 여부 확인
+ */
+function canEditOrDelete(createdAtRaw: string): boolean {
+  const now = Date.now();
+  const created = new Date(createdAtRaw).getTime();
+  return now - created < ONE_HOUR_MS;
+}
+
+/**
+ * 드롭다운 메뉴 컴포넌트
+ */
+function DropdownMenu({
+  isOpen,
+  onClose,
+  timeRemaining,
+  onEdit,
+  onDelete,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  timeRemaining: string | null;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={menuRef}
+      className="absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg
+                 border border-gray-200 dark:border-gray-700 py-1 min-w-[140px]
+                 animate-in fade-in slide-in-from-top-2 duration-200"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* 수정 버튼 - 남은 시간 표시 */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+          onClose();
+        }}
+        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200
+                   hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+      >
+        <span>✏️</span>
+        <span>수정</span>
+        {timeRemaining && (
+          <span className="ml-auto text-xs text-gray-500 dark:text-gray-400 font-mono">
+            {timeRemaining}
+          </span>
+        )}
+      </button>
+      {/* 삭제 버튼 */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+          onClose();
+        }}
+        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400
+                   hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+      >
+        <span>🗑️</span>
+        <span>삭제</span>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * 삭제 확인 모달 컴포넌트
+ */
+function DeleteConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+  type,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+  type: 'post' | 'comment';
+}) {
+  if (!isOpen) return null;
+
+  const typeLabel = type === 'post' ? '게시글' : '댓글';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl
+                   animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+          {typeLabel} 삭제
+        </h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          정말 이 {typeLabel}을 삭제하시겠습니까?
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700
+                       rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            취소
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 text-white bg-red-500 rounded-xl hover:bg-red-600
+                       transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? '삭제 중...' : '삭제'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FeedPost({
   post,
   postId,
+  currentUserId,
   onLikeToggle,
   onLoadComments,
   onAddComment,
+  onEditPost,
+  onDeletePost,
+  onEditComment,
+  onDeleteComment,
   showTickerPrice = true,
   showTickerCard = true,
   fetchPrices = false,
@@ -98,18 +279,72 @@ export function FeedPost({
   const [isLiking, setIsLiking] = useState(false);
 
   // 프로필 이미지 로딩 에러 상태
-  // - authorImageError: 게시글 작성자 이미지 로딩 실패 여부
-  // - commentImageErrors: 댓글 작성자별 이미지 로딩 실패 여부 (댓글 ID를 키로 사용)
   const [authorImageError, setAuthorImageError] = useState(false);
   const [commentImageErrors, setCommentImageErrors] = useState<Record<string, boolean>>({});
 
+  // 게시글 수정/삭제 관련 상태
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editPostContent, setEditPostContent] = useState(post.content);
+  const [isSavingPost, setIsSavingPost] = useState(false);
+  const [showDeletePostModal, setShowDeletePostModal] = useState(false);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+  const [isPostDeleted, setIsPostDeleted] = useState(false);
+
+  // 댓글 수정/삭제 관련 상태
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
+  const [showDeleteCommentModal, setShowDeleteCommentModal] = useState<string | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
+
+  // 남은 시간 상태 (실시간 업데이트)
+  const [postTimeRemaining, setPostTimeRemaining] = useState<string | null>(null);
+  const [commentTimeRemaining, setCommentTimeRemaining] = useState<Record<string, string | null>>({});
+
+  // 본인 게시글인지 확인
+  const isOwnPost = currentUserId && post.userId && currentUserId === post.userId;
+  // 게시글 수정/삭제 가능 여부
+  const canEditPost = isOwnPost && post.createdAtRaw && canEditOrDelete(post.createdAtRaw);
+
+  // 남은 시간 실시간 업데이트 (게시글)
+  useEffect(() => {
+    if (!canEditPost || !post.createdAtRaw) return;
+
+    const updateTime = () => {
+      const remaining = getTimeRemaining(post.createdAtRaw!);
+      setPostTimeRemaining(remaining);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [canEditPost, post.createdAtRaw]);
+
+  // 남은 시간 실시간 업데이트 (댓글)
+  useEffect(() => {
+    if (comments.length === 0) return;
+
+    const updateTimes = () => {
+      const newTimeRemaining: Record<string, string | null> = {};
+      comments.forEach((comment) => {
+        if (currentUserId && comment.userId === currentUserId && comment.createdAt) {
+          newTimeRemaining[comment.id] = getTimeRemaining(comment.createdAt);
+        }
+      });
+      setCommentTimeRemaining(newTimeRemaining);
+    };
+
+    updateTimes();
+    const interval = setInterval(updateTimes, 1000);
+    return () => clearInterval(interval);
+  }, [comments, currentUserId]);
+
   /**
    * 좋아요 토글
-   * - 비로그인 시: onLoginRequired 콜백 호출 (로그인 유도 토스트)
-   * - 로그인 시: API 호출하여 좋아요 토글
    */
   const handleLike = async () => {
-    // 비로그인 상태 체크 - 로그인 유도
     if (!isLoggedIn) {
       onLoginRequired?.();
       return;
@@ -117,7 +352,6 @@ export function FeedPost({
 
     if (isLiking) return;
 
-    // API 콜백이 있으면 사용
     if (postId && onLikeToggle) {
       setIsLiking(true);
       try {
@@ -130,7 +364,6 @@ export function FeedPost({
         setIsLiking(false);
       }
     } else {
-      // 로컬 토글 (폴백)
       setLiked(!liked);
       setLikesCount(liked ? likesCount - 1 : likesCount + 1);
     }
@@ -143,7 +376,6 @@ export function FeedPost({
     const newShowComments = !showComments;
     setShowComments(newShowComments);
 
-    // 댓글을 처음 열 때 로드
     if (newShowComments && comments.length === 0 && postId && onLoadComments) {
       setIsLoadingComments(true);
       try {
@@ -159,11 +391,8 @@ export function FeedPost({
 
   /**
    * 댓글 작성
-   * - 비로그인 시: onLoginRequired 콜백 호출 (로그인 유도 토스트)
-   * - 로그인 시: API 호출하여 댓글 작성
    */
   const handleSubmitComment = async () => {
-    // 비로그인 상태 체크 - 로그인 유도
     if (!isLoggedIn) {
       onLoginRequired?.();
       return;
@@ -187,12 +416,103 @@ export function FeedPost({
   };
 
   /**
+   * 게시글 수정 저장
+   */
+  const handleSavePostEdit = useCallback(async () => {
+    if (!postId || !onEditPost || isSavingPost) return;
+    if (!editPostContent.trim()) return;
+
+    setIsSavingPost(true);
+    try {
+      const success = await onEditPost(postId, editPostContent.trim());
+      if (success) {
+        setIsEditingPost(false);
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsSavingPost(false);
+    }
+  }, [postId, onEditPost, isSavingPost, editPostContent]);
+
+  /**
+   * 게시글 삭제 확인
+   */
+  const handleConfirmDeletePost = useCallback(async () => {
+    if (!postId || !onDeletePost || isDeletingPost) return;
+
+    setIsDeletingPost(true);
+    try {
+      const success = await onDeletePost(postId);
+      if (success) {
+        setShowDeletePostModal(false);
+        setIsPostDeleted(true);
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsDeletingPost(false);
+    }
+  }, [postId, onDeletePost, isDeletingPost]);
+
+  /**
+   * 댓글 수정 시작
+   */
+  const handleStartEditComment = (comment: CommunityComment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentContent(comment.content);
+    setShowCommentMenu(null);
+  };
+
+  /**
+   * 댓글 수정 저장
+   */
+  const handleSaveCommentEdit = useCallback(async (commentId: string) => {
+    if (!postId || !onEditComment || isSavingComment) return;
+    if (!editCommentContent.trim()) return;
+
+    setIsSavingComment(true);
+    try {
+      const updatedComment = await onEditComment(postId, commentId, editCommentContent.trim());
+      if (updatedComment) {
+        setComments(prev =>
+          prev.map(c => (c.id === commentId ? updatedComment : c))
+        );
+        setEditingCommentId(null);
+        setEditCommentContent('');
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsSavingComment(false);
+    }
+  }, [postId, onEditComment, isSavingComment, editCommentContent]);
+
+  /**
+   * 댓글 삭제 확인
+   */
+  const handleConfirmDeleteComment = useCallback(async (commentId: string) => {
+    if (!postId || !onDeleteComment || isDeletingComment) return;
+
+    setIsDeletingComment(true);
+    try {
+      const success = await onDeleteComment(postId, commentId);
+      if (success) {
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        setCommentsCount(prev => prev - 1);
+        setShowDeleteCommentModal(null);
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsDeletingComment(false);
+    }
+  }, [postId, onDeleteComment, isDeletingComment]);
+
+  /**
    * 본문 내용 파싱
-   * $종목태그와 #해시태그를 링크로 변환
-   * 일반 텍스트는 용어사전 툴팁 적용
    */
   const parseContent = (content: string) => {
-    // 먼저 줄바꿈을 처리
     const lines = content.split('\n');
 
     return lines.map((line, lineIndex) => {
@@ -200,11 +520,9 @@ export function FeedPost({
       let lastIndex = 0;
       let match;
 
-      // $종목태그와 #해시태그를 찾아서 처리
       const combinedRegex = /(\$[A-Za-z0-9]+|#[^\s#]+)/g;
 
       while ((match = combinedRegex.exec(line)) !== null) {
-        // 매치 전 텍스트 (용어사전 툴팁 적용)
         if (match.index > lastIndex) {
           const textBefore = line.slice(lastIndex, match.index);
           parts.push(
@@ -216,7 +534,6 @@ export function FeedPost({
 
         const tag = match[1];
         if (tag.startsWith('$')) {
-          // 종목 태그 링크
           const ticker = tag.slice(1);
           parts.push(
             <span
@@ -231,7 +548,6 @@ export function FeedPost({
             </span>
           );
         } else {
-          // 해시태그
           parts.push(
             <span
               key={`${lineIndex}-${match.index}`}
@@ -245,7 +561,6 @@ export function FeedPost({
         lastIndex = match.index + match[0].length;
       }
 
-      // 남은 텍스트 (용어사전 툴팁 적용)
       if (lastIndex < line.length) {
         const remainingText = line.slice(lastIndex);
         parts.push(
@@ -266,14 +581,6 @@ export function FeedPost({
 
   /**
    * 종목 미니 카드 렌더링
-   *
-   * showTickerPrice 설정에 따른 동작:
-   * - true (기본값): 가격 표시 (/community 페이지용)
-   * - false: 가격 숨김 (/market/[ticker] 커뮤니티 섹션용 - 중복 방지)
-   *
-   * 가격 정보가 없는 경우 (price === 0):
-   * - "시세 보기 →" 텍스트 표시
-   * - 클릭 시 종목 상세 페이지로 이동
    */
   const renderStockCard = (stock: StockTag) => {
     const isPositive = stock.changePercent >= 0;
@@ -290,16 +597,13 @@ export function FeedPost({
                    border border-gray-100 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700
                    transition-colors cursor-pointer"
       >
-        {/* 종목 정보 */}
         <div className="flex items-center gap-2">
           <span className="font-semibold text-gray-900 dark:text-white">{stock.ticker}</span>
           <span className="text-sm text-gray-500 dark:text-gray-400">{stock.name}</span>
         </div>
 
-        {/* 가격 영역 - showTickerPrice=false면 숨김 */}
         {showTickerPrice && (
           hasPrice ? (
-            /* 가격 정보 있음 - 가격과 등락률 표시 */
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900 dark:text-white">
                 ${stock.price.toFixed(2)}
@@ -317,14 +621,12 @@ export function FeedPost({
               <span className="text-lg">{isPositive ? '📈' : '📉'}</span>
             </div>
           ) : (
-            /* 가격 정보 없음 - 시세 보기 링크 표시 */
             <span className="text-sm text-blue-600 dark:text-blue-400">
               시세 보기 →
             </span>
           )
         )}
 
-        {/* showTickerPrice=false일 때 화살표 아이콘만 표시 */}
         {!showTickerPrice && (
           <span className="text-gray-400 dark:text-gray-500">→</span>
         )}
@@ -332,24 +634,25 @@ export function FeedPost({
     );
   };
 
+  // 삭제된 게시글이면 표시하지 않음
+  if (isPostDeleted) {
+    return null;
+  }
+
   return (
     <article
       className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700
                  hover:bg-gray-50/50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
     >
       <div className="p-4">
-        {/* 상단: 프로필 + 닉네임 + 시간 */}
+        {/* 상단: 프로필 + 닉네임 + 시간 + 메뉴 */}
         <div className="flex items-start gap-3">
-          {/* 프로필 아바타 - 조건부 렌더링으로 하나만 표시 */}
-          {/* 우선순위: 1.이미지URL → 2.이모지 → 3.이니셜 (이미지 로딩 실패 시 이니셜로 fallback) */}
+          {/* 프로필 아바타 */}
           <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
             {(() => {
-              // 이미지 URL 여부 확인 (http:// 또는 /avatars/ 경로)
               const isImageUrl = post.authorAvatar?.startsWith('http') || post.authorAvatar?.startsWith('/avatars/');
-              // 이모지 여부 확인 (이미지 URL이 아닌 경우)
               const isEmoji = post.authorAvatar && !isImageUrl;
 
-              // 1. 이미지 URL이 있고 로딩 에러가 없으면 → 이미지 표시
               if (isImageUrl && !authorImageError) {
                 return (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -357,15 +660,11 @@ export function FeedPost({
                     src={post.authorAvatar}
                     alt={post.author}
                     className="w-full h-full object-cover"
-                    onError={() => {
-                      // 이미지 로딩 실패 시 에러 상태 설정 → 이니셜로 전환
-                      setAuthorImageError(true);
-                    }}
+                    onError={() => setAuthorImageError(true)}
                   />
                 );
               }
 
-              // 2. 이모지가 있으면 → 이모지 표시
               if (isEmoji) {
                 return (
                   <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl">
@@ -374,7 +673,6 @@ export function FeedPost({
                 );
               }
 
-              // 3. 그 외 (이미지 없거나 로딩 실패) → 이니셜 아바타 표시
               return (
                 <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                   <span className="text-white font-bold text-base">
@@ -387,7 +685,7 @@ export function FeedPost({
 
           {/* 콘텐츠 영역 */}
           <div className="flex-1 min-w-0">
-            {/* 작성자 정보 */}
+            {/* 작성자 정보 + 메뉴 버튼 */}
             <div className="flex items-center gap-1 mb-1">
               <span className="font-semibold text-gray-900 dark:text-white truncate">
                 {post.author}
@@ -404,69 +702,126 @@ export function FeedPost({
                   🔥 인기
                 </span>
               )}
+
+              {/* ⋮ 메뉴 버튼 - 본인 게시글 + 1시간 이내만 표시 */}
+              {canEditPost && (
+                <div className="relative ml-auto">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPostMenu(!showPostMenu);
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                               hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  >
+                    <span className="text-lg leading-none">⋮</span>
+                  </button>
+                  <DropdownMenu
+                    isOpen={showPostMenu}
+                    onClose={() => setShowPostMenu(false)}
+                    timeRemaining={postTimeRemaining}
+                    onEdit={() => {
+                      setIsEditingPost(true);
+                      setEditPostContent(post.content);
+                    }}
+                    onDelete={() => setShowDeletePostModal(true)}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* 본문 내용 */}
-            <div className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap mb-3">
-              {parseContent(post.content)}
-            </div>
+            {/* 본문 내용 - 수정 모드 또는 일반 모드 */}
+            {isEditingPost ? (
+              <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                <textarea
+                  value={editPostContent}
+                  onChange={(e) => setEditPostContent(e.target.value)}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600
+                             rounded-xl text-gray-900 dark:text-white resize-none focus:outline-none
+                             focus:ring-2 focus:ring-blue-500"
+                  rows={4}
+                  maxLength={500}
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                  <button
+                    onClick={() => {
+                      setIsEditingPost(false);
+                      setEditPostContent(post.content);
+                    }}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100
+                               dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleSavePostEdit}
+                    disabled={isSavingPost || !editPostContent.trim()}
+                    className="px-4 py-2 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-lg
+                               transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingPost ? '저장 중...' : '저장'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap mb-3">
+                {parseContent(post.content)}
+              </div>
+            )}
 
-            {/* 종목 미니 카드 (태그된 종목이 있을 때) */}
-            {/* 종목 태그 카드 - showTickerCard=false면 숨김 */}
-            {showTickerCard && post.stockTags.length > 0 && (
+            {/* 종목 미니 카드 */}
+            {showTickerCard && post.stockTags.length > 0 && !isEditingPost && (
               <div className="space-y-2 mb-3">
                 {fetchPrices
-                  ? /* 실시간 가격 API 호출하여 표시 */
-                    post.stockTags.map((stock) => (
+                  ? post.stockTags.map((stock) => (
                       <StockCardWithPrice
                         key={stock.ticker}
                         ticker={stock.ticker}
                         name={stock.name}
                       />
                     ))
-                  : /* 정적 가격 표시 */
-                    post.stockTags.map(renderStockCard)
+                  : post.stockTags.map(renderStockCard)
                 }
               </div>
             )}
 
-            {/* 인터랙션 버튼 - 좋아요, 댓글만 표시 (리포스트/북마크 제거됨) */}
-            <div className="flex items-center gap-2 -ml-2">
-              {/* 좋아요 버튼 - 클릭 시 빨간색으로 변경 */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLike();
-                }}
-                disabled={isLiking}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors
-                  ${
-                    liked
-                      ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                  }
-                  ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <span className="text-lg">{liked ? '❤️' : '🤍'}</span>
-                <span className="text-sm">{likesCount}</span>
-              </button>
+            {/* 인터랙션 버튼 */}
+            {!isEditingPost && (
+              <div className="flex items-center gap-2 -ml-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLike();
+                  }}
+                  disabled={isLiking}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors
+                    ${
+                      liked
+                        ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                    }
+                    ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className="text-lg">{liked ? '❤️' : '🤍'}</span>
+                  <span className="text-sm">{likesCount}</span>
+                </button>
 
-              {/* 댓글 버튼 - 클릭 시 댓글 섹션 펼침/접힘 */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleComments();
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors
-                  ${showComments
-                    ? 'text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                  }`}
-              >
-                <span className="text-lg">💬</span>
-                <span className="text-sm">{commentsCount}</span>
-              </button>
-            </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleComments();
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors
+                    ${showComments
+                      ? 'text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                    }`}
+                >
+                  <span className="text-lg">💬</span>
+                  <span className="text-sm">{commentsCount}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -519,65 +874,133 @@ export function FeedPost({
                 댓글을 불러오는 중...
               </div>
             ) : comments.length > 0 ? (
-              comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-                  {/* 댓글 작성자 아바타 - 조건부 렌더링으로 하나만 표시 */}
-                  {/* 우선순위: 1.이미지URL → 2.이니셜 (이미지 로딩 실패 시 이니셜로 fallback) */}
-                  <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
-                    {(() => {
-                      // 이미지 URL 여부 확인 (http:// 또는 /avatars/ 경로)
-                      const isImageUrl = comment.author.avatarUrl?.startsWith('http') || comment.author.avatarUrl?.startsWith('/avatars/');
-                      // 해당 댓글의 이미지 로딩 에러 여부
-                      const hasImageError = commentImageErrors[comment.id];
+              comments.map((comment) => {
+                // 본인 댓글인지 확인
+                const isOwnComment = currentUserId && comment.userId === currentUserId;
+                // 댓글 수정/삭제 가능 여부 (1시간 이내)
+                const canEditComment = isOwnComment && comment.createdAt && canEditOrDelete(comment.createdAt);
+                // 댓글 수정 중인지 확인
+                const isEditingThisComment = editingCommentId === comment.id;
 
-                      // 1. 이미지 URL이 있고 로딩 에러가 없으면 → 이미지 표시
-                      if (isImageUrl && !hasImageError) {
+                return (
+                  <div key={comment.id} className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                    {/* 댓글 작성자 아바타 */}
+                    <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                      {(() => {
+                        const isImageUrl = comment.author.avatarUrl?.startsWith('http') || comment.author.avatarUrl?.startsWith('/avatars/');
+                        const hasImageError = commentImageErrors[comment.id];
+
+                        if (isImageUrl && !hasImageError) {
+                          return (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={comment.author.avatarUrl}
+                              alt={comment.author.name}
+                              className="w-full h-full object-cover"
+                              onError={() => {
+                                setCommentImageErrors(prev => ({
+                                  ...prev,
+                                  [comment.id]: true,
+                                }));
+                              }}
+                            />
+                          );
+                        }
+
                         return (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={comment.author.avatarUrl}
-                            alt={comment.author.name}
-                            className="w-full h-full object-cover"
-                            onError={() => {
-                              // 이미지 로딩 실패 시 에러 상태 설정 → 이니셜로 전환
-                              setCommentImageErrors(prev => ({
-                                ...prev,
-                                [comment.id]: true,
-                              }));
-                            }}
-                          />
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {comment.author.name?.charAt(0).toUpperCase() || '?'}
+                            </span>
+                          </div>
                         );
-                      }
-
-                      // 2. 그 외 (이미지 없거나 로딩 실패) → 이니셜 아바타 표시
-                      return (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {comment.author.name?.charAt(0).toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-medium text-sm text-gray-900 dark:text-white">
-                        {comment.author.name}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        @{comment.author.handle}
-                      </span>
-                      <span className="text-gray-400 dark:text-gray-500">·</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatCommentTime(comment.createdAt)}
-                      </span>
+                      })()}
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      {comment.content}
-                    </p>
+
+                    <div className="flex-1 min-w-0">
+                      {/* 댓글 헤더: 작성자 + 시간 + 메뉴 */}
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-medium text-sm text-gray-900 dark:text-white">
+                          {comment.author.name}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          @{comment.author.handle}
+                        </span>
+                        <span className="text-gray-400 dark:text-gray-500">·</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatCommentTime(comment.createdAt)}
+                        </span>
+
+                        {/* ⋮ 메뉴 버튼 - 본인 댓글 + 1시간 이내만 표시 */}
+                        {canEditComment && !isEditingThisComment && (
+                          <div className="relative ml-auto">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowCommentMenu(showCommentMenu === comment.id ? null : comment.id);
+                              }}
+                              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                                         hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            >
+                              <span className="text-base leading-none">⋮</span>
+                            </button>
+                            <DropdownMenu
+                              isOpen={showCommentMenu === comment.id}
+                              onClose={() => setShowCommentMenu(null)}
+                              timeRemaining={commentTimeRemaining[comment.id] || null}
+                              onEdit={() => handleStartEditComment(comment)}
+                              onDelete={() => {
+                                setShowCommentMenu(null);
+                                setShowDeleteCommentModal(comment.id);
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 댓글 내용 - 수정 모드 또는 일반 모드 */}
+                      {isEditingThisComment ? (
+                        <div className="mt-1">
+                          <input
+                            type="text"
+                            value={editCommentContent}
+                            onChange={(e) => setEditCommentContent(e.target.value)}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200
+                                       dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            maxLength={300}
+                            autoFocus
+                          />
+                          <div className="flex justify-end gap-2 mt-2">
+                            <button
+                              onClick={() => {
+                                setEditingCommentId(null);
+                                setEditCommentContent('');
+                              }}
+                              className="px-3 py-1 text-xs text-gray-600 dark:text-gray-300
+                                         hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                              취소
+                            </button>
+                            <button
+                              onClick={() => handleSaveCommentEdit(comment.id)}
+                              disabled={isSavingComment || !editCommentContent.trim()}
+                              className="px-3 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600
+                                         rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isSavingComment ? '저장 중...' : '저장'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                          {comment.content}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
                 아직 댓글이 없습니다
@@ -586,6 +1009,24 @@ export function FeedPost({
           </div>
         </div>
       )}
+
+      {/* 게시글 삭제 확인 모달 */}
+      <DeleteConfirmModal
+        isOpen={showDeletePostModal}
+        onClose={() => setShowDeletePostModal(false)}
+        onConfirm={handleConfirmDeletePost}
+        isDeleting={isDeletingPost}
+        type="post"
+      />
+
+      {/* 댓글 삭제 확인 모달 */}
+      <DeleteConfirmModal
+        isOpen={showDeleteCommentModal !== null}
+        onClose={() => setShowDeleteCommentModal(null)}
+        onConfirm={() => showDeleteCommentModal && handleConfirmDeleteComment(showDeleteCommentModal)}
+        isDeleting={isDeletingComment}
+        type="comment"
+      />
     </article>
   );
 }

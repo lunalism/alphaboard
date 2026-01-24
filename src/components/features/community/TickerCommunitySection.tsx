@@ -53,6 +53,8 @@ interface TickerCommunitySectionProps {
  * CommunityPost를 FeedPost 형식으로 변환
  *
  * FeedPost 컴포넌트와 호환성 유지를 위해 데이터 변환
+ * - userId: 작성자 ID (수정/삭제 권한 확인용)
+ * - createdAtRaw: ISO 형식 원본 시간 (수정 가능 시간 계산용)
  */
 function toFeedPost(post: CommunityPost): FeedPostType {
   // 상대 시간 계산
@@ -94,6 +96,7 @@ function toFeedPost(post: CommunityPost): FeedPostType {
     author: authorName,
     username: authorHandle,
     authorAvatar: authorAvatar,  // null이면 FeedPost에서 이니셜 표시
+    userId: post.userId,  // 작성자 ID (수정/삭제 권한 확인용)
     content: post.content,
     hashtags: post.hashtags,
     stockTags: post.tickers.map(ticker => ({
@@ -104,6 +107,7 @@ function toFeedPost(post: CommunityPost): FeedPostType {
     })),
     category: post.category,
     createdAt: timeAgo,
+    createdAtRaw: post.createdAt,  // ISO 형식 원본 시간 (수정 가능 시간 계산용)
     likes: post.likesCount,
     comments: post.commentsCount,
     reposts: post.repostsCount,
@@ -288,6 +292,89 @@ export function TickerCommunitySection({
   }, [getAuthHeaders]);
 
   /**
+   * 게시글 수정 핸들러
+   * - 수정 후 목록 새로고침
+   */
+  const handleEditPost = useCallback(async (postId: string, content: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      const result: CommunityApiResponse<CommunityPost> = await response.json();
+      if (result.success) {
+        refetch();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders, refetch]);
+
+  /**
+   * 게시글 삭제 핸들러
+   * - 삭제 후 목록 새로고침
+   */
+  const handleDeletePost = useCallback(async (postId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const result: CommunityApiResponse<{ deleted: boolean }> = await response.json();
+      if (result.success) {
+        refetch();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders, refetch]);
+
+  /**
+   * 댓글 수정 핸들러
+   */
+  const handleEditComment = useCallback(async (
+    postId: string,
+    commentId: string,
+    content: string
+  ): Promise<CommunityComment | null> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments/${commentId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      const result: CommunityApiResponse<CommunityComment> = await response.json();
+      if (result.success && result.data) {
+        return result.data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, [getAuthHeaders]);
+
+  /**
+   * 댓글 삭제 핸들러
+   */
+  const handleDeleteComment = useCallback(async (postId: string, commentId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const result: CommunityApiResponse<{ deleted: boolean }> = await response.json();
+      return result.success;
+    } catch {
+      return false;
+    }
+  }, [getAuthHeaders]);
+
+  /**
    * 더보기 버튼 클릭 핸들러
    *
    * /community?ticker=AAPL 페이지로 이동
@@ -409,9 +496,14 @@ export function TickerCommunitySection({
               key={post.id}
               post={toFeedPost(post)}
               postId={post.id}
+              currentUserId={user?.uid}  // 현재 로그인한 사용자 ID (수정/삭제 권한 확인용)
               onLikeToggle={handleLikeToggle}
               onLoadComments={handleLoadComments}
               onAddComment={handleAddComment}
+              onEditPost={handleEditPost}  // 게시글 수정 핸들러
+              onDeletePost={handleDeletePost}  // 게시글 삭제 핸들러
+              onEditComment={handleEditComment}  // 댓글 수정 핸들러
+              onDeleteComment={handleDeleteComment}  // 댓글 삭제 핸들러
               showTickerPrice={false}  // 시세 페이지에서는 가격 숨김 (위에 이미 표시됨)
               showTickerCard={false}   // 시세 페이지에서는 티커 카드 숨김 (이미 종목 페이지에 있으므로)
               isLoggedIn={isLoggedIn}  // 로그인 상태 전달 (좋아요/댓글 기능 활성화용)
