@@ -88,10 +88,10 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
       {/* ========================================
           로그인/프로필 섹션
+          - mt-auto: 항상 하단으로 밀어냄
           - flex-shrink-0: 절대 축소되지 않음
-          - 항상 하단에 고정 표시
           ======================================== */}
-      <div className="px-3 pt-2 flex-shrink-0 border-t border-gray-100 dark:border-gray-800">
+      <div className="px-3 pt-2 mt-auto flex-shrink-0 border-t border-gray-100 dark:border-gray-800">
         {isLoading || isProfileLoading ? (
           // 로딩 중 - 스켈레톤 UI
           <div className="w-full h-12 rounded-xl flex items-center px-2">
