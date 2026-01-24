@@ -24,7 +24,7 @@ import Link from "next/link";
 import { Sidebar } from "@/components/layout";
 import { MobileSearchHeader } from "@/components/features/search";
 import { searchCategoryFilters } from "@/utils/search";
-import { useRecentSearches, useStockSearch, type StockSearchResult } from "@/hooks";
+import { useRecentSearches, useStockSearch, useRecentlyViewed, type StockSearchResult } from "@/hooks";
 import { newsData } from "@/constants/news";
 import { glossaryTerms } from "@/constants/glossary";
 import { calendarEvents } from "@/constants/calendar";
@@ -647,6 +647,13 @@ function SearchResultsContent() {
   // 최근 검색어 훅
   const { addSearch } = useRecentSearches();
 
+  // 최근 본 종목 훅
+  const {
+    recentlyViewed,
+    isLoaded: isRecentlyViewedLoaded,
+    removeFromRecentlyViewed,
+  } = useRecentlyViewed();
+
   // API 기반 종목 검색 훅
   const {
     results: stockResults,
@@ -896,46 +903,119 @@ function SearchResultsContent() {
 
           {/* 초기 상태 (검색 전) */}
           {!hasQuery && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
-                <svg
-                  className="w-8 h-8 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400">
-                검색어를 입력하세요
-              </p>
+            <div className="py-8">
+              {/* ========================================
+                  최근 본 종목 섹션
+                  - localStorage에 저장된 최근 조회한 종목 표시
+                  - 최대 10개까지 칩 형태로 수평 스크롤
+                  - X 버튼으로 개별 삭제 가능
+                  - 클릭 시 해당 종목 상세 페이지로 이동
+                  ======================================== */}
+              {isRecentlyViewedLoaded && recentlyViewed.length > 0 && (
+                <section className="mb-8">
+                  {/* 섹션 헤더 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">👀</span>
+                    <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      최근 본 종목
+                    </h2>
+                  </div>
 
-              {/* 인기 검색어 */}
-              <div className="mt-6">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  인기 검색어
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["삼성전자", "NVIDIA", "테슬라", "CPI", "FOMC", "금리"].map(
-                    (term) => (
-                      <button
-                        key={term}
-                        onClick={() => {
-                          setInputValue(term);
-                          router.push(`/search?q=${encodeURIComponent(term)}`);
-                        }}
-                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  {/* 종목 칩 목록 - 수평 스크롤 */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                    {recentlyViewed.slice(0, 10).map((stock) => (
+                      <div
+                        key={`recent-stock-${stock.ticker}`}
+                        className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm whitespace-nowrap hover:border-blue-400 dark:hover:border-blue-500 transition-colors group"
                       >
-                        {term}
-                      </button>
-                    )
-                  )}
+                        {/* 종목명 클릭 시 상세 페이지 이동 */}
+                        <Link
+                          href={`/market/${stock.ticker}?market=${stock.market}`}
+                          className="flex items-center gap-2"
+                        >
+                          {/* 시장 배지 */}
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                            stock.market === 'kr'
+                              ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                              : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                          }`}>
+                            {stock.market === 'kr' ? 'KR' : 'US'}
+                          </span>
+                          {/* 종목명 */}
+                          <span className="text-gray-700 dark:text-gray-200 font-medium">
+                            {stock.name}
+                          </span>
+                        </Link>
+
+                        {/* X 버튼 - 개별 삭제 */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeFromRecentlyViewed(stock.ticker);
+                          }}
+                          className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="삭제"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* 검색 안내 아이콘 */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-blue-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400">
+                  검색어를 입력하세요
+                </p>
+
+                {/* ========================================
+                    인기 검색어 섹션
+                    - 자주 검색되는 키워드 표시
+                    - 클릭 시 해당 검색어로 검색 실행
+                    ======================================== */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-lg">🔥</span>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      인기 검색어
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {["삼성전자", "NVIDIA", "테슬라", "CPI", "FOMC", "금리"].map(
+                      (term) => (
+                        <button
+                          key={term}
+                          onClick={() => {
+                            setInputValue(term);
+                            router.push(`/search?q=${encodeURIComponent(term)}`);
+                          }}
+                          className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          {term}
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
