@@ -144,9 +144,10 @@ function DropdownMenu({
   return (
     <div
       ref={menuRef}
-      className="absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg
-                 border border-gray-200 dark:border-gray-700 py-1 min-w-[140px]
-                 animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute right-0 top-full mt-1 z-[100] bg-white dark:bg-gray-800 rounded-xl
+                 shadow-lg border border-gray-200 dark:border-gray-700 py-2 min-w-[150px]
+                 overflow-visible"
+      style={{ animation: 'fadeIn 0.15s ease-out' }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* 수정 버튼 - 남은 시간 표시 */}
@@ -156,7 +157,7 @@ function DropdownMenu({
           onEdit();
           onClose();
         }}
-        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200
+        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200
                    hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
       >
         <span>✏️</span>
@@ -174,7 +175,7 @@ function DropdownMenu({
           onDelete();
           onClose();
         }}
-        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400
+        className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400
                    hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
       >
         <span>🗑️</span>
