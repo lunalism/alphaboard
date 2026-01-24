@@ -9,9 +9,15 @@
  * 기능:
  * - 티커 코드로 한국/미국 종목 자동 구분
  * - 실시간 시세 API 호출 (lazy loading)
+ * - 미국 주식: 한글명 표시 (nameKr)
  * - 로딩 중: 스켈레톤 UI
  * - API 실패 시: "시세 보기 →" 폴백
  * - 클릭 시: 종목 상세 페이지로 이동
+ *
+ * 종목명 표시 우선순위:
+ * 1. nameKr (한글명) - "써모 피셔 사이언티픽"
+ * 2. name (영문명) - "Thermo Fisher Scientific"
+ * 3. props.name (fallback)
  */
 
 import { useState, useEffect } from 'react';
@@ -20,7 +26,7 @@ import { useRouter } from 'next/navigation';
 interface StockCardWithPriceProps {
   /** 종목 코드 (티커) */
   ticker: string;
-  /** 종목명 */
+  /** 종목명 (fallback용) */
   name: string;
 }
 
@@ -29,7 +35,7 @@ const isKoreanStock = (ticker: string): boolean => {
   return /^\d{6}$/.test(ticker);
 };
 
-export function StockCardWithPrice({ ticker, name }: StockCardWithPriceProps) {
+export function StockCardWithPrice({ ticker, name: propName }: StockCardWithPriceProps) {
   const router = useRouter();
 
   // 가격 데이터 상태
@@ -37,6 +43,10 @@ export function StockCardWithPrice({ ticker, name }: StockCardWithPriceProps) {
   const [changePercent, setChangePercent] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // 종목명 상태 (API에서 가져온 값 사용)
+  // 우선순위: nameKr > name > propName
+  const [displayName, setDisplayName] = useState<string>(propName);
 
   // 종목 가격 조회
   useEffect(() => {
@@ -56,6 +66,15 @@ export function StockCardWithPrice({ ticker, name }: StockCardWithPriceProps) {
         if (response.ok && data.currentPrice !== undefined) {
           setPrice(data.currentPrice);
           setChangePercent(data.changePercent || 0);
+
+          // 종목명 설정 (우선순위: nameKr > name > propName)
+          // 미국 주식의 경우 한글명(nameKr)이 있으면 한글명 표시
+          if (data.nameKr) {
+            setDisplayName(data.nameKr);
+          } else if (data.name && data.name !== ticker) {
+            setDisplayName(data.name);
+          }
+          // 그 외의 경우 propName 유지
         } else {
           setError(true);
         }
@@ -67,7 +86,7 @@ export function StockCardWithPrice({ ticker, name }: StockCardWithPriceProps) {
     };
 
     fetchPrice();
-  }, [ticker]);
+  }, [ticker, propName]);
 
   const isPositive = (changePercent ?? 0) >= 0;
   const hasPrice = price !== null && !error;
@@ -83,9 +102,13 @@ export function StockCardWithPrice({ ticker, name }: StockCardWithPriceProps) {
                  transition-colors cursor-pointer"
     >
       {/* 종목 정보 */}
+      {/* 표시 형식: "종목명 티커" (예: "써모 피셔 사이언티픽 TMO") */}
       <div className="flex items-center gap-2">
-        <span className="font-semibold text-gray-900 dark:text-white">{ticker}</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">{name}</span>
+        <span className="font-semibold text-gray-900 dark:text-white">{displayName}</span>
+        {/* 종목명이 티커와 다를 때만 티커 표시 */}
+        {displayName !== ticker && (
+          <span className="text-sm text-gray-500 dark:text-gray-400">{ticker}</span>
+        )}
       </div>
 
       {/* 가격 영역 */}
