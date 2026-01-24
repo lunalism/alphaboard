@@ -47,9 +47,9 @@
 
 ## ✨ Features
 
-<table>
+<table width="100%">
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 🔐 Authentication
 Firebase 기반 안전한 인증
@@ -58,7 +58,7 @@ Firebase 기반 안전한 인증
 - 프로필 & 설정 관리
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 📰 News Feed
 AI 기반 글로벌 금융 뉴스
@@ -69,7 +69,7 @@ AI 기반 글로벌 금융 뉴스
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 💹 Real-time Quotes
 한국투자증권 API 연동
@@ -78,7 +78,7 @@ AI 기반 글로벌 금융 뉴스
 - 4대 지수 위젯 & 차트
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 👥 Community
 투자자 소통 공간
@@ -89,7 +89,7 @@ AI 기반 글로벌 금융 뉴스
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### ⭐ Watchlist
 나만의 관심종목 관리
@@ -98,7 +98,7 @@ AI 기반 글로벌 금융 뉴스
 - 드래그로 순서 변경
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 🔔 Price Alerts
 목표가 알림 시스템
@@ -109,7 +109,7 @@ AI 기반 글로벌 금융 뉴스
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 🔍 Search
 빠른 종목 검색
@@ -118,7 +118,7 @@ AI 기반 글로벌 금융 뉴스
 - 검색 결과 즉시 이동
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### 🌙 Dark Mode
 눈 편한 다크 테마
@@ -133,29 +133,29 @@ AI 기반 글로벌 금융 뉴스
 
 ## 🛠 Tech Stack
 
-<table>
+<table width="100%">
 <tr>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=nextjs" width="48" height="48" alt="Next.js" />
 <br /><strong>Next.js 16</strong>
 </td>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" />
 <br /><strong>React 19</strong>
 </td>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=ts" width="48" height="48" alt="TypeScript" />
 <br /><strong>TypeScript</strong>
 </td>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" />
 <br /><strong>Tailwind 4</strong>
 </td>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=firebase" width="48" height="48" alt="Firebase" />
 <br /><strong>Firebase</strong>
 </td>
-<td align="center" width="96">
+<td align="center" width="16.66%">
 <img src="https://skillicons.dev/icons?i=supabase" width="48" height="48" alt="Supabase" />
 <br /><strong>Supabase</strong>
 </td>
@@ -187,26 +187,26 @@ AI 기반 글로벌 금융 뉴스
 
 ## 📸 Screenshots
 
-<table>
+<table width="100%">
 <tr>
-<td align="center">
+<td align="center" width="50%" height="150">
 <strong>📰 News Feed</strong>
 <br /><br />
 <em>Coming Soon</em>
 </td>
-<td align="center">
+<td align="center" width="50%" height="150">
 <strong>💹 Market</strong>
 <br /><br />
 <em>Coming Soon</em>
 </td>
 </tr>
 <tr>
-<td align="center">
+<td align="center" width="50%" height="150">
 <strong>👥 Community</strong>
 <br /><br />
 <em>Coming Soon</em>
 </td>
-<td align="center">
+<td align="center" width="50%" height="150">
 <strong>📊 Stock Detail</strong>
 <br /><br />
 <em>Coming Soon</em>
