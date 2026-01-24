@@ -11,7 +11,8 @@ import {
   MobileEventCard,
 } from '@/components/features/calendar';
 import { EventCardSkeletonList, EventDetailPanelSkeleton, Skeleton } from '@/components/skeleton';
-import { calendarEvents, eventCategoryFilters } from '@/constants';
+import { eventCategoryFilters } from '@/constants';
+import { useCalendarEvents } from '@/hooks';
 import { EventCategory, CalendarEvent } from '@/types';
 
 /**
@@ -35,26 +36,21 @@ export default function CalendarPage() {
     new Date().toISOString().split('T')[0]
   );
 
-  // ========== 로딩 상태 관리 ==========
-  // isLoading: 데이터 로딩 중 여부
-  const [isLoading, setIsLoading] = useState(true);
+  // ========== API에서 이벤트 데이터 조회 ==========
+  // useCalendarEvents 훅으로 /api/calendar/events API 호출
+  // 현재는 정적 데이터(constants/calendar.ts)를 반환
+  // 추후 Finnhub 등 실제 API 연동 시 자동으로 반영됨
+  const { events: calendarEvents, isLoading, error: apiError, source } = useCalendarEvents();
 
-  /**
-   * 데이터 로딩 시뮬레이션
-   *
-   * 실제 API 호출 시에는 이 부분을 fetch/axios로 대체합니다.
-   * 테스트용으로 2초 딜레이를 추가했습니다.
-   *
-   * TODO: 실제 API 연동 시 아래 코드를 수정하세요
-   */
+  // API 에러 로깅 (개발용)
   useEffect(() => {
-    // 테스트용 2초 딜레이 (실제 배포 시 제거)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (apiError) {
+      console.warn('[Calendar] API 에러:', apiError);
+    }
+    if (source && source !== 'static') {
+      console.log(`[Calendar] 데이터 소스: ${source}`);
+    }
+  }, [apiError, source]);
 
   // ========== 필터링된 이벤트 ==========
   const filteredEvents = useMemo(() => {

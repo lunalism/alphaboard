@@ -61,3 +61,6 @@ export { usePriceAlertCheck, type PriceData } from './usePriceAlertCheck';
 
 // 커뮤니티 훅
 export { useCommunity, useComments, useTickerCommunity } from './useCommunity';
+
+// 경제 캘린더 훅
+export { useCalendarEvents } from './useCalendarEvents';
