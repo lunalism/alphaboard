@@ -759,7 +759,7 @@ function MarketContent() {
             </div>
             {/* 데스크톱 검색바 (lg 이상에서만 표시) */}
             <div className="hidden lg:block w-72 flex-shrink-0">
-              <GlobalSearch compact />
+              <GlobalSearch />
             </div>
           </div>
 

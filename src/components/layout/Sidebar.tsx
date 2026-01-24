@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { menuItems } from '@/constants';
 import { MenuIcon, UserAvatar } from '@/components/common';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { GlobalSearch } from '@/components/features/search';
 
 interface SidebarProps {
   activeMenu: string;
@@ -50,7 +51,18 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         </Link>
       </div>
 
-      {/* 검색 버튼 - 태블릿 (md~lg) 에서만 표시 */}
+      {/* ========================================
+          검색 영역 - 반응형 분기
+          - lg 이상: 드롭다운 방식 검색창 (GlobalSearch)
+          - md~lg: 검색 버튼 클릭 시 /search 페이지 이동
+          ======================================== */}
+
+      {/* 데스크톱 검색창 (lg 이상) - 드롭다운 방식 */}
+      <div className="px-3 mb-4 hidden lg:block">
+        <GlobalSearch />
+      </div>
+
+      {/* 태블릿 검색 버튼 (md~lg) - 페이지 이동 방식 */}
       <div className="px-3 mb-4 lg:hidden">
         <button
           type="button"

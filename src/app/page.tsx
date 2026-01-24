@@ -78,7 +78,7 @@ export default function Home() {
                 </svg>
               </button>
               <div className="w-72">
-                <GlobalSearch compact />
+                <GlobalSearch />
               </div>
             </div>
           </div>
