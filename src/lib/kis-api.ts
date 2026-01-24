@@ -1524,3 +1524,226 @@ function transformOverseasFluctuationRanking(
     previousClose: parseFloat(raw.base) || 0,
   };
 }
+
+// ==================== 일봉 차트 데이터 조회 ====================
+
+/**
+ * 캔들(일봉) 데이터 타입
+ *
+ * TradingView Lightweight Charts에서 사용하는 형식
+ */
+export interface CandleData {
+  /** 날짜 (YYYY-MM-DD 형식) */
+  time: string;
+  /** 시가 */
+  open: number;
+  /** 고가 */
+  high: number;
+  /** 저가 */
+  low: number;
+  /** 종가 */
+  close: number;
+  /** 거래량 */
+  volume: number;
+}
+
+/**
+ * 한국투자증권 일봉 조회 API 응답 타입
+ *
+ * tr_id: FHKST03010100
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-quotations
+ */
+interface KISDailyChartResponse {
+  rt_cd: string;
+  msg_cd: string;
+  msg1: string;
+  output1?: {
+    stck_shrn_iscd: string;  // 종목코드
+    hts_kor_isnm: string;    // 종목명
+  };
+  output2?: Array<{
+    stck_bsop_date: string;  // 영업일자 (YYYYMMDD)
+    stck_oprc: string;       // 시가
+    stck_hgpr: string;       // 고가
+    stck_lwpr: string;       // 저가
+    stck_clpr: string;       // 종가
+    acml_vol: string;        // 누적거래량
+    acml_tr_pbmn: string;    // 누적거래대금
+  }>;
+}
+
+/**
+ * 국내주식 일봉 차트 데이터 조회
+ *
+ * @param symbol 종목코드 (6자리 숫자)
+ * @param period 조회 기간 ('D': 일, 'W': 주, 'M': 월)
+ * @param count 조회 개수 (최대 100)
+ * @returns 캔들 데이터 배열 (과거 → 현재 순서)
+ *
+ * @description
+ * GET /uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice
+ * tr_id: FHKST03010100
+ *
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-quotations
+ */
+export async function getKoreanDailyChart(
+  symbol: string,
+  period: 'D' | 'W' | 'M' = 'D',
+  count: number = 100
+): Promise<CandleData[]> {
+  const accessToken = await getAccessToken();
+
+  // 조회 종료일 (오늘)
+  const today = new Date();
+  const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+
+  // 조회 시작일 (count일 전)
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - count * 2);  // 넉넉하게 2배로 조회
+  const startDateStr = startDate.toISOString().slice(0, 10).replace(/-/g, '');
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice`);
+  url.searchParams.append('FID_COND_MRKT_DIV_CODE', 'J');      // J: 주식
+  url.searchParams.append('FID_INPUT_ISCD', symbol);           // 종목코드
+  url.searchParams.append('FID_INPUT_DATE_1', startDateStr);   // 시작일
+  url.searchParams.append('FID_INPUT_DATE_2', endDate);        // 종료일
+  url.searchParams.append('FID_PERIOD_DIV_CODE', period);      // D: 일, W: 주, M: 월
+  url.searchParams.append('FID_ORG_ADJ_PRC', '0');             // 0: 수정주가, 1: 원주가
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'FHKST03010100'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 일봉 조회 실패:', response.status, errorText);
+
+    if (response.status === 401 || errorText.includes('EGW00123') || errorText.includes('만료된 token')) {
+      console.log('[KIS API] 토큰 만료 감지, 캐시 초기화');
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`일봉 조회 실패: ${response.status}`);
+  }
+
+  const data: KISDailyChartResponse = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // output2가 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output2 || !Array.isArray(data.output2)) {
+    console.warn('[KIS API] 일봉 데이터가 없습니다.');
+    return [];
+  }
+
+  // 데이터 변환 (과거 → 현재 순서로 정렬)
+  const candles = data.output2
+    .map((item) => ({
+      time: `${item.stck_bsop_date.slice(0, 4)}-${item.stck_bsop_date.slice(4, 6)}-${item.stck_bsop_date.slice(6, 8)}`,
+      open: parseInt(item.stck_oprc) || 0,
+      high: parseInt(item.stck_hgpr) || 0,
+      low: parseInt(item.stck_lwpr) || 0,
+      close: parseInt(item.stck_clpr) || 0,
+      volume: parseInt(item.acml_vol) || 0,
+    }))
+    .filter((candle) => candle.open > 0)  // 유효한 데이터만
+    .reverse()  // 과거 → 현재 순서로 변경
+    .slice(-count);  // 요청한 개수만큼
+
+  return candles;
+}
+
+/**
+ * 해외주식 일봉 차트 데이터 조회
+ *
+ * @param symbol 종목 심볼 (예: AAPL, TSLA)
+ * @param exchange 거래소 코드 (NAS, NYS, AMS)
+ * @param period 조회 기간 ('0': 일, '1': 주, '2': 월)
+ * @param count 조회 개수 (최대 100)
+ * @returns 캔들 데이터 배열 (과거 → 현재 순서)
+ *
+ * @description
+ * GET /uapi/overseas-price/v1/quotations/dailyprice
+ * tr_id: HHDFS76240000
+ *
+ * @see https://apiportal.koreainvestment.com/apiservice/apiservice-oversea-stock-quotations
+ */
+export async function getOverseasDailyChart(
+  symbol: string,
+  exchange: 'NAS' | 'NYS' | 'AMS' = 'NAS',
+  period: '0' | '1' | '2' = '0',
+  count: number = 100
+): Promise<CandleData[]> {
+  const accessToken = await getAccessToken();
+
+  // 조회 종료일 (오늘)
+  const today = new Date();
+  const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+
+  // 거래소 코드 매핑
+  const exchCdMap: Record<string, string> = {
+    NAS: 'NASD',  // 나스닥
+    NYS: 'NYSE',  // 뉴욕증권거래소
+    AMS: 'AMEX',  // 아멕스
+  };
+
+  const url = new URL(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/dailyprice`);
+  url.searchParams.append('AUTH', '');
+  url.searchParams.append('EXCD', exchCdMap[exchange] || 'NASD');
+  url.searchParams.append('SYMB', symbol.toUpperCase());
+  url.searchParams.append('GUBN', period);  // 0: 일, 1: 주, 2: 월
+  url.searchParams.append('BYMD', endDate);
+  url.searchParams.append('MODP', '1');     // 1: 수정주가 적용
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: getCommonHeaders(accessToken, 'HHDFS76240000'),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[KIS API] 해외 일봉 조회 실패:', response.status, errorText);
+
+    if (response.status === 401 || errorText.includes('EGW00123') || errorText.includes('만료된 token')) {
+      console.log('[KIS API] 토큰 만료 감지, 캐시 초기화');
+      clearTokenCache();
+      throw new Error('인증 토큰이 만료되었습니다. 다시 시도해주세요.');
+    }
+
+    throw new Error(`해외 일봉 조회 실패: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (data.rt_cd !== '0') {
+    console.error('[KIS API] API 에러:', data.msg1);
+    throw new Error(`API 에러: ${data.msg1} (${data.msg_cd})`);
+  }
+
+  // output2가 없거나 빈 배열인 경우 빈 배열 반환
+  if (!data.output2 || !Array.isArray(data.output2)) {
+    console.warn('[KIS API] 해외 일봉 데이터가 없습니다.');
+    return [];
+  }
+
+  // 데이터 변환 (과거 → 현재 순서로 정렬)
+  const candles = data.output2
+    .map((item: { xymd: string; open: string; high: string; low: string; clos: string; tvol: string }) => ({
+      time: `${item.xymd.slice(0, 4)}-${item.xymd.slice(4, 6)}-${item.xymd.slice(6, 8)}`,
+      open: parseFloat(item.open) || 0,
+      high: parseFloat(item.high) || 0,
+      low: parseFloat(item.low) || 0,
+      close: parseFloat(item.clos) || 0,
+      volume: parseInt(item.tvol) || 0,
+    }))
+    .filter((candle: CandleData) => candle.open > 0)  // 유효한 데이터만
+    .reverse()  // 과거 → 현재 순서로 변경
+    .slice(-count);  // 요청한 개수만큼
+
+  return candles;
+}

@@ -17,16 +17,8 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-} from 'recharts';
 import { getAssetDetail, getRelatedNews } from '@/constants';
-import { ChartPeriod, RelatedNews } from '@/types/market';
+import { RelatedNews } from '@/types/market';
 import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed, useAlerts, usePriceAlertCheck } from '@/hooks';
 import { useCompanyInfo } from '@/hooks/useCompanyInfo';
 import { showSuccess, showError } from '@/lib/toast';
@@ -38,16 +30,7 @@ import { EditAlertModal } from '@/components/features/alert/EditAlertModal';
 import { PriceAlert } from '@/types/priceAlert';
 import { Sidebar, BottomNav } from '@/components/layout';
 import { TickerCommunitySection } from '@/components/features/community';
-
-// 차트 기간 탭 정의
-const chartPeriods: { id: ChartPeriod; label: string }[] = [
-  { id: '1D', label: '1일' },
-  { id: '1W', label: '1주' },
-  { id: '1M', label: '1개월' },
-  { id: '3M', label: '3개월' },
-  { id: '1Y', label: '1년' },
-  { id: 'ALL', label: '전체' },
-];
+import CandlestickChart from '@/components/features/market/CandlestickChart';
 
 /**
  * 한국 종목 여부 판별
@@ -64,42 +47,6 @@ function isKoreanStock(ticker: string): boolean {
 function getKoreanStockInfo(symbol: string): { name: string; domain: string } | null {
   const stock = KOREAN_STOCKS.find(s => s.symbol === symbol);
   return stock ? { name: stock.name, domain: stock.domain } : null;
-}
-
-/**
- * 차트 데이터 생성 (가상 데이터)
- * TODO: 실제 일별 시세 API 연동 시 대체
- */
-function generateChartDataForKorean(
-  currentPrice: number,
-  days: number,
-  changePercent: number
-): { date: string; price: number; volume: number }[] {
-  const data: { date: string; price: number; volume: number }[] = [];
-  const today = new Date();
-  const basePrice = currentPrice / (1 + changePercent / 100);
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-
-    const progress = (days - i) / days;
-    const noise = (Math.random() - 0.5) * 0.02 * currentPrice;
-    const price = basePrice + (currentPrice - basePrice) * progress + noise;
-
-    data.push({
-      date: date.toISOString().split('T')[0],
-      price: Math.round(price),
-      volume: Math.floor(Math.random() * 50000000) + 10000000,
-    });
-  }
-
-  // 마지막 가격을 현재가로 설정
-  if (data.length > 0) {
-    data[data.length - 1].price = currentPrice;
-  }
-
-  return data;
 }
 
 /**
@@ -233,29 +180,6 @@ function AlertButton({
 }
 
 /**
- * 차트 툴팁 커스텀 컴포넌트
- */
-function CustomTooltip({ active, payload, currency }: { active?: boolean; payload?: any[]; currency: string }) {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{data.date}</p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-          {formatPrice(data.price, currency)}
-        </p>
-        {data.volume && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            거래량: {(data.volume / 1000000).toFixed(1)}M
-          </p>
-        )}
-      </div>
-    );
-  }
-  return null;
-}
-
-/**
  * 핵심 지표 카드 컴포넌트
  */
 function MetricCard({ label, value, subValue }: { label: string; value: string; subValue?: string }) {
@@ -348,7 +272,6 @@ function CompanyInfoSection({
  */
 function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
   const router = useRouter();
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
   // 사이드바 메뉴 상태 (market으로 고정)
   const [activeMenu, setActiveMenu] = useState('market');
@@ -593,20 +516,6 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
 
   const isPositive = stock.changePercent >= 0;
 
-  // 기간별 차트 데이터 생성
-  const periodDays: Record<ChartPeriod, number> = {
-    '1D': 1, '1W': 7, '1M': 30, '3M': 90, '1Y': 365, 'ALL': 730
-  };
-  const chartData = generateChartDataForKorean(stock.currentPrice, periodDays[chartPeriod], stock.changePercent);
-
-  // 차트 데이터 범위 계산
-  const prices = chartData.map((d) => d.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const yMin = minPrice - priceRange * 0.1;
-  const yMax = maxPrice + priceRange * 0.1;
-
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* 사이드바 - 데스크톱 */}
@@ -738,68 +647,9 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">실시간</p>
               </section>
 
-              {/* 차트 섹션 */}
+              {/* 차트 섹션 - 캔들스틱 차트 */}
               <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                {/* 기간 탭 */}
-                <div className="flex gap-1 mb-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-x-auto">
-                  {chartPeriods.map((period) => (
-                    <button
-                      key={period.id}
-                      onClick={() => setChartPeriod(period.id)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                        chartPeriod === period.id
-                          ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {period.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 차트 - 반응형 높이 */}
-                <div className="h-72 md:h-80 lg:h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorPriceKr" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
-                          <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <XAxis
-                        dataKey="date"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return `${date.getMonth() + 1}/${date.getDate()}`;
-                        }}
-                        interval="preserveStartEnd"
-                      />
-                      <YAxis
-                        domain={[yMin, yMax]}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                        tickFormatter={(value) => {
-                          if (value > 10000) return (value / 10000).toFixed(1) + '만';
-                          return value.toLocaleString();
-                        }}
-                        width={50}
-                      />
-                      <Tooltip content={<CustomTooltip currency="KRW" />} />
-                      <Area
-                        type="monotone"
-                        dataKey="price"
-                        stroke={isPositive ? '#22c55e' : '#ef4444'}
-                        strokeWidth={2}
-                        fill="url(#colorPriceKr)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <CandlestickChart symbol={ticker} isOverseas={false} />
               </section>
 
               {/* 오늘의 시세 (OHLC) - 2x2 그리드 */}
@@ -974,7 +824,6 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
  */
 function USAssetDetailPage({ ticker }: { ticker: string }) {
   const router = useRouter();
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
   // 사이드바 메뉴 상태 (market으로 고정)
   const [activeMenu, setActiveMenu] = useState('market');
@@ -1220,20 +1069,6 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
   // 등락 여부 (양수면 상승, 음수면 하락)
   const isPositive = stock.changePercent >= 0;
 
-  // 차트 데이터 생성 (가상 데이터 - 실제 API 연동 시 대체)
-  const periodDays: Record<ChartPeriod, number> = {
-    '1D': 1, '1W': 7, '1M': 30, '3M': 90, '1Y': 365, 'ALL': 730
-  };
-  const chartData = generateChartDataForUS(stock.currentPrice, periodDays[chartPeriod], stock.changePercent);
-
-  // 차트 Y축 범위 계산
-  const prices = chartData.map((d) => d.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const yMin = minPrice - priceRange * 0.1;
-  const yMax = maxPrice + priceRange * 0.1;
-
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
       {/* 사이드바 - 데스크톱 */}
@@ -1368,65 +1203,9 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                 </p>
               </section>
 
-              {/* 차트 섹션 */}
+              {/* 차트 섹션 - 캔들스틱 차트 */}
               <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-700">
-                {/* 기간 탭 */}
-                <div className="flex gap-1 mb-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-x-auto">
-                  {chartPeriods.map((period) => (
-                    <button
-                      key={period.id}
-                      onClick={() => setChartPeriod(period.id)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                        chartPeriod === period.id
-                          ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {period.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 차트 - 반응형 높이 */}
-                <div className="h-72 md:h-80 lg:h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorPriceUs" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
-                          <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <XAxis
-                        dataKey="date"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return `${date.getMonth() + 1}/${date.getDate()}`;
-                        }}
-                        interval="preserveStartEnd"
-                      />
-                      <YAxis
-                        domain={[yMin, yMax]}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                        tickFormatter={(value) => '$' + value.toFixed(0)}
-                        width={50}
-                      />
-                      <Tooltip content={<CustomTooltip currency="USD" />} />
-                      <Area
-                        type="monotone"
-                        dataKey="price"
-                        stroke={isPositive ? '#22c55e' : '#ef4444'}
-                        strokeWidth={2}
-                        fill="url(#colorPriceUs)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <CandlestickChart symbol={ticker} isOverseas={true} exchange={stock?.exchange as 'NAS' | 'NYS' | 'AMS' | undefined} />
               </section>
 
               {/* 가격 정보 + 거래 정보 - 2x2 그리드 */}
@@ -1516,54 +1295,6 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
 }
 
 /**
- * 미국 주식 차트 데이터 생성 (가상 데이터)
- *
- * 현재가와 변동률을 기반으로 가상의 과거 가격 데이터를 생성합니다.
- * 실제 일별 시세 API 연동 시 이 함수를 대체해야 합니다.
- *
- * @param currentPrice 현재가 (USD)
- * @param days 데이터 생성 일수
- * @param changePercent 전일 대비 변동률 (%)
- * @returns 차트 데이터 배열
- */
-function generateChartDataForUS(
-  currentPrice: number,
-  days: number,
-  changePercent: number
-): { date: string; price: number; volume: number }[] {
-  const data: { date: string; price: number; volume: number }[] = [];
-  const today = new Date();
-
-  // 변동률을 기반으로 과거 가격 추정
-  const basePrice = currentPrice / (1 + changePercent / 100);
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-
-    // 시간 진행률 (0 ~ 1)
-    const progress = (days - i) / days;
-    // 랜덤 노이즈 추가 (±2%)
-    const noise = (Math.random() - 0.5) * 0.02 * currentPrice;
-    // 가격 계산 (과거 가격에서 현재 가격으로 점진적 변화)
-    const price = basePrice + (currentPrice - basePrice) * progress + noise;
-
-    data.push({
-      date: date.toISOString().split('T')[0],
-      price: Math.round(price * 100) / 100, // 소수점 2자리
-      volume: Math.floor(Math.random() * 50000000) + 10000000,
-    });
-  }
-
-  // 마지막 가격을 현재가로 정확히 설정
-  if (data.length > 0) {
-    data[data.length - 1].price = currentPrice;
-  }
-
-  return data;
-}
-
-/**
  * 메인 페이지 컴포넌트
  *
  * URL 파라미터를 분석하여 적절한 상세 페이지 컴포넌트를 렌더링합니다.
@@ -1576,7 +1307,6 @@ function generateChartDataForUS(
 export default function AssetDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1M');
 
   // React 19 use() hook for params
   const { ticker } = use(params);
@@ -1656,15 +1386,6 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
   }
 
   const isPositive = asset.change >= 0;
-  const chartData = asset.chartData[chartPeriod];
-
-  // 차트 데이터 범위 계산
-  const prices = chartData.map((d) => d.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const yMin = minPrice - priceRange * 0.1;
-  const yMax = maxPrice + priceRange * 0.1;
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
@@ -1730,81 +1451,9 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 왼쪽: 차트 + 관련 뉴스 */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 차트 섹션 */}
+            {/* 차트 섹션 - 캔들스틱 차트 */}
             <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-              {/* 기간 탭 */}
-              <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg w-fit">
-                {chartPeriods.map((period) => (
-                  <button
-                    key={period.id}
-                    onClick={() => setChartPeriod(period.id)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      chartPeriod === period.id
-                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {period.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* 차트 */}
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="5%"
-                          stopColor={isPositive ? '#22c55e' : '#ef4444'}
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={isPositive ? '#22c55e' : '#ef4444'}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => {
-                        const date = new Date(value);
-                        if (chartPeriod === '1D') {
-                          return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-                        }
-                        return `${date.getMonth() + 1}/${date.getDate()}`;
-                      }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={[yMin, yMax]}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#9ca3af' }}
-                      tickFormatter={(value) => {
-                        if (asset.currency === 'KRW' && value > 10000) {
-                          return (value / 10000).toFixed(1) + '만';
-                        }
-                        return value.toLocaleString();
-                      }}
-                      width={60}
-                    />
-                    <Tooltip content={<CustomTooltip currency={asset.currency} />} />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke={isPositive ? '#22c55e' : '#ef4444'}
-                      strokeWidth={2}
-                      fill="url(#colorPrice)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              <CandlestickChart symbol={ticker} isOverseas={true} />
             </section>
 
             {/* 관련 뉴스 섹션 */}
