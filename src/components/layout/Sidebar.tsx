@@ -90,8 +90,13 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         </button>
       </div>
 
-      {/* Menu Items */}
-      <nav className="flex-1 flex flex-col gap-1 px-3">
+      {/* ========================================
+          메뉴 영역
+          - flex-1: 남은 공간 차지
+          - overflow-y-auto: 메뉴가 많으면 스크롤
+          - 로그인 버튼은 항상 하단에 고정
+          ======================================== */}
+      <nav className="flex-1 flex flex-col gap-1 px-3 overflow-y-auto scrollbar-hide">
         {menuItems
           .filter((item) => item.id !== 'profile')
           // 가격 알림과 관심종목은 로그인 시에만 표시 (로딩 완료 후에만 체크)
@@ -101,7 +106,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           <Link
             key={item.id}
             href={item.href}
-            className={`group relative w-full h-12 rounded-xl flex items-center transition-all duration-200 ${
+            className={`group relative w-full h-12 rounded-xl flex items-center transition-all duration-200 flex-shrink-0 ${
               activeMenu === item.id
                 ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                 : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
@@ -123,8 +128,12 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Login/User Section */}
-      <div className="px-3 mt-auto">
+      {/* ========================================
+          로그인/프로필 섹션
+          - flex-shrink-0: 절대 축소되지 않음
+          - 항상 하단에 고정 표시
+          ======================================== */}
+      <div className="px-3 pt-2 flex-shrink-0 border-t border-gray-100 dark:border-gray-800">
         {isLoading || isProfileLoading ? (
           // 로딩 중 - 스켈레톤 UI
           <div className="w-full h-12 rounded-xl flex items-center px-2">
