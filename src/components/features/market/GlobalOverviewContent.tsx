@@ -3,7 +3,11 @@
 /**
  * GlobalOverviewContent 컴포넌트
  * 글로벌 시장 > 전체 카테고리 선택 시 표시되는 콘텐츠
- * 암호화폐, 원자재, 환율의 요약 정보를 한 페이지에 표시
+ *
+ * 표시 순서 (일반 투자자 관점에서 중요도 순):
+ * 1. 환율 - 가장 기본적인 투자 정보
+ * 2. 원자재 - 금, 유가 등 주요 자산
+ * 3. 암호화폐 - 특수 자산
  */
 
 import { cryptoData, commodityData, forexData } from '@/constants';
@@ -241,11 +245,11 @@ export function GlobalOverviewContent() {
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         글로벌 시장 요약
       </h2>
-      {/* 3열 그리드 레이아웃 */}
+      {/* 3열 그리드 레이아웃 - 중요도 순: 환율 → 원자재 → 암호화폐 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <CryptoSummary />
-        <CommoditySummary />
         <ForexSummary />
+        <CommoditySummary />
+        <CryptoSummary />
       </div>
     </section>
   );
