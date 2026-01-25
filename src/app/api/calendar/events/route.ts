@@ -7,32 +7,34 @@
  * @query category - 카테고리 필터 (institution, earnings, corporate, crypto, 선택)
  *
  * @description
- * 경제 캘린더 이벤트 데이터를 반환합니다.
- * 현재는 정적 데이터(constants/calendar.ts)를 사용하며,
- * 추후 Finnhub 등 실제 API로 쉽게 교체할 수 있도록 구조화되어 있습니다.
+ * Firestore에서 경제 캘린더 이벤트 데이터를 조회합니다.
+ * Firestore에 데이터가 없으면 정적 데이터(constants/calendar.ts)를 폴백으로 사용합니다.
  *
- * 데이터 소스 전환 시:
- * 1. fetchEventsFromAPI() 함수만 수정하면 됨
- * 2. 응답 포맷은 CalendarEvent 타입 유지
- * 3. 캐싱 로직 추가 권장 (Firestore 또는 Redis)
+ * 데이터 소스:
+ * 1. Firestore (calendar_events 컬렉션) - 우선
+ * 2. 정적 데이터 (constants/calendar.ts) - 폴백
  *
  * @example
  * // 전체 이벤트 조회
  * GET /api/calendar/events
  *
  * // 날짜 범위 필터
- * GET /api/calendar/events?from=2025-01-01&to=2025-01-31
+ * GET /api/calendar/events?from=2026-01-01&to=2026-01-31
  *
  * // 카테고리 필터
  * GET /api/calendar/events?category=institution
- *
- * // 복합 필터
- * GET /api/calendar/events?from=2025-01-01&to=2025-03-31&category=earnings
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calendarEvents as staticEvents } from '@/constants/calendar';
 import { CalendarEvent, EventCategory } from '@/types';
+import {
+  calendarEventsCollection,
+  queryCollection,
+  where,
+  orderBy,
+  FirestoreCalendarEvent,
+} from '@/lib/firestore';
 
 // ==================== 타입 정의 ====================
 
@@ -50,11 +52,10 @@ interface CalendarEventsResponse {
   };
   /**
    * 데이터 소스 정보
-   * - 'static': constants/calendar.ts 정적 데이터
-   * - 'finnhub': Finnhub API (추후 연동)
-   * - 'eodhd': EODHD API (추후 연동)
+   * - 'firestore': Firestore 데이터베이스
+   * - 'static': constants/calendar.ts 정적 데이터 (폴백)
    */
-  source: 'static' | 'finnhub' | 'eodhd';
+  source: 'firestore' | 'static';
   timestamp: string;
 }
 
@@ -99,26 +100,73 @@ function isValidCategory(category: string): category is EventCategory {
 // ==================== 데이터 조회 함수 ====================
 
 /**
- * 이벤트 데이터 조회
+ * Firestore에서 이벤트 데이터 조회
  *
- * @description
- * 현재는 정적 데이터를 반환합니다.
- * 추후 실제 API 연동 시 이 함수만 수정하면 됩니다.
- *
- * @example
- * // Finnhub API 연동 시 (예시)
- * async function fetchEventsFromAPI(): Promise<CalendarEvent[]> {
- *   const response = await fetch(
- *     `https://finnhub.io/api/v1/calendar/economic?token=${FINNHUB_API_KEY}`
- *   );
- *   const data = await response.json();
- *   return transformFinnhubData(data.economicCalendar);
- * }
+ * @param from - 시작 날짜 (선택)
+ * @param to - 종료 날짜 (선택)
+ * @param category - 카테고리 필터 (선택)
+ * @returns 이벤트 배열 및 소스 정보
  */
-async function fetchEventsFromAPI(): Promise<CalendarEvent[]> {
-  // TODO: 실제 API 연동 시 이 부분을 수정하세요
-  // 현재는 정적 데이터 반환
-  return staticEvents;
+async function fetchEventsFromFirestore(
+  from?: string | null,
+  to?: string | null,
+  category?: string | null
+): Promise<{ events: CalendarEvent[]; source: 'firestore' | 'static' }> {
+  try {
+    // Firestore 쿼리 조건 빌드
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const constraints: any[] = [];
+
+    // 날짜 범위 필터
+    if (from) {
+      constraints.push(where('date', '>=', from));
+    }
+    if (to) {
+      constraints.push(where('date', '<=', to));
+    }
+
+    // 카테고리 필터
+    if (category && category !== 'all') {
+      constraints.push(where('category', '==', category));
+    }
+
+    // 날짜순 정렬
+    constraints.push(orderBy('date', 'asc'));
+
+    // Firestore 쿼리 실행
+    const firestoreEvents = await queryCollection<FirestoreCalendarEvent>(
+      calendarEventsCollection(),
+      constraints
+    );
+
+    // Firestore에 데이터가 있으면 사용
+    if (firestoreEvents.length > 0) {
+      const events: CalendarEvent[] = firestoreEvents.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        titleEn: doc.titleEn,
+        date: doc.date,
+        endDate: doc.endDate,
+        category: doc.category,
+        countryCode: doc.countryCode,
+        companyDomain: doc.companyDomain,
+        importance: doc.importance,
+        time: doc.time,
+        description: doc.description,
+        relatedTerms: doc.relatedTerms,
+      }));
+
+      return { events, source: 'firestore' };
+    }
+
+    // Firestore에 데이터가 없으면 정적 데이터 폴백
+    console.log('[Calendar API] Firestore에 데이터 없음, 정적 데이터 사용');
+    return { events: staticEvents, source: 'static' };
+  } catch (error) {
+    // Firestore 오류 시 정적 데이터 폴백
+    console.error('[Calendar API] Firestore 조회 오류, 정적 데이터 사용:', error);
+    return { events: staticEvents, source: 'static' };
+  }
 }
 
 // ==================== API 핸들러 ====================
@@ -174,24 +222,27 @@ export async function GET(
   }
 
   try {
-    // 이벤트 데이터 조회
-    let events = await fetchEventsFromAPI();
+    // Firestore에서 이벤트 데이터 조회 (폴백: 정적 데이터)
+    let { events, source } = await fetchEventsFromFirestore(fromParam, toParam, categoryParam);
 
-    // 날짜 범위 필터링
-    if (fromParam) {
-      events = events.filter((event) => event.date >= fromParam);
-    }
-    if (toParam) {
-      events = events.filter((event) => event.date <= toParam);
-    }
+    // 정적 데이터 사용 시 클라이언트 측 필터링 적용
+    if (source === 'static') {
+      // 날짜 범위 필터링
+      if (fromParam) {
+        events = events.filter((event) => event.date >= fromParam);
+      }
+      if (toParam) {
+        events = events.filter((event) => event.date <= toParam);
+      }
 
-    // 카테고리 필터링
-    if (categoryParam && categoryParam !== 'all') {
-      events = events.filter((event) => event.category === categoryParam);
-    }
+      // 카테고리 필터링
+      if (categoryParam && categoryParam !== 'all') {
+        events = events.filter((event) => event.category === categoryParam);
+      }
 
-    // 날짜순 정렬 (오름차순)
-    events.sort((a, b) => a.date.localeCompare(b.date));
+      // 날짜순 정렬 (오름차순)
+      events.sort((a, b) => a.date.localeCompare(b.date));
+    }
 
     return NextResponse.json({
       success: true,
@@ -202,7 +253,7 @@ export async function GET(
         to: toParam,
         category: (categoryParam as EventCategory) || 'all',
       },
-      source: 'static', // 현재 정적 데이터 사용 중
+      source,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

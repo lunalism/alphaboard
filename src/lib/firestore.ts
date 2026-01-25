@@ -114,6 +114,32 @@ export const companyInfoCollection = () => collection(db, 'company_info');
  */
 export const companyInfoDoc = (symbol: string) => doc(db, 'company_info', symbol);
 
+/**
+ * calendar_events 컬렉션 참조
+ * 경제 캘린더 이벤트 저장
+ *
+ * 문서 구조:
+ * - title: 이벤트 제목 (예: "FOMC 정례회의")
+ * - titleEn: 영문 제목 (예: "FOMC Meeting")
+ * - date: 날짜 (YYYY-MM-DD)
+ * - endDate: 종료일 (2일 이상인 경우, 선택)
+ * - category: 카테고리 (institution, earnings, corporate, crypto)
+ * - countryCode: 국가 코드 (us, kr, jp 등)
+ * - importance: 중요도 (high, medium, low)
+ * - time: 한국 시간 (HH:MM)
+ * - description: 설명
+ * - relatedTerms: 관련 용어 배열 (용어사전 연동용)
+ * - createdAt: 생성일
+ * - updatedAt: 수정일
+ */
+export const calendarEventsCollection = () => collection(db, 'calendar_events');
+
+/**
+ * 특정 캘린더 이벤트 문서 참조
+ * @param eventId - 이벤트 ID
+ */
+export const calendarEventDoc = (eventId: string) => doc(db, 'calendar_events', eventId);
+
 // ==================== 타임스탬프 변환 헬퍼 ====================
 
 /**
@@ -323,4 +349,42 @@ export interface FirestoreAlert {
   isTriggered: boolean;
   createdAt: Timestamp;
   triggeredAt: Timestamp | null;
+}
+
+/**
+ * Firestore 캘린더 이벤트 문서 타입
+ *
+ * 경제 캘린더 이벤트 저장
+ * - FOMC 회의, CPI 발표, GDP 발표 등 경제 지표
+ * - 실적 발표 (earnings)
+ * - 기업 이벤트 (corporate)
+ * - 암호화폐 이벤트 (crypto)
+ */
+export interface FirestoreCalendarEvent {
+  /** 이벤트 제목 (한글) */
+  title: string;
+  /** 영문 제목 (선택) */
+  titleEn?: string;
+  /** 날짜 (YYYY-MM-DD) */
+  date: string;
+  /** 종료일 (2일 이상인 경우, 선택) */
+  endDate?: string;
+  /** 카테고리 */
+  category: 'institution' | 'earnings' | 'corporate' | 'crypto';
+  /** 국가 코드 (us, kr, jp 등) - institution용 */
+  countryCode?: string;
+  /** 기업 도메인 (로고용) - earnings, corporate, crypto용 */
+  companyDomain?: string;
+  /** 중요도 */
+  importance: 'high' | 'medium' | 'low';
+  /** 한국 시간 (HH:MM) */
+  time?: string;
+  /** 설명 */
+  description?: string;
+  /** 관련 용어 배열 (용어사전 연동용) */
+  relatedTerms?: string[];
+  /** 생성일 */
+  createdAt: Timestamp;
+  /** 수정일 */
+  updatedAt: Timestamp;
 }
