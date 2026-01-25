@@ -53,6 +53,72 @@ interface CandlestickChartProps {
 // 차트 기간 타입 (일봉/주봉/월봉)
 type PeriodType = 'D' | 'W' | 'M';
 
+// ============================================
+// 한국식 날짜 포맷팅 함수들
+// ============================================
+
+/**
+ * 날짜를 한국식 형식으로 변환
+ * @param time - YYYY-MM-DD 형식의 날짜 문자열 또는 Unix timestamp
+ * @returns "YYYY년 M월 D일" 형식의 문자열
+ */
+function formatKoreanDate(time: string | number): string {
+  let date: Date;
+
+  if (typeof time === 'string') {
+    // YYYY-MM-DD 형식
+    const [year, month, day] = time.split('-');
+    return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
+  } else {
+    // Unix timestamp (초 단위)
+    date = new Date(time * 1000);
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  }
+}
+
+/**
+ * 차트 X축 눈금 포맷터 (한국식)
+ * 날짜를 "MM.DD" 또는 "YYYY.MM" 형식으로 표시
+ *
+ * @param time - lightweight-charts BusinessDay 또는 UTCTimestamp
+ * @param tickMarkType - 눈금 유형 (Year, Month, DayOfMonth, Time, TimeWithSeconds)
+ * @returns 포맷된 날짜 문자열
+ */
+function koreanTickMarkFormatter(
+  time: { year: number; month: number; day: number } | number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tickMarkType: any
+): string {
+  // tickMarkType 값:
+  // 0 = Year, 1 = Month, 2 = DayOfMonth, 3 = Time, 4 = TimeWithSeconds
+
+  let year: number, month: number, day: number;
+
+  if (typeof time === 'object' && 'year' in time) {
+    // BusinessDay 형식
+    year = time.year;
+    month = time.month;
+    day = time.day;
+  } else {
+    // Unix timestamp
+    const date = new Date((time as number) * 1000);
+    year = date.getFullYear();
+    month = date.getMonth() + 1;
+    day = date.getDate();
+  }
+
+  // 눈금 유형에 따른 포맷
+  switch (tickMarkType) {
+    case 0: // Year - 연도만
+      return `${year}년`;
+    case 1: // Month - 연월
+      return `${year}.${String(month).padStart(2, '0')}`;
+    case 2: // DayOfMonth - 월일
+    default:
+      return `${month}.${String(day).padStart(2, '0')}`;
+  }
+}
+
 // 기간 선택 옵션
 const periodOptions = [
   { label: '일봉', value: 'D' as PeriodType },
@@ -144,10 +210,29 @@ export default function CandlestickChart({ symbol, isOverseas = false, exchange 
       rightPriceScale: {
         borderColor: isDarkMode ? '#2d2d44' : '#e5e7eb',  // 우측 가격 축 테두리
       },
+      // ========================================
+      // 시간 축 설정 (한국식 날짜 포맷 적용)
+      // ========================================
       timeScale: {
         borderColor: isDarkMode ? '#2d2d44' : '#e5e7eb',  // 하단 시간 축 테두리
-        timeVisible: true,   // 시간 표시
-        secondsVisible: false,
+        timeVisible: false,    // 시간 숨김 (일봉에서는 불필요)
+        secondsVisible: false, // 초 숨김
+        // X축 눈금 레이블 포맷터 (한국식: "M.DD" 또는 "YYYY.MM")
+        tickMarkFormatter: koreanTickMarkFormatter,
+      },
+      // ========================================
+      // 로컬라이제이션 설정 (크로스헤어 날짜 표시)
+      // ========================================
+      localization: {
+        // 크로스헤어 하단 파란 박스에 표시되는 날짜 포맷
+        timeFormatter: (time: { year: number; month: number; day: number } | number): string => {
+          if (typeof time === 'object' && 'year' in time) {
+            return `${time.year}년 ${time.month}월 ${time.day}일`;
+          }
+          // Unix timestamp의 경우
+          const date = new Date((time as number) * 1000);
+          return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        },
       },
       width: container.clientWidth,  // 컨테이너 너비에 맞춤
       height: 400,                    // 차트 높이 (px)
