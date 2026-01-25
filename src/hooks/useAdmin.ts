@@ -77,6 +77,18 @@ export function useAdmin(): UseAdminReturn {
     ? adminEmails.includes(userProfile.email)
     : false;
 
+  // 디버깅: 관리자 여부 확인 로그
+  useEffect(() => {
+    if (!authLoading && !isLoading) {
+      console.log('[useAdmin] 관리자 체크 결과:', {
+        isLoggedIn,
+        userEmail: userProfile?.email,
+        adminEmails,
+        isAdmin,
+      });
+    }
+  }, [authLoading, isLoading, isLoggedIn, userProfile?.email, adminEmails, isAdmin]);
+
   /**
    * Firestore에서 관리자 설정 조회
    */
@@ -117,16 +129,31 @@ export function useAdmin(): UseAdminReturn {
     // Auth 로딩이 완료될 때까지 대기
     if (authLoading) return;
 
+    console.log('[useAdmin] 관리자 설정 구독 시작...');
     const adminSettingsRef = doc(db, 'adminSettings', 'config');
 
     // 실시간 구독 시작
     const unsubscribe = onSnapshot(
       adminSettingsRef,
-      (docSnapshot) => {
+      async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const data = docSnapshot.data() as AdminSettings;
           setAdminEmails(data.adminEmails || []);
-          debug.log('[useAdmin] 관리자 설정 업데이트:', data.adminEmails);
+          console.log('[useAdmin] 관리자 이메일 목록:', data.adminEmails);
+        } else {
+          // 문서가 없으면 초기 설정 생성
+          console.log('[useAdmin] adminSettings/config 문서 없음 - 초기 설정 생성 중...');
+          try {
+            const initialEmails = ['chrisholic11@gmail.com'];
+            await setDoc(adminSettingsRef, {
+              adminEmails: initialEmails,
+              updatedAt: serverTimestamp(),
+            });
+            setAdminEmails(initialEmails);
+            console.log('[useAdmin] 초기 관리자 설정 생성 완료:', initialEmails);
+          } catch (createErr) {
+            console.error('[useAdmin] 초기 설정 생성 실패:', createErr);
+          }
         }
         setIsLoading(false);
       },
@@ -142,7 +169,7 @@ export function useAdmin(): UseAdminReturn {
 
     // 클린업: 구독 해제
     return () => {
-      debug.log('[useAdmin] 관리자 설정 구독 해제');
+      console.log('[useAdmin] 관리자 설정 구독 해제');
       unsubscribe();
     };
   }, [authLoading, fetchAdminSettings]);

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { menuItems } from '@/constants';
 import { MenuIcon, UserAvatar } from '@/components/common';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface SidebarProps {
   activeMenu: string;
@@ -24,6 +25,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
   // 전역 인증 상태 사용 (자체 세션 체크 없음)
   const { userProfile, isLoading, isLoggedIn, isTestMode, isProfileLoading } = useAuth();
+
+  // 관리자 권한 확인
+  const { isAdmin } = useAdmin();
 
   // 클라이언트 마운트 확인 (hydration 방지)
   useState(() => {
@@ -85,6 +89,56 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
             </div>
           </Link>
         ))}
+
+        {/* ========================================
+            관리자 메뉴 (관리자만 표시)
+            ======================================== */}
+        {isAdmin && (
+          <>
+            {/* 구분선 */}
+            <div className="my-2 mx-2 border-t border-gray-200 dark:border-gray-700" />
+
+            {/* 관리자 메뉴 링크 */}
+            <Link
+              href="/admin"
+              className={`group relative w-full h-12 rounded-xl flex items-center transition-all duration-200 flex-shrink-0 ${
+                activeMenu === 'admin'
+                  ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                  : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+              }`}
+              title="관리자"
+            >
+              <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                {/* 관리자 아이콘 (잠금/설정) */}
+                <svg
+                  className={`w-6 h-6 ${
+                    activeMenu === 'admin'
+                      ? 'text-purple-600 dark:text-purple-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+              </div>
+              <span className={`text-sm font-medium hidden lg:block ${
+                activeMenu === 'admin' ? "text-purple-600 dark:text-purple-400" : "text-gray-700 dark:text-gray-300"
+              }`}>
+                관리자
+              </span>
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
+                관리자
+              </div>
+            </Link>
+          </>
+        )}
         </nav>
       </div>
 
