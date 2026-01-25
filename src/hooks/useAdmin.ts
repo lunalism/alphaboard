@@ -24,7 +24,9 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { AdminSettings } from '@/types/admin';
-import { debug } from '@/lib/debug';
+
+// 개발 환경에서만 로그 출력
+const isDev = process.env.NODE_ENV === 'development';
 
 /**
  * useAdmin 훅 반환 타입
@@ -77,17 +79,15 @@ export function useAdmin(): UseAdminReturn {
     ? adminEmails.includes(userProfile.email)
     : false;
 
-  // 디버깅: 관리자 여부 확인 로그
+  // 디버깅: 관리자 여부 확인 로그 (개발 환경에서만)
   useEffect(() => {
-    if (!authLoading && !isLoading) {
-      console.log('[useAdmin] 관리자 체크 결과:', {
-        isLoggedIn,
+    if (isDev && !authLoading && !isLoading) {
+      console.log('[useAdmin] 관리자 체크:', {
         userEmail: userProfile?.email,
-        adminEmails,
         isAdmin,
       });
     }
-  }, [authLoading, isLoading, isLoggedIn, userProfile?.email, adminEmails, isAdmin]);
+  }, [authLoading, isLoading, userProfile?.email, isAdmin]);
 
   /**
    * Firestore에서 관리자 설정 조회
@@ -103,10 +103,8 @@ export function useAdmin(): UseAdminReturn {
       if (adminSettingsDoc.exists()) {
         const data = adminSettingsDoc.data() as AdminSettings;
         setAdminEmails(data.adminEmails || []);
-        debug.log('[useAdmin] 관리자 이메일 목록 로드:', data.adminEmails);
       } else {
         // 문서가 없으면 초기 설정 생성 (chrisholic11@gmail.com을 기본 관리자로)
-        debug.log('[useAdmin] 관리자 설정 문서 없음 - 초기 설정 생성');
         const initialSettings: Omit<AdminSettings, 'id'> = {
           adminEmails: ['chrisholic11@gmail.com'],
           updatedAt: serverTimestamp() as AdminSettings['updatedAt'],
@@ -129,7 +127,6 @@ export function useAdmin(): UseAdminReturn {
     // Auth 로딩이 완료될 때까지 대기
     if (authLoading) return;
 
-    console.log('[useAdmin] 관리자 설정 구독 시작...');
     const adminSettingsRef = doc(db, 'adminSettings', 'config');
 
     // 실시간 구독 시작
@@ -139,10 +136,11 @@ export function useAdmin(): UseAdminReturn {
         if (docSnapshot.exists()) {
           const data = docSnapshot.data() as AdminSettings;
           setAdminEmails(data.adminEmails || []);
-          console.log('[useAdmin] 관리자 이메일 목록:', data.adminEmails);
         } else {
           // 문서가 없으면 초기 설정 생성
-          console.log('[useAdmin] adminSettings/config 문서 없음 - 초기 설정 생성 중...');
+          if (isDev) {
+            console.log('[useAdmin] 초기 관리자 설정 생성 중...');
+          }
           try {
             const initialEmails = ['chrisholic11@gmail.com'];
             await setDoc(adminSettingsRef, {
@@ -150,7 +148,6 @@ export function useAdmin(): UseAdminReturn {
               updatedAt: serverTimestamp(),
             });
             setAdminEmails(initialEmails);
-            console.log('[useAdmin] 초기 관리자 설정 생성 완료:', initialEmails);
           } catch (createErr) {
             console.error('[useAdmin] 초기 설정 생성 실패:', createErr);
           }
@@ -169,7 +166,6 @@ export function useAdmin(): UseAdminReturn {
 
     // 클린업: 구독 해제
     return () => {
-      console.log('[useAdmin] 관리자 설정 구독 해제');
       unsubscribe();
     };
   }, [authLoading, fetchAdminSettings]);
@@ -199,8 +195,6 @@ export function useAdmin(): UseAdminReturn {
         adminEmails: newAdminEmails,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-
-      debug.log('[useAdmin] 관리자 이메일 추가:', email);
     } catch (err) {
       console.error('[useAdmin] 관리자 이메일 추가 에러:', err);
       throw new Error('관리자 이메일 추가에 실패했습니다.');
@@ -233,8 +227,6 @@ export function useAdmin(): UseAdminReturn {
         adminEmails: newAdminEmails,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-
-      debug.log('[useAdmin] 관리자 이메일 삭제:', email);
     } catch (err) {
       console.error('[useAdmin] 관리자 이메일 삭제 에러:', err);
       throw new Error('관리자 이메일 삭제에 실패했습니다.');

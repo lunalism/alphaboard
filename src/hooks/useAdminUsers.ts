@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   collection,
   query,
@@ -40,10 +40,9 @@ import type {
   PaginationInfo,
   PlanType,
 } from '@/types/admin';
-import { debug } from '@/lib/debug';
 
-// 페이지당 항목 수 기본값
-const DEFAULT_PAGE_SIZE = 10;
+// 페이지당 항목 수 기본값 (20명으로 증가)
+const DEFAULT_PAGE_SIZE = 20;
 
 /**
  * useAdminUsers 훅 반환 타입
@@ -115,11 +114,16 @@ export function useAdminUsers(): UseAdminUsersReturn {
     limit: DEFAULT_PAGE_SIZE,
   });
 
-  // 페이지별 마지막 문서 캐시 (페이지네이션용)
-  const [lastDocs, setLastDocs] = useState<Map<number, QueryDocumentSnapshot<DocumentData>>>(new Map());
+  // 페이지별 마지막 문서 캐시 (페이지네이션용) - useRef로 변경하여 리렌더링 방지
+  const lastDocsRef = useRef<Map<number, QueryDocumentSnapshot<DocumentData>>>(new Map());
+
+  // 총 개수 캐시 (불필요한 count 쿼리 방지)
+  const totalCountRef = useRef<number | null>(null);
 
   /**
-   * 사용자 목록 조회
+   * 사용자 목록 조회 (최적화)
+   * - 총 개수는 첫 로드 또는 필터 변경 시에만 조회
+   * - lastDocs를 ref로 관리하여 무한 루프 방지
    */
   const fetchUsers = useCallback(async () => {
     try {
@@ -140,6 +144,9 @@ export function useAdminUsers(): UseAdminUsersReturn {
           where('plan', '==', searchParams.plan),
           orderBy('createdAt', 'desc')
         );
+        // 필터 변경 시 캐시 초기화
+        totalCountRef.current = null;
+        lastDocsRef.current.clear();
       }
 
       // 정지 여부 필터 적용
@@ -149,11 +156,18 @@ export function useAdminUsers(): UseAdminUsersReturn {
           where('isBanned', '==', searchParams.isBanned),
           orderBy('createdAt', 'desc')
         );
+        // 필터 변경 시 캐시 초기화
+        totalCountRef.current = null;
+        lastDocsRef.current.clear();
       }
 
-      // 총 개수 조회
-      const totalSnapshot = await getCountFromServer(baseQuery);
-      const totalItems = totalSnapshot.data().count;
+      // 총 개수 조회 (캐시가 없을 때만)
+      let totalItems = totalCountRef.current;
+      if (totalItems === null) {
+        const totalSnapshot = await getCountFromServer(baseQuery);
+        totalItems = totalSnapshot.data().count;
+        totalCountRef.current = totalItems;
+      }
       const totalPages = Math.ceil(totalItems / pageSize);
 
       // 페이지네이션 쿼리 구성
@@ -161,12 +175,11 @@ export function useAdminUsers(): UseAdminUsersReturn {
 
       // 2페이지 이상이면 이전 페이지의 마지막 문서 이후부터 조회
       if (currentPage > 1) {
-        const prevLastDoc = lastDocs.get(currentPage - 1);
+        const prevLastDoc = lastDocsRef.current.get(currentPage - 1);
         if (prevLastDoc) {
           pageQuery = query(baseQuery, startAfter(prevLastDoc), limit(pageSize));
         } else {
           // 이전 페이지 문서가 없으면 처음부터 조회 (skip 방식)
-          // Firestore는 offset을 지원하지 않으므로 처음부터 다시 조회
           const skipCount = (currentPage - 1) * pageSize;
           const skipQuery = query(baseQuery, limit(skipCount));
           const skipSnapshot = await getDocs(skipQuery);
@@ -196,7 +209,6 @@ export function useAdminUsers(): UseAdminUsersReturn {
       });
 
       // 클라이언트 사이드 검색 필터 (이메일/닉네임)
-      // Firestore는 부분 문자열 검색을 지원하지 않으므로 클라이언트에서 필터링
       let filteredUsers = fetchedUsers;
       if (searchParams.query) {
         const searchLower = searchParams.query.toLowerCase();
@@ -208,13 +220,9 @@ export function useAdminUsers(): UseAdminUsersReturn {
         );
       }
 
-      // 마지막 문서 캐시 업데이트
+      // 마지막 문서 캐시 업데이트 (ref 사용 - 리렌더링 없음)
       if (snapshot.docs.length > 0) {
-        setLastDocs((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(currentPage, snapshot.docs[snapshot.docs.length - 1]);
-          return newMap;
-        });
+        lastDocsRef.current.set(currentPage, snapshot.docs[snapshot.docs.length - 1]);
       }
 
       setUsers(filteredUsers);
@@ -224,20 +232,13 @@ export function useAdminUsers(): UseAdminUsersReturn {
         totalItems,
         itemsPerPage: pageSize,
       });
-
-      debug.log('[useAdminUsers] 사용자 목록 조회:', {
-        count: filteredUsers.length,
-        totalItems,
-        currentPage,
-        totalPages,
-      });
     } catch (err) {
       console.error('[useAdminUsers] 사용자 목록 조회 에러:', err);
       setError('사용자 목록을 불러오는데 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
-  }, [searchParams, lastDocs]);
+  }, [searchParams]); // lastDocs 의존성 제거
 
   // 검색 조건 변경 시 조회
   useEffect(() => {
@@ -322,7 +323,7 @@ export function useAdminUserDetail(userId: string): UseAdminUserDetailReturn {
         updatedAt: data.updatedAt || undefined,
       });
 
-      debug.log('[useAdminUserDetail] 사용자 정보 조회:', userDoc.id);
+      // 조회 완료 (디버그 로그 제거)
     } catch (err) {
       console.error('[useAdminUserDetail] 사용자 정보 조회 에러:', err);
       setError('사용자 정보를 불러오는데 실패했습니다.');
@@ -374,7 +375,7 @@ export function useAdminUserDetail(userId: string): UseAdminUserDetailReturn {
             : null
         );
 
-        debug.log('[useAdminUserDetail] 사용자 정보 수정:', userId, updates);
+        // 수정 완료 (디버그 로그 제거)
       } catch (err) {
         console.error('[useAdminUserDetail] 사용자 정보 수정 에러:', err);
         setError('사용자 정보 수정에 실패했습니다.');
