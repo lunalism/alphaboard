@@ -53,18 +53,36 @@ export function MobileEventCard({ event, day, weekday }: MobileEventCardProps) {
     }
   };
 
-  // 중요도 색상
-  const getImportanceColor = (importance: string) => {
-    switch (importance) {
-      case 'high':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
-      case 'medium':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400';
-      case 'low':
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-    }
+  // 카테고리별 뱃지 색상 및 라벨
+  // - 경제지표: 파란색 (🏛️ 아이콘과 매칭)
+  // - 실적발표: 초록색 (📊 아이콘과 매칭)
+  // - 기업이벤트: 주황색 (🎉 아이콘과 매칭)
+  // - 암호화폐: 보라색 (🪙 아이콘과 매칭)
+  // - 중요도가 high인 경우 테두리 추가로 강조
+  const getCategoryBadge = (category: EventCategory, importance: string) => {
+    // 카테고리별 색상 설정
+    const colors: Record<EventCategory, string> = {
+      institution: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+      earnings: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+      corporate: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+      crypto: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
+    };
+
+    // 카테고리별 한글 라벨
+    const labels: Record<EventCategory, string> = {
+      institution: '경제지표',
+      earnings: '실적발표',
+      corporate: '기업이벤트',
+      crypto: '암호화폐',
+    };
+
+    // 중요 이벤트는 테두리 추가하여 강조 표시
+    const ring = importance === 'high' ? 'ring-2 ring-current ring-offset-1 dark:ring-offset-gray-800' : '';
+
+    return {
+      className: `${colors[category]} ${ring}`,
+      label: labels[category],
+    };
   };
 
   // 카드 클릭 핸들러
@@ -105,16 +123,13 @@ export function MobileEventCard({ event, day, weekday }: MobileEventCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-gray-900 dark:text-white truncate">{event.title}</h3>
+              {/* 카테고리 뱃지 - 중요 이벤트는 테두리로 강조 */}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${getImportanceColor(
-                  event.importance
-                )}`}
+                className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                  getCategoryBadge(event.category, event.importance).className
+                }`}
               >
-                {event.importance === 'high'
-                  ? '중요'
-                  : event.importance === 'medium'
-                  ? '보통'
-                  : '낮음'}
+                {getCategoryBadge(event.category, event.importance).label}
               </span>
             </div>
             {event.description && (

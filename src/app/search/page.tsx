@@ -49,7 +49,7 @@ import {
 import { newsData } from "@/constants/news";
 import { glossaryTerms } from "@/constants/glossary";
 import { calendarEvents } from "@/constants/calendar";
-import type { SearchCategory, NewsItem, GlossaryTerm, CalendarEvent } from "@/types";
+import type { SearchCategory, NewsItem, GlossaryTerm, CalendarEvent, EventCategory } from "@/types";
 
 // ==================== 검색 입력 컴포넌트 ====================
 
@@ -231,6 +231,26 @@ function NewsResultCard({ news }: { news: NewsItem }) {
  * 캘린더 검색 결과 카드 컴포넌트
  */
 function CalendarResultCard({ event }: { event: CalendarEvent }) {
+  // 카테고리별 뱃지 색상 설정
+  // - 경제지표: 파란색, 실적발표: 초록색, 기업이벤트: 주황색, 암호화폐: 보라색
+  const categoryColors: Record<EventCategory, string> = {
+    institution: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+    earnings: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    corporate: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
+    crypto: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+  };
+
+  // 카테고리별 한글 라벨
+  const categoryLabels: Record<EventCategory, string> = {
+    institution: "경제지표",
+    earnings: "실적발표",
+    corporate: "기업이벤트",
+    crypto: "암호화폐",
+  };
+
+  // 중요 이벤트는 테두리 추가하여 강조 표시
+  const ringClass = event.importance === "high" ? "ring-2 ring-current ring-offset-1 dark:ring-offset-gray-800" : "";
+
   return (
     <Link
       href="/calendar"
@@ -263,16 +283,11 @@ function CalendarResultCard({ event }: { event: CalendarEvent }) {
                 {event.time}
               </span>
             )}
+            {/* 카테고리 뱃지 - 중요 이벤트는 테두리로 강조 */}
             <span
-              className={`text-xs px-2 py-0.5 rounded ${
-                event.importance === "high"
-                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                  : event.importance === "medium"
-                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-              }`}
+              className={`text-xs px-2 py-0.5 rounded ${categoryColors[event.category]} ${ringClass}`}
             >
-              {event.importance === "high" ? "중요" : event.importance === "medium" ? "보통" : "낮음"}
+              {categoryLabels[event.category]}
             </span>
           </div>
         </div>
