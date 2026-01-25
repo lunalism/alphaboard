@@ -5,12 +5,13 @@
  *
  * Firestore siteContent 컬렉션에서 콘텐츠를 불러와 표시합니다.
  * HTML 형식의 콘텐츠를 렌더링합니다.
+ *
+ * 참고: 법적 문서 페이지이므로 주식 검색창을 표시하지 않습니다.
  */
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { Sidebar, BottomNav } from '@/components/layout';
-import { MobileSearchHeader, GlobalSearch } from '@/components/features/search';
 import { useSiteContent } from '@/hooks/useSiteContent';
 
 export default function TermsPage() {
@@ -26,18 +27,21 @@ export default function TermsPage() {
 
       {/* 메인 콘텐츠 */}
       <main className="flex-1 lg:ml-64">
-        {/* 모바일 헤더 */}
-        <div className="lg:hidden">
-          <MobileSearchHeader />
-        </div>
+        {/* 모바일 헤더 - 검색창 없이 페이지 제목만 표시 */}
+        <header className="lg:hidden sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
+          <div className="px-4 py-3 flex items-center justify-center">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+              이용약관
+            </h1>
+          </div>
+        </header>
 
-        {/* 데스크톱 헤더 */}
+        {/* 데스크톱 헤더 - 검색창 없이 페이지 제목만 표시 */}
         <header className="hidden lg:block sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
-          <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="max-w-5xl mx-auto px-6 py-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               이용약관
             </h1>
-            <GlobalSearch />
           </div>
         </header>
 
