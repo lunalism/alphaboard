@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar, BottomNav } from '@/components/layout';
+import { Sidebar, BottomNav, Footer } from '@/components/layout';
 import { CrawledNewsCard } from '@/components/features/news';
 import { MobileSearchHeader, GlobalSearch } from '@/components/features/search';
 import { NewsCardSkeletonGrid } from '@/components/skeleton';
@@ -134,6 +134,9 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* 푸터 - 데스크톱에서만 표시 */}
+        <Footer className="hidden md:block mt-8" />
       </main>
     </div>
   );

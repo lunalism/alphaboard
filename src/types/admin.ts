@@ -86,6 +86,28 @@ export interface SiteSettings {
 }
 
 // ============================================
+// 사이트 콘텐츠 (siteContent 컬렉션)
+// ============================================
+
+/** 사이트 콘텐츠 타입 ID */
+export type SiteContentType = 'privacy' | 'terms';
+
+/** 사이트 콘텐츠 문서 구조 (개인정보처리방침, 이용약관) */
+export interface SiteContent {
+  id: SiteContentType;                       // 문서 ID (privacy 또는 terms)
+  title: string;                             // 제목
+  content: string;                           // 본문 (Markdown)
+  updatedAt: Timestamp;                      // 마지막 수정일
+  updatedBy: string;                         // 수정한 관리자 이메일
+}
+
+/** 사이트 콘텐츠 타입별 기본 정보 */
+export const SITE_CONTENT_INFO: Record<SiteContentType, { label: string; defaultTitle: string }> = {
+  privacy: { label: '개인정보처리방침', defaultTitle: '개인정보처리방침' },
+  terms: { label: '이용약관', defaultTitle: '서비스 이용약관' },
+};
+
+// ============================================
 // 공지사항 (announcements 컬렉션)
 // ============================================
 

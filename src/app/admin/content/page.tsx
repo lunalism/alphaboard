@@ -101,9 +101,8 @@ export default function AdminContentPage() {
           title="개인정보처리방침"
           description="개인정보처리방침 내용을 수정합니다."
           href="/admin/content/privacy"
-          disabled={true}
           icon={
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           }
@@ -114,9 +113,8 @@ export default function AdminContentPage() {
           title="이용약관"
           description="서비스 이용약관 내용을 수정합니다."
           href="/admin/content/terms"
-          disabled={true}
           icon={
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           }
@@ -157,10 +155,10 @@ export default function AdminContentPage() {
           </svg>
           <div>
             <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-              콘텐츠 관리 기능은 Phase 2에서 구현 예정입니다.
+              마크다운 문법으로 콘텐츠를 작성할 수 있습니다.
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              현재는 관리자 이메일 관리, 사용자 관리, 대시보드 기능만 사용 가능합니다.
+              공지사항, FAQ 기능은 추후 업데이트 예정입니다.
             </p>
           </div>
         </div>
