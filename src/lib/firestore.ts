@@ -140,6 +140,29 @@ export const calendarEventsCollection = () => collection(db, 'calendar_events');
  */
 export const calendarEventDoc = (eventId: string) => doc(db, 'calendar_events', eventId);
 
+/**
+ * etf_holdings 컬렉션 참조
+ * ETF 구성종목 정보 저장
+ *
+ * 문서 구조:
+ * - symbol: ETF 심볼 (예: "QQQ")
+ * - name: ETF 이름 (예: "Invesco QQQ Trust")
+ * - description: 한글 설명 (예: "나스닥 100 추종 ETF")
+ * - holdings: 구성종목 배열
+ *   - symbol: 종목 심볼
+ *   - name: 종목명
+ *   - weight: 비중 (%)
+ * - totalHoldings: 전체 구성종목 수
+ * - updatedAt: 마지막 업데이트 날짜
+ */
+export const etfHoldingsCollection = () => collection(db, 'etf_holdings');
+
+/**
+ * 특정 ETF 구성종목 문서 참조
+ * @param symbol - ETF 심볼 (예: "QQQ")
+ */
+export const etfHoldingsDoc = (symbol: string) => doc(db, 'etf_holdings', symbol);
+
 // ==================== 타임스탬프 변환 헬퍼 ====================
 
 /**

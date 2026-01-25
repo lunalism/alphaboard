@@ -19,7 +19,8 @@ import { useState, useEffect, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAssetDetail, getRelatedNews } from '@/constants';
 import { RelatedNews } from '@/types/market';
-import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed, useAlerts, usePriceAlertCheck } from '@/hooks';
+import { useKoreanStockPrice, useUSStockPrice, KOREAN_STOCKS, useWatchlist, useRecentlyViewed, useAlerts, usePriceAlertCheck, isETFWithHoldings } from '@/hooks';
+import { ETFHoldingsSection } from '@/components/features/market';
 import { useCompanyInfo } from '@/hooks/useCompanyInfo';
 import { showSuccess, showError } from '@/lib/toast';
 import { debug } from '@/lib/debug';
@@ -1273,6 +1274,15 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
                   <p className="text-gray-500 dark:text-gray-400 text-center py-4">관련 뉴스가 없습니다</p>
                 )}
               </section>
+
+              {/* ========================================
+                  ETF 구성종목 섹션
+                  ETF인 경우에만 표시 (QQQ, SPY, VOO, ARKK, DIA)
+                  구성종목 클릭 시 해당 종목 상세 페이지로 이동
+                  ======================================== */}
+              {isETFWithHoldings(ticker) && (
+                <ETFHoldingsSection symbol={ticker} />
+              )}
 
               {/* ========================================
                   커뮤니티 섹션 - 종목 토론

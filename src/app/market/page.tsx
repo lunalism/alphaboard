@@ -41,6 +41,7 @@ import {
   CommodityContent,
   ForexContent,
   GlobalOverviewContent,
+  GlobalETFContent,
 } from '@/components/features/market';
 import { IndexCardSkeletonGrid, StockTableSkeleton } from '@/components/skeleton';
 import { marketIndices, popularStocks, topGainers, topLosers } from '@/constants';
@@ -731,6 +732,10 @@ function MarketContent() {
 
       case 'forex':
         return <ForexContent />;
+
+      // 글로벌 ETF (QQQ, SPY, VOO, ARKK, DIA)
+      case 'etf':
+        return <GlobalETFContent />;
 
       default:
         return null;

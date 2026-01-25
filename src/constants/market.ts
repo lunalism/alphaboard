@@ -45,12 +45,13 @@ export const countryCategoryTabs: CategoryTab[] = [
 
 // ==================== 글로벌 시장 카테고리 탭 ====================
 // 일반 투자자 관점에서 중요도 순으로 정렬:
-// 환율(기본) → 원자재(금/유가) → 암호화폐(특수 자산)
+// 환율(기본) → 원자재(금/유가) → 암호화폐(특수 자산) → ETF
 export const globalCategoryTabs: CategoryTab[] = [
   { id: 'all', label: '전체', icon: '📊' },
   { id: 'forex', label: '환율', icon: '💱' },
   { id: 'commodities', label: '원자재', icon: '🛢️' },
   { id: 'crypto', label: '암호화폐', icon: '₿' },
+  { id: 'etf', label: 'ETF', icon: '📦' },
 ];
 
 // 전체 카테고리 탭 (하위 호환성 유지)

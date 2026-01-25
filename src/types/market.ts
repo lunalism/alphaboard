@@ -6,8 +6,8 @@ export type MarketType = 'country' | 'global';
 // 국가별 시장 카테고리: 전체, 지수, 주식, ETF
 export type CountryCategory = 'all' | 'indices' | 'stocks' | 'etf';
 
-// 글로벌 시장 카테고리: 전체, 암호화폐, 원자재, 환율
-export type GlobalCategory = 'all' | 'crypto' | 'commodities' | 'forex';
+// 글로벌 시장 카테고리: 전체, 환율, 원자재, 암호화폐, ETF
+export type GlobalCategory = 'all' | 'crypto' | 'commodities' | 'forex' | 'etf';
 
 // 전체 카테고리 타입 (하위 호환성 유지)
 export type MarketCategory = 'all' | 'indices' | 'stocks' | 'etf' | 'crypto' | 'commodities' | 'forex';

@@ -18,3 +18,5 @@ export { CryptoContent } from './CryptoContent';
 export { CommodityContent } from './CommodityContent';
 export { ForexContent } from './ForexContent';
 export { GlobalOverviewContent } from './GlobalOverviewContent';
+export { GlobalETFContent } from './GlobalETFContent';
+export { ETFHoldingsSection } from './ETFHoldingsSection';

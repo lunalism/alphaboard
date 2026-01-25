@@ -70,3 +70,12 @@ export { usePopularSearches, type PopularSearchItem } from './usePopularSearches
 
 // 관리자 권한 훅
 export { useAdmin } from './useAdmin';
+
+// ETF 구성종목 조회 훅
+export {
+  useETFHoldings,
+  isETFWithHoldings,
+  ETF_WITH_HOLDINGS,
+  type ETFHolding,
+  type ETFHoldingsData,
+} from './useETFHoldings';
