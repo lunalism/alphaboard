@@ -66,19 +66,28 @@ export default function CalendarPage() {
   }, [filteredEvents, selectedDate]);
 
   // ========== 모바일용: 월별 그룹화 ==========
+  // 현재 월 이후 이벤트만 표시 (과거 데이터 필터링)
   const eventsByMonth = useMemo(() => {
+    // 현재 월 기준 (YYYY-MM 형식)
+    const currentMonth = currentDate.toISOString().substring(0, 7);
+
     const grouped: Record<string, CalendarEvent[]> = {};
-    filteredEvents.forEach((event) => {
-      const month = event.date.substring(0, 7); // "2024-01"
-      if (!grouped[month]) grouped[month] = [];
-      grouped[month].push(event);
-    });
-    // 날짜순 정렬
+    filteredEvents
+      // 현재 월 이후 이벤트만 필터링
+      .filter((event) => event.date.substring(0, 7) >= currentMonth)
+      .forEach((event) => {
+        const month = event.date.substring(0, 7); // "2026-01"
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(event);
+      });
+
+    // 각 월 내에서 날짜순 정렬
     Object.keys(grouped).forEach((month) => {
       grouped[month].sort((a, b) => a.date.localeCompare(b.date));
     });
+
     return grouped;
-  }, [filteredEvents]);
+  }, [filteredEvents, currentDate]);
 
   // ========== 네비게이션 핸들러 ==========
   // 이전 월/주로 이동
