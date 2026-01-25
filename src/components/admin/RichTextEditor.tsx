@@ -13,6 +13,7 @@
  * - 인용: Blockquote
  * - 구분선: Horizontal Rule
  * - 링크: URL 링크 추가/제거
+ * - 테이블: 삽입, 행/열 추가/삭제
  * - 정렬: 좌/중앙/우 정렬
  * - 높이 고정 + 스크롤
  */
@@ -23,7 +24,11 @@ import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
-import { useCallback, useEffect } from 'react';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
 // ============================================
 // 타입 정의
@@ -123,9 +128,6 @@ const StrikeIcon = () => (
 const BulletListIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-    <circle cx="1" cy="6" r="1" fill="currentColor" />
-    <circle cx="1" cy="12" r="1" fill="currentColor" />
-    <circle cx="1" cy="18" r="1" fill="currentColor" />
   </svg>
 );
 
@@ -157,6 +159,13 @@ const LinkIcon = () => (
   </svg>
 );
 
+/** 테이블 아이콘 */
+const TableIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" />
+  </svg>
+);
+
 /** 좌측 정렬 아이콘 */
 const AlignLeftIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,6 +188,181 @@ const AlignRightIcon = () => (
 );
 
 // ============================================
+// 테이블 드롭다운 메뉴 컴포넌트
+// ============================================
+
+interface TableMenuProps {
+  /** 메뉴 열림 상태 */
+  isOpen: boolean;
+  /** 메뉴 닫기 핸들러 */
+  onClose: () => void;
+  /** 테이블 삽입 핸들러 */
+  onInsertTable: () => void;
+  /** 행 위에 추가 */
+  onAddRowBefore: () => void;
+  /** 행 아래에 추가 */
+  onAddRowAfter: () => void;
+  /** 행 삭제 */
+  onDeleteRow: () => void;
+  /** 열 왼쪽에 추가 */
+  onAddColumnBefore: () => void;
+  /** 열 오른쪽에 추가 */
+  onAddColumnAfter: () => void;
+  /** 열 삭제 */
+  onDeleteColumn: () => void;
+  /** 테이블 삭제 */
+  onDeleteTable: () => void;
+  /** 테이블 선택 여부 */
+  isInTable: boolean;
+}
+
+/**
+ * 테이블 작업 드롭다운 메뉴
+ */
+function TableMenu({
+  isOpen,
+  onClose,
+  onInsertTable,
+  onAddRowBefore,
+  onAddRowAfter,
+  onDeleteRow,
+  onAddColumnBefore,
+  onAddColumnAfter,
+  onDeleteColumn,
+  onDeleteTable,
+  isInTable,
+}: TableMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={menuRef}
+      className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50"
+    >
+      <div className="py-1">
+        {/* 테이블 삽입 */}
+        <button
+          type="button"
+          onClick={() => {
+            onInsertTable();
+            onClose();
+          }}
+          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          테이블 삽입 (3x3)
+        </button>
+
+        {/* 테이블 내부에서만 표시되는 메뉴 */}
+        {isInTable && (
+          <>
+            <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+
+            {/* 행 관련 */}
+            <button
+              type="button"
+              onClick={() => {
+                onAddRowBefore();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              행 위에 추가
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onAddRowAfter();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              행 아래에 추가
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onDeleteRow();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              행 삭제
+            </button>
+
+            <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+
+            {/* 열 관련 */}
+            <button
+              type="button"
+              onClick={() => {
+                onAddColumnBefore();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              열 왼쪽에 추가
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onAddColumnAfter();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              열 오른쪽에 추가
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onDeleteColumn();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              열 삭제
+            </button>
+
+            <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+
+            {/* 테이블 삭제 */}
+            <button
+              type="button"
+              onClick={() => {
+                onDeleteTable();
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              테이블 삭제
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // 메인 에디터 컴포넌트
 // ============================================
 
@@ -187,20 +371,19 @@ export function RichTextEditor({
   onChange,
   placeholder = '내용을 입력하세요...',
 }: RichTextEditorProps) {
+  // 테이블 메뉴 열림 상태
+  const [isTableMenuOpen, setIsTableMenuOpen] = useState(false);
+
   // Tiptap 에디터 인스턴스 생성
   const editor = useEditor({
     extensions: [
       // 기본 확장팩 (제목, 목록, 굵게, 기울임, 취소선, 인용, 구분선 등)
       StarterKit.configure({
-        // 제목 레벨 제한 (H1, H2, H3만 사용)
         heading: {
           levels: [1, 2, 3],
         },
-        // 인용 활성화
         blockquote: {},
-        // 구분선 활성화
         horizontalRule: {},
-        // 코드블록 비활성화 (별도 확장 사용 가능)
         codeBlock: false,
       }),
       // 밑줄 확장
@@ -222,13 +405,21 @@ export function RichTextEditor({
       Placeholder.configure({
         placeholder,
       }),
+      // 테이블 확장
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'tiptap-table',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content,
-    // 내용 변경 시 콜백 호출
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-    // 에디터 스타일 설정
     editorProps: {
       attributes: {
         class: 'prose prose-gray dark:prose-invert max-w-none focus:outline-none min-h-[400px] px-4 py-3',
@@ -245,27 +436,20 @@ export function RichTextEditor({
 
   /**
    * 링크 추가/수정 핸들러
-   * 프롬프트로 URL을 입력받아 선택된 텍스트에 링크를 적용합니다.
    */
   const setLink = useCallback(() => {
     if (!editor) return;
 
-    // 현재 선택된 텍스트의 링크 URL 가져오기
     const previousUrl = editor.getAttributes('link').href;
-
-    // URL 입력 프롬프트
     const url = window.prompt('링크 URL을 입력하세요:', previousUrl || 'https://');
 
-    // 취소 버튼 클릭 시
     if (url === null) return;
 
-    // 빈 URL 입력 시 링크 제거
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
 
-    // 링크 적용
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
@@ -279,11 +463,13 @@ export function RichTextEditor({
     );
   }
 
+  // 현재 커서가 테이블 안에 있는지 확인
+  const isInTable = editor.isActive('table');
+
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {/* ========================================
           툴바 영역 (상단 고정)
-          그룹: 실행취소 | 텍스트서식 | 제목 | 목록/인용 | 구분선/링크 | 정렬
           ======================================== */}
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         {/* 실행취소/다시실행 그룹 */}
@@ -386,7 +572,7 @@ export function RichTextEditor({
 
         <ToolbarDivider />
 
-        {/* 구분선/링크 그룹 */}
+        {/* 구분선/링크/테이블 그룹 */}
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           title="구분선 삽입"
@@ -401,7 +587,7 @@ export function RichTextEditor({
           <LinkIcon />
         </ToolbarButton>
 
-        {/* 링크 제거 버튼 (링크가 선택된 경우에만 표시) */}
+        {/* 링크 제거 버튼 */}
         {editor.isActive('link') && (
           <ToolbarButton
             onClick={() => editor.chain().focus().unsetLink().run()}
@@ -412,6 +598,31 @@ export function RichTextEditor({
             </svg>
           </ToolbarButton>
         )}
+
+        {/* 테이블 버튼 (드롭다운) */}
+        <div className="relative">
+          <ToolbarButton
+            onClick={() => setIsTableMenuOpen(!isTableMenuOpen)}
+            isActive={isInTable}
+            title="테이블"
+          >
+            <TableIcon />
+          </ToolbarButton>
+
+          <TableMenu
+            isOpen={isTableMenuOpen}
+            onClose={() => setIsTableMenuOpen(false)}
+            onInsertTable={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            onAddRowBefore={() => editor.chain().focus().addRowBefore().run()}
+            onAddRowAfter={() => editor.chain().focus().addRowAfter().run()}
+            onDeleteRow={() => editor.chain().focus().deleteRow().run()}
+            onAddColumnBefore={() => editor.chain().focus().addColumnBefore().run()}
+            onAddColumnAfter={() => editor.chain().focus().addColumnAfter().run()}
+            onDeleteColumn={() => editor.chain().focus().deleteColumn().run()}
+            onDeleteTable={() => editor.chain().focus().deleteTable().run()}
+            isInTable={isInTable}
+          />
+        </div>
 
         <ToolbarDivider />
 
@@ -441,8 +652,6 @@ export function RichTextEditor({
 
       {/* ========================================
           에디터 영역
-          - 고정 높이 (max-height) + 스크롤
-          - Tiptap EditorContent 컴포넌트
           ======================================== */}
       <div className="bg-white dark:bg-gray-800 max-h-[500px] overflow-y-auto">
         <EditorContent editor={editor} />
