@@ -409,3 +409,56 @@ body {
 .prose em {
   font-style: italic;
 }
+
+/* prose 인용 스타일 */
+.prose blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.dark .prose blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+/* prose 구분선 스타일 */
+.prose hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dark .prose hr {
+  border-top-color: #374151;
+}
+
+/* prose 취소선 스타일 */
+.prose s,
+.prose del {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.dark .prose s,
+.dark .prose del {
+  color: #6b7280;
+}
+
+/* Tiptap 플레이스홀더 스타일 */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
+}
