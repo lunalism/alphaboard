@@ -173,11 +173,14 @@ function CommoditySummary() {
  * 환율 요약 섹션 (원화 기준)
  * 주요 4개 통화의 원화 환율 표시
  *
+ * 표기법: "원/외화" (한국 원화가 먼저)
+ * 국기 순서: 🇰🇷(한국) + 외국 국기
+ *
  * 표시 통화:
- * - 달러/원 (USD/KRW)
- * - 유로/원 (EUR/KRW = USD/KRW × EUR/USD)
- * - 100엔/원 (JPY/KRW × 100)
- * - 파운드/원 (GBP/KRW = USD/KRW × GBP/USD)
+ * - 원/달러 (KRW/USD)
+ * - 원/유로 (KRW/EUR)
+ * - 원/100엔 (KRW/100JPY)
+ * - 원/파운드 (KRW/GBP)
  */
 function ForexSummary() {
   // 원본 데이터에서 필요한 환율 추출
@@ -189,47 +192,47 @@ function ForexSummary() {
   // USD/KRW가 없으면 빈 상태 표시
   if (!usdkrw) return null;
 
-  // 원화 기준 환율 계산
+  // 원화 기준 환율 계산 (국기: 🇰🇷가 먼저)
   const krwForexList = [
-    // 달러/원 - 직접 사용
+    // 원/달러 - 직접 사용
     {
       id: 'usdkrw',
-      pair: '달러/원',
+      pair: '원/달러',
       name: '미국 달러',
       krwRate: usdkrw.rate,
       changePercent: usdkrw.changePercent,
       chartData: usdkrw.chartData,
-      flags: '🇺🇸🇰🇷',
+      flags: '🇰🇷🇺🇸',
     },
-    // 유로/원 = USD/KRW × EUR/USD
+    // 원/유로 = USD/KRW × EUR/USD
     ...(eurusd ? [{
       id: 'eurkrw',
-      pair: '유로/원',
+      pair: '원/유로',
       name: '유럽 유로',
       krwRate: usdkrw.rate * eurusd.rate,
       changePercent: eurusd.changePercent + usdkrw.changePercent,
       chartData: eurusd.chartData.map((rate, i) => usdkrw.chartData[i] * rate),
-      flags: '🇪🇺🇰🇷',
+      flags: '🇰🇷🇪🇺',
     }] : []),
-    // 100엔/원 = (USD/KRW ÷ USD/JPY) × 100
+    // 원/100엔 = (USD/KRW ÷ USD/JPY) × 100
     ...(usdjpy ? [{
       id: 'jpykrw',
-      pair: '100엔/원',
+      pair: '원/100엔',
       name: '일본 엔',
       krwRate: (usdkrw.rate / usdjpy.rate) * 100,
       changePercent: usdkrw.changePercent - usdjpy.changePercent,
       chartData: usdjpy.chartData.map((rate, i) => (usdkrw.chartData[i] / rate) * 100),
-      flags: '🇯🇵🇰🇷',
+      flags: '🇰🇷🇯🇵',
     }] : []),
-    // 파운드/원 = USD/KRW × GBP/USD
+    // 원/파운드 = USD/KRW × GBP/USD
     ...(gbpusd ? [{
       id: 'gbpkrw',
-      pair: '파운드/원',
+      pair: '원/파운드',
       name: '영국 파운드',
       krwRate: usdkrw.rate * gbpusd.rate,
       changePercent: gbpusd.changePercent + usdkrw.changePercent,
       chartData: gbpusd.chartData.map((rate, i) => usdkrw.chartData[i] * rate),
-      flags: '🇬🇧🇰🇷',
+      flags: '🇰🇷🇬🇧',
     }] : []),
   ];
 

@@ -5,10 +5,13 @@
  * 환율 카테고리 선택 시 표시되는 콘텐츠
  *
  * 한국 사용자 기준 원화 환율 표시:
- * - 달러/원: USD/KRW 직접 표시
- * - 유로/원: USD/KRW × EUR/USD
- * - 100엔/원: (USD/KRW ÷ USD/JPY) × 100
- * - 파운드/원: USD/KRW × GBP/USD
+ * - 원/달러: 1 USD = X KRW
+ * - 원/유로: 1 EUR = X KRW
+ * - 원/100엔: 100 JPY = X KRW
+ * - 원/파운드: 1 GBP = X KRW
+ *
+ * 표기법: "원/외화" (한국 원화가 먼저)
+ * 국기 순서: 🇰🇷(한국) + 외국 국기
  *
  * 모든 환율은 원화 기준으로 계산하여 표시합니다.
  */
@@ -49,12 +52,14 @@ interface KRWForex {
  * 원화 기준 환율 데이터 계산
  *
  * 원본 환율 데이터(forexData)를 기반으로 한국 사용자용 원화 환율 계산
- * - 달러/원: USD/KRW 직접 사용
- * - 유로/원: USD/KRW × EUR/USD
- * - 100엔/원: (USD/KRW ÷ USD/JPY) × 100
- * - 파운드/원: USD/KRW × GBP/USD
- * - 위안/원: USD/KRW ÷ USD/CNY
- * - 호주달러/원: USD/KRW × AUD/USD
+ * 표기법: "원/외화" (한국 원화가 먼저, 국기도 🇰🇷가 먼저)
+ *
+ * - 원/달러: USD/KRW 직접 사용
+ * - 원/유로: USD/KRW × EUR/USD
+ * - 원/100엔: (USD/KRW ÷ USD/JPY) × 100
+ * - 원/파운드: USD/KRW × GBP/USD
+ * - 원/위안: USD/KRW ÷ USD/CNY
+ * - 원/호주달러: USD/KRW × AUD/USD
  *
  * @returns 원화 기준 환율 데이터 배열
  */
@@ -72,19 +77,21 @@ function calculateKRWForexData(): KRWForex[] {
 
   const krwForexList: KRWForex[] = [];
 
-  // 1. 달러/원 (USD/KRW) - 직접 사용
+  // 1. 원/달러 (KRW/USD) - 직접 사용
+  // 국기 순서: 🇰🇷(한국) + 🇺🇸(미국)
   krwForexList.push({
     id: 'usdkrw',
-    pair: '달러/원',
+    pair: '원/달러',
     name: '미국 달러',
     krwRate: usdkrw.rate,
     change: usdkrw.change,
     changePercent: usdkrw.changePercent,
     chartData: usdkrw.chartData,
-    flags: '🇺🇸🇰🇷',
+    flags: '🇰🇷🇺🇸',
   });
 
-  // 2. 유로/원 (EUR/KRW) = USD/KRW × EUR/USD
+  // 2. 원/유로 (KRW/EUR) = USD/KRW × EUR/USD
+  // 국기 순서: 🇰🇷(한국) + 🇪🇺(유럽)
   if (eurusd) {
     const eurKrwRate = usdkrw.rate * eurusd.rate;
     // 차트 데이터도 원화 기준으로 변환
@@ -93,38 +100,40 @@ function calculateKRWForexData(): KRWForex[] {
     );
     krwForexList.push({
       id: 'eurkrw',
-      pair: '유로/원',
+      pair: '원/유로',
       name: '유럽 유로',
       krwRate: eurKrwRate,
       change: eurKrwRate * (eurusd.changePercent / 100), // 근사값
       changePercent: eurusd.changePercent + usdkrw.changePercent, // 복합 변동률
       chartData: eurKrwChartData,
-      flags: '🇪🇺🇰🇷',
+      flags: '🇰🇷🇪🇺',
     });
   }
 
-  // 3. 100엔/원 (JPY/KRW × 100) = (USD/KRW ÷ USD/JPY) × 100
+  // 3. 원/100엔 (KRW/100JPY) = (USD/KRW ÷ USD/JPY) × 100
+  // 국기 순서: 🇰🇷(한국) + 🇯🇵(일본)
   if (usdjpy) {
     const jpyKrwRate = (usdkrw.rate / usdjpy.rate) * 100;
     // 차트 데이터도 원화 기준으로 변환
     const jpyKrwChartData = usdjpy.chartData.map((jpyRate, i) =>
       (usdkrw.chartData[i] / jpyRate) * 100
     );
-    // 엔화 강세(USD/JPY 하락) → 100엔/원 상승, 엔화 약세(USD/JPY 상승) → 100엔/원 하락
+    // 엔화 강세(USD/JPY 하락) → 원/100엔 상승, 엔화 약세(USD/JPY 상승) → 원/100엔 하락
     const jpyChangePercent = usdkrw.changePercent - usdjpy.changePercent;
     krwForexList.push({
       id: 'jpykrw',
-      pair: '100엔/원',
+      pair: '원/100엔',
       name: '일본 엔 (100엔당)',
       krwRate: jpyKrwRate,
       change: jpyKrwRate * (jpyChangePercent / 100),
       changePercent: jpyChangePercent,
       chartData: jpyKrwChartData,
-      flags: '🇯🇵🇰🇷',
+      flags: '🇰🇷🇯🇵',
     });
   }
 
-  // 4. 파운드/원 (GBP/KRW) = USD/KRW × GBP/USD
+  // 4. 원/파운드 (KRW/GBP) = USD/KRW × GBP/USD
+  // 국기 순서: 🇰🇷(한국) + 🇬🇧(영국)
   if (gbpusd) {
     const gbpKrwRate = usdkrw.rate * gbpusd.rate;
     const gbpKrwChartData = gbpusd.chartData.map((gbpRate, i) =>
@@ -132,37 +141,39 @@ function calculateKRWForexData(): KRWForex[] {
     );
     krwForexList.push({
       id: 'gbpkrw',
-      pair: '파운드/원',
+      pair: '원/파운드',
       name: '영국 파운드',
       krwRate: gbpKrwRate,
       change: gbpKrwRate * ((gbpusd.changePercent + usdkrw.changePercent) / 100),
       changePercent: gbpusd.changePercent + usdkrw.changePercent,
       chartData: gbpKrwChartData,
-      flags: '🇬🇧🇰🇷',
+      flags: '🇰🇷🇬🇧',
     });
   }
 
-  // 5. 위안/원 (CNY/KRW) = USD/KRW ÷ USD/CNY
+  // 5. 원/위안 (KRW/CNY) = USD/KRW ÷ USD/CNY
+  // 국기 순서: 🇰🇷(한국) + 🇨🇳(중국)
   if (usdcny) {
     const cnyKrwRate = usdkrw.rate / usdcny.rate;
     const cnyKrwChartData = usdcny.chartData.map((cnyRate, i) =>
       usdkrw.chartData[i] / cnyRate
     );
-    // 위안 강세(USD/CNY 하락) → 위안/원 상승
+    // 위안 강세(USD/CNY 하락) → 원/위안 상승
     const cnyChangePercent = usdkrw.changePercent - usdcny.changePercent;
     krwForexList.push({
       id: 'cnykrw',
-      pair: '위안/원',
+      pair: '원/위안',
       name: '중국 위안',
       krwRate: cnyKrwRate,
       change: cnyKrwRate * (cnyChangePercent / 100),
       changePercent: cnyChangePercent,
       chartData: cnyKrwChartData,
-      flags: '🇨🇳🇰🇷',
+      flags: '🇰🇷🇨🇳',
     });
   }
 
-  // 6. 호주달러/원 (AUD/KRW) = USD/KRW × AUD/USD
+  // 6. 원/호주달러 (KRW/AUD) = USD/KRW × AUD/USD
+  // 국기 순서: 🇰🇷(한국) + 🇦🇺(호주)
   if (audusd) {
     const audKrwRate = usdkrw.rate * audusd.rate;
     const audKrwChartData = audusd.chartData.map((audRate, i) =>
@@ -170,13 +181,13 @@ function calculateKRWForexData(): KRWForex[] {
     );
     krwForexList.push({
       id: 'audkrw',
-      pair: '호주달러/원',
+      pair: '원/호주달러',
       name: '호주 달러',
       krwRate: audKrwRate,
       change: audKrwRate * ((audusd.changePercent + usdkrw.changePercent) / 100),
       changePercent: audusd.changePercent + usdkrw.changePercent,
       chartData: audKrwChartData,
-      flags: '🇦🇺🇰🇷',
+      flags: '🇰🇷🇦🇺',
     });
   }
 
