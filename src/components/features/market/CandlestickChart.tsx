@@ -58,54 +58,69 @@ type PeriodType = 'D' | 'W' | 'M';
 // ============================================
 
 /**
- * 날짜를 한국식 형식으로 변환
- * @param time - YYYY-MM-DD 형식의 날짜 문자열 또는 Unix timestamp
- * @returns "YYYY년 M월 D일" 형식의 문자열
+ * 날짜 데이터에서 연/월/일 추출
+ * lightweight-charts는 다양한 형식의 시간 데이터를 전달할 수 있음:
+ * - 문자열: "YYYY-MM-DD" (우리 데이터 형식)
+ * - BusinessDay 객체: { year, month, day }
+ * - Unix timestamp: 숫자 (초 단위)
+ *
+ * @param time - 시간 데이터 (문자열, 객체, 또는 숫자)
+ * @returns { year, month, day } 객체
  */
-function formatKoreanDate(time: string | number): string {
-  let date: Date;
-
+function parseDateComponents(time: unknown): { year: number; month: number; day: number } {
+  // 1. 문자열인 경우 (우리 API 데이터는 "YYYY-MM-DD" 형식)
   if (typeof time === 'string') {
-    // YYYY-MM-DD 형식
-    const [year, month, day] = time.split('-');
-    return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
-  } else {
-    // Unix timestamp (초 단위)
-    date = new Date(time * 1000);
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    const parts = time.split('-');
+    if (parts.length === 3) {
+      return {
+        year: parseInt(parts[0], 10),
+        month: parseInt(parts[1], 10),
+        day: parseInt(parts[2], 10),
+      };
+    }
   }
+
+  // 2. BusinessDay 객체인 경우 { year, month, day }
+  if (typeof time === 'object' && time !== null) {
+    const obj = time as { year?: number; month?: number; day?: number };
+    if (typeof obj.year === 'number' && typeof obj.month === 'number' && typeof obj.day === 'number') {
+      return { year: obj.year, month: obj.month, day: obj.day };
+    }
+  }
+
+  // 3. Unix timestamp (숫자)인 경우
+  if (typeof time === 'number' && !isNaN(time)) {
+    const date = new Date(time * 1000);
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+    };
+  }
+
+  // 4. 파싱 실패 시 현재 날짜 반환 (폴백)
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+  };
 }
 
 /**
  * 차트 X축 눈금 포맷터 (한국식)
  * 날짜를 "MM.DD" 또는 "YYYY.MM" 형식으로 표시
  *
- * @param time - lightweight-charts BusinessDay 또는 UTCTimestamp
- * @param tickMarkType - 눈금 유형 (Year, Month, DayOfMonth, Time, TimeWithSeconds)
+ * @param time - lightweight-charts 시간 데이터 (문자열, 객체, 또는 숫자)
+ * @param tickMarkType - 눈금 유형 (0=Year, 1=Month, 2=DayOfMonth, 3=Time, 4=TimeWithSeconds)
  * @returns 포맷된 날짜 문자열
  */
 function koreanTickMarkFormatter(
-  time: { year: number; month: number; day: number } | number,
+  time: unknown,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tickMarkType: any
 ): string {
-  // tickMarkType 값:
-  // 0 = Year, 1 = Month, 2 = DayOfMonth, 3 = Time, 4 = TimeWithSeconds
-
-  let year: number, month: number, day: number;
-
-  if (typeof time === 'object' && 'year' in time) {
-    // BusinessDay 형식
-    year = time.year;
-    month = time.month;
-    day = time.day;
-  } else {
-    // Unix timestamp
-    const date = new Date((time as number) * 1000);
-    year = date.getFullYear();
-    month = date.getMonth() + 1;
-    day = date.getDate();
-  }
+  const { year, month, day } = parseDateComponents(time);
 
   // 눈금 유형에 따른 포맷
   switch (tickMarkType) {
@@ -117,6 +132,18 @@ function koreanTickMarkFormatter(
     default:
       return `${month}.${String(day).padStart(2, '0')}`;
   }
+}
+
+/**
+ * 크로스헤어 시간 포맷터 (한국식)
+ * 차트 하단 파란색 박스에 표시되는 날짜를 "YYYY년 M월 D일" 형식으로 변환
+ *
+ * @param time - lightweight-charts 시간 데이터
+ * @returns "YYYY년 M월 D일" 형식의 문자열
+ */
+function koreanTimeFormatter(time: unknown): string {
+  const { year, month, day } = parseDateComponents(time);
+  return `${year}년 ${month}월 ${day}일`;
 }
 
 // 기간 선택 옵션
@@ -222,17 +249,11 @@ export default function CandlestickChart({ symbol, isOverseas = false, exchange 
       },
       // ========================================
       // 로컬라이제이션 설정 (크로스헤어 날짜 표시)
+      // 문자열/객체/숫자 모든 형식의 시간 데이터 처리
       // ========================================
       localization: {
-        // 크로스헤어 하단 파란 박스에 표시되는 날짜 포맷
-        timeFormatter: (time: { year: number; month: number; day: number } | number): string => {
-          if (typeof time === 'object' && 'year' in time) {
-            return `${time.year}년 ${time.month}월 ${time.day}일`;
-          }
-          // Unix timestamp의 경우
-          const date = new Date((time as number) * 1000);
-          return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-        },
+        // 크로스헤어 하단 파란 박스에 표시되는 날짜 포맷 (한국식)
+        timeFormatter: koreanTimeFormatter,
       },
       width: container.clientWidth,  // 컨테이너 너비에 맞춤
       height: 400,                    // 차트 높이 (px)
