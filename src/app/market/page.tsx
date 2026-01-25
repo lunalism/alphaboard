@@ -42,6 +42,7 @@ import {
   ForexContent,
   GlobalOverviewContent,
   GlobalETFContent,
+  HeatmapContent,
 } from '@/components/features/market';
 import { IndexCardSkeletonGrid, StockTableSkeleton } from '@/components/skeleton';
 import { marketIndices, popularStocks, topGainers, topLosers } from '@/constants';
@@ -704,6 +705,10 @@ function MarketContent() {
 
       case 'etf':
         return <ETFContent market={activeMarket} />;
+
+      // 히트맵: 섹터별 시가총액/등락률 시각화
+      case 'heatmap':
+        return <HeatmapContent country={activeMarket} />;
 
       default:
         return null;

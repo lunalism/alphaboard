@@ -3,14 +3,14 @@ export type MarketRegion = 'us' | 'kr' | 'jp' | 'hk';
 // 1차 탭 타입: 국가별 시장 / 글로벌 시장
 export type MarketType = 'country' | 'global';
 
-// 국가별 시장 카테고리: 전체, 지수, 주식, ETF
-export type CountryCategory = 'all' | 'indices' | 'stocks' | 'etf';
+// 국가별 시장 카테고리: 전체, 지수, 주식, ETF, 히트맵
+export type CountryCategory = 'all' | 'indices' | 'stocks' | 'etf' | 'heatmap';
 
 // 글로벌 시장 카테고리: 전체, 환율, 원자재, 암호화폐, ETF
 export type GlobalCategory = 'all' | 'crypto' | 'commodities' | 'forex' | 'etf';
 
 // 전체 카테고리 타입 (하위 호환성 유지)
-export type MarketCategory = 'all' | 'indices' | 'stocks' | 'etf' | 'crypto' | 'commodities' | 'forex';
+export type MarketCategory = 'all' | 'indices' | 'stocks' | 'etf' | 'crypto' | 'commodities' | 'forex' | 'heatmap';
 
 // 주식 섹터 타입
 export type StockSector = 'all' | 'tech' | 'finance' | 'healthcare' | 'energy' | 'consumer' | 'telecom';

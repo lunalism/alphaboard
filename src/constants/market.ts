@@ -41,6 +41,7 @@ export const countryCategoryTabs: CategoryTab[] = [
   { id: 'indices', label: '지수', icon: '📈' },
   { id: 'stocks', label: '주식', icon: '💹' },
   { id: 'etf', label: 'ETF', icon: '📦' },
+  { id: 'heatmap', label: 'HeatMap', icon: '🗺️' },
 ];
 
 // ==================== 글로벌 시장 카테고리 탭 ====================
