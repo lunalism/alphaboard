@@ -51,7 +51,7 @@
 
 import { useMemo, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ResponsiveTreeMap } from '@nivo/treemap';
+import { ResponsiveTreeMap, ComputedNode } from '@nivo/treemap';
 import type { MarketRegion } from '@/types';
 
 // ==================== 타입 정의 ====================
@@ -512,6 +512,153 @@ function formatMarketCap(value: number, isKorean: boolean): string {
   }
 }
 
+// ==================== 커스텀 라벨 레이어 ====================
+
+/**
+ * TreeMap 커스텀 라벨 레이어
+ *
+ * 2줄 레이아웃으로 종목명과 등락률을 표시합니다.
+ * 박스 크기에 따라 폰트 크기와 텍스트 길이를 조절합니다.
+ *
+ * 레이아웃:
+ * ┌─────────────┐
+ * │  삼성전자    │  ← 종목명 (볼드, 흰색)
+ * │   +1.2%    │  ← 등락률 (일반, 흰색/90%)
+ * └─────────────┘
+ *
+ * 박스 크기별 표시:
+ * - 150px+: 전체 종목명 + 등락률 (큰 폰트)
+ * - 80~150px: 축약 종목명(5자) + 등락률 (중간 폰트)
+ * - 50~80px: 축약 종목명(3자) + 등락률 (작은 폰트)
+ * - 50px 미만: 텍스트 없음
+ */
+function CustomLabelsLayer({
+  nodes,
+}: {
+  nodes: ComputedNode<TreemapNode>[];
+}) {
+  return (
+    <g>
+      {nodes.map((node) => {
+        // ==================== 섹터 라벨 ====================
+        // pathComponents: [root, sector] = length 2
+        if (node.pathComponents.length === 2) {
+          // 섹터 박스가 너무 작으면 라벨 숨김
+          if (node.width < 60 || node.height < 30) {
+            return null;
+          }
+
+          return (
+            <text
+              key={`sector-${node.id}`}
+              x={node.x + 6}
+              y={node.y + 14}
+              style={{
+                fill: '#9ca3af',
+                fontSize: '10px',
+                fontWeight: 600,
+                fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                textTransform: 'uppercase',
+                pointerEvents: 'none',
+              }}
+            >
+              {String(node.id).toUpperCase()}
+            </text>
+          );
+        }
+
+        // ==================== 종목 라벨 ====================
+        // pathComponents: [root, sector, stock] = length 3
+        if (node.pathComponents.length !== 3) {
+          return null;
+        }
+
+        const width = node.width;
+        const height = node.height;
+        const minDimension = Math.min(width, height);
+
+        // 50px 미만: 텍스트 없음
+        if (minDimension < 50) {
+          return null;
+        }
+
+        const fullName = node.data.name || String(node.id);
+        const change = node.data.change ?? 0;
+
+        // 박스 크기에 따른 종목명 길이 및 폰트 크기 결정
+        let maxNameLength: number;
+        let nameFontSize: number;
+        let changeFontSize: number;
+
+        if (minDimension >= 150) {
+          // 큰 박스: 전체 이름 또는 8자까지
+          maxNameLength = 8;
+          nameFontSize = 14;
+          changeFontSize = 12;
+        } else if (minDimension >= 80) {
+          // 중간 박스: 5자까지
+          maxNameLength = 5;
+          nameFontSize = 11;
+          changeFontSize = 10;
+        } else {
+          // 작은 박스: 3자까지
+          maxNameLength = 3;
+          nameFontSize = 10;
+          changeFontSize = 9;
+        }
+
+        // 종목명 축약
+        const displayName =
+          fullName.length > maxNameLength
+            ? fullName.slice(0, maxNameLength) + '…'
+            : fullName;
+
+        // 등락률 포맷팅
+        const changeText = formatPercent(change);
+
+        // 박스 중앙 좌표
+        const centerX = node.x + width / 2;
+        const centerY = node.y + height / 2;
+
+        return (
+          <g key={node.id} transform={`translate(${centerX}, ${centerY})`}>
+            {/* 종목명 (위쪽, 볼드) */}
+            <text
+              textAnchor="middle"
+              dominantBaseline="auto"
+              dy={-changeFontSize / 2 - 1}
+              style={{
+                fill: '#ffffff',
+                fontSize: `${nameFontSize}px`,
+                fontWeight: 700,
+                fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                pointerEvents: 'none',
+              }}
+            >
+              {displayName}
+            </text>
+            {/* 등락률 (아래쪽, 일반) */}
+            <text
+              textAnchor="middle"
+              dominantBaseline="hanging"
+              dy={nameFontSize / 2}
+              style={{
+                fill: 'rgba(255, 255, 255, 0.9)',
+                fontSize: `${changeFontSize}px`,
+                fontWeight: 500,
+                fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                pointerEvents: 'none',
+              }}
+            >
+              {changeText}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 // ==================== 데이터 변환 함수 ====================
 
 /**
@@ -833,43 +980,12 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
             // ==================== 테두리 설정 ====================
             borderWidth={1}
             borderColor="#1f2937"
-            // ==================== 종목 라벨 설정 ====================
-            // 텍스트 넘침 완전 방지:
-            // - 박스 크기가 60px 미만이면 라벨 숨김
-            // - 종목명은 5자로 제한
-            // - 등락률은 항상 표시
-            label={(node) => {
-              const fullName = node.data.name || node.id;
-              const change = node.data.change ?? 0;
-
-              // 종목명 길이 제한 (최대 5자)
-              // 예: "LG에너지솔루션" → "LG에너…"
-              const maxLength = 5;
-              const name =
-                fullName.length > maxLength
-                  ? fullName.slice(0, maxLength) + '…'
-                  : fullName;
-
-              // 한 줄로 종목명 + 등락률
-              return `${name}\n${formatPercent(change)}`;
-            }}
-            // 텍스트 넘침 방지: 박스가 60px 미만이면 라벨 숨김
-            labelSkipSize={60}
-            labelTextColor="#ffffff"
+            // ==================== 라벨 비활성화 (커스텀 레이어 사용) ====================
+            // 기본 라벨 대신 커스텀 레이어로 2줄 레이아웃 구현
+            enableLabel={false}
             // ==================== 섹터 라벨 설정 ====================
-            // Finviz 스타일: 섹터명은 좌상단에 작게 표시
-            enableParentLabel={true}
-            parentLabel={(node) => {
-              // root 노드: 빈 문자열 (숨김)
-              if (node.pathComponents.length === 1) {
-                return '';
-              }
-              // 섹터 노드: 대문자 섹터명
-              return node.id.toUpperCase();
-            }}
-            parentLabelPosition="top"
-            parentLabelPadding={6}
-            parentLabelTextColor="#6b7280"
+            // 커스텀 레이어에서 섹터 라벨 처리
+            enableParentLabel={false}
             // ==================== 툴팁 설정 ====================
             tooltip={({ node }) => {
               // 섹터 노드: 툴팁 없음
@@ -936,6 +1052,10 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
                 handleStockClick(node.data.symbol);
               }
             }}
+            // ==================== 커스텀 레이어 ====================
+            // nodes: 기본 박스 렌더링
+            // CustomLabelsLayer: 커스텀 2줄 종목 라벨
+            layers={['nodes', CustomLabelsLayer]}
             // ==================== 애니메이션 ====================
             animate={false}
             motionConfig="gentle"
