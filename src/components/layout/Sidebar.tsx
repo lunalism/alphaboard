@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { menuItems } from '@/constants';
+import { menuItems, infoMenuItems } from '@/constants';
 import { MenuIcon, UserAvatar } from '@/components/common';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -65,6 +65,8 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           // 가격 알림과 관심종목은 로그인 시에만 표시 (로딩 완료 후에만 체크)
           .filter((item) => item.id !== 'alerts' || (!isLoading && isLoggedIn))
           .filter((item) => item.id !== 'watchlist' || (!isLoading && isLoggedIn))
+          // 공지사항/FAQ는 하단 2열로 별도 표시
+          .filter((item) => item.id !== 'announcements' && item.id !== 'faq')
           .map((item) => (
           <Link
             key={item.id}
@@ -140,6 +142,37 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           </>
         )}
         </nav>
+      </div>
+
+      {/* ========================================
+          공지사항/FAQ 2열 섹션
+          - 로그인 버튼 위에 작게 2열로 표시
+          - 아이콘 + 텍스트 (lg 이상에서만 텍스트 표시)
+          ======================================== */}
+      <div className="flex-shrink-0 px-3 py-2 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div className="grid grid-cols-2 gap-1">
+          {infoMenuItems.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`group relative flex items-center justify-center lg:justify-start gap-1.5 px-2 py-2 rounded-lg text-xs transition-colors ${
+                activeMenu === item.id
+                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              title={item.label}
+            >
+              {/* 아이콘 */}
+              <span className="text-sm">{item.emoji}</span>
+              {/* 텍스트 (lg 이상에서만 표시) */}
+              <span className="hidden lg:inline font-medium">{item.label}</span>
+              {/* 툴팁 (접힌 상태에서 호버 시) */}
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap lg:hidden z-50">
+                {item.label}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ========================================
