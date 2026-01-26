@@ -2,21 +2,29 @@
 
 /**
  * ForexContent 컴포넌트
+ *
  * 환율 카테고리 선택 시 표시되는 콘텐츠
  *
- * 한국 사용자 기준 원화 환율 표시:
- * - 원/달러: 1 USD = X KRW
- * - 원/유로: 1 EUR = X KRW
- * - 원/100엔: 100 JPY = X KRW
- * - 원/파운드: 1 GBP = X KRW
+ * ============================================================
+ * 데이터 소스:
+ * ============================================================
+ * - 한국은행 ECOS API (실시간 환율)
+ * - API 실패 시 mock 데이터 fallback
+ *
+ * ============================================================
+ * 표시 환율:
+ * ============================================================
+ * - 원/달러: 1 USD = X KRW (한국은행 직접 제공)
+ * - 원/100엔: 100 JPY = X KRW (한국은행 직접 제공)
+ * - 원/유로: 1 EUR = X KRW (한국은행 직접 제공)
+ * - 원/파운드: 1 GBP = X KRW (한국은행 직접 제공)
+ * - 원/위안, 원/호주달러: mock 데이터에서 계산
  *
  * 표기법: "원/외화" (한국 원화가 먼저)
  * 국기 순서: 🇰🇷(한국) + 외국 국기
- *
- * 모든 환율은 원화 기준으로 계산하여 표시합니다.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { forexData } from '@/constants';
 
@@ -28,7 +36,7 @@ import { forexData } from '@/constants';
 interface KRWForex {
   /** 고유 ID */
   id: string;
-  /** 통화쌍 표시명 (예: 달러/원) */
+  /** 통화쌍 표시명 (예: 원/달러) */
   pair: string;
   /** 통화명 */
   name: string;
@@ -42,28 +50,76 @@ interface KRWForex {
   chartData: number[];
   /** 국기 이모지 */
   flags: string;
+  /** 기준일 */
+  date?: string;
+  /** 데이터 소스 (api: 한국은행, mock: 더미) */
+  source: 'api' | 'mock';
+}
+
+/** 한국은행 API 응답 타입 */
+interface BOKExchangeRateData {
+  rate: number;
+  change: number;
+  changePercent: number;
+  date: string;
+}
+
+/** 한국은행 API 응답 전체 */
+interface BOKAPIResponse {
+  success: boolean;
+  data: {
+    usdkrw: BOKExchangeRateData;
+    jpykrw: BOKExchangeRateData;
+    eurkrw: BOKExchangeRateData;
+    gbpkrw: BOKExchangeRateData;
+  } | null;
+  error?: string;
+  timestamp: string;
 }
 
 // ============================================
-// 원화 기준 환율 계산 함수
+// 한국은행 API 호출 함수
 // ============================================
 
 /**
- * 원화 기준 환율 데이터 계산
+ * 한국은행 ECOS API에서 환율 데이터 조회
  *
- * 원본 환율 데이터(forexData)를 기반으로 한국 사용자용 원화 환율 계산
- * 표기법: "원/외화" (한국 원화가 먼저, 국기도 🇰🇷가 먼저)
- *
- * - 원/달러: USD/KRW 직접 사용
- * - 원/유로: USD/KRW × EUR/USD
- * - 원/100엔: (USD/KRW ÷ USD/JPY) × 100
- * - 원/파운드: USD/KRW × GBP/USD
- * - 원/위안: USD/KRW ÷ USD/CNY
- * - 원/호주달러: USD/KRW × AUD/USD
+ * @returns 환율 데이터 또는 null (실패 시)
+ */
+async function fetchBOKExchangeRate(): Promise<BOKAPIResponse | null> {
+  try {
+    const response = await fetch('/api/bok/exchange-rate', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // 캐시: 5분
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      console.error('[ForexContent] API 응답 오류:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('[ForexContent] API 호출 실패:', error);
+    return null;
+  }
+}
+
+// ============================================
+// Mock 데이터 기반 환율 계산 함수 (Fallback)
+// ============================================
+
+/**
+ * Mock 데이터 기반 원화 환율 계산 (API 실패 시 사용)
  *
  * @returns 원화 기준 환율 데이터 배열
  */
-function calculateKRWForexData(): KRWForex[] {
+function calculateMockKRWForexData(): KRWForex[] {
   // 기준 환율 추출 (USD/KRW)
   const usdkrw = forexData.find(f => f.id === 'usdkrw');
   const eurusd = forexData.find(f => f.id === 'eurusd');
@@ -78,7 +134,6 @@ function calculateKRWForexData(): KRWForex[] {
   const krwForexList: KRWForex[] = [];
 
   // 1. 원/달러 (KRW/USD) - 직접 사용
-  // 국기 순서: 🇰🇷(한국) + 🇺🇸(미국)
   krwForexList.push({
     id: 'usdkrw',
     pair: '원/달러',
@@ -88,13 +143,12 @@ function calculateKRWForexData(): KRWForex[] {
     changePercent: usdkrw.changePercent,
     chartData: usdkrw.chartData,
     flags: '🇰🇷🇺🇸',
+    source: 'mock',
   });
 
   // 2. 원/유로 (KRW/EUR) = USD/KRW × EUR/USD
-  // 국기 순서: 🇰🇷(한국) + 🇪🇺(유럽)
   if (eurusd) {
     const eurKrwRate = usdkrw.rate * eurusd.rate;
-    // 차트 데이터도 원화 기준으로 변환
     const eurKrwChartData = eurusd.chartData.map((eurRate, i) =>
       usdkrw.chartData[i] * eurRate
     );
@@ -103,22 +157,20 @@ function calculateKRWForexData(): KRWForex[] {
       pair: '원/유로',
       name: '유럽 유로',
       krwRate: eurKrwRate,
-      change: eurKrwRate * (eurusd.changePercent / 100), // 근사값
-      changePercent: eurusd.changePercent + usdkrw.changePercent, // 복합 변동률
+      change: eurKrwRate * (eurusd.changePercent / 100),
+      changePercent: eurusd.changePercent + usdkrw.changePercent,
       chartData: eurKrwChartData,
       flags: '🇰🇷🇪🇺',
+      source: 'mock',
     });
   }
 
   // 3. 원/100엔 (KRW/100JPY) = (USD/KRW ÷ USD/JPY) × 100
-  // 국기 순서: 🇰🇷(한국) + 🇯🇵(일본)
   if (usdjpy) {
     const jpyKrwRate = (usdkrw.rate / usdjpy.rate) * 100;
-    // 차트 데이터도 원화 기준으로 변환
     const jpyKrwChartData = usdjpy.chartData.map((jpyRate, i) =>
       (usdkrw.chartData[i] / jpyRate) * 100
     );
-    // 엔화 강세(USD/JPY 하락) → 원/100엔 상승, 엔화 약세(USD/JPY 상승) → 원/100엔 하락
     const jpyChangePercent = usdkrw.changePercent - usdjpy.changePercent;
     krwForexList.push({
       id: 'jpykrw',
@@ -129,11 +181,11 @@ function calculateKRWForexData(): KRWForex[] {
       changePercent: jpyChangePercent,
       chartData: jpyKrwChartData,
       flags: '🇰🇷🇯🇵',
+      source: 'mock',
     });
   }
 
   // 4. 원/파운드 (KRW/GBP) = USD/KRW × GBP/USD
-  // 국기 순서: 🇰🇷(한국) + 🇬🇧(영국)
   if (gbpusd) {
     const gbpKrwRate = usdkrw.rate * gbpusd.rate;
     const gbpKrwChartData = gbpusd.chartData.map((gbpRate, i) =>
@@ -148,17 +200,16 @@ function calculateKRWForexData(): KRWForex[] {
       changePercent: gbpusd.changePercent + usdkrw.changePercent,
       chartData: gbpKrwChartData,
       flags: '🇰🇷🇬🇧',
+      source: 'mock',
     });
   }
 
   // 5. 원/위안 (KRW/CNY) = USD/KRW ÷ USD/CNY
-  // 국기 순서: 🇰🇷(한국) + 🇨🇳(중국)
   if (usdcny) {
     const cnyKrwRate = usdkrw.rate / usdcny.rate;
     const cnyKrwChartData = usdcny.chartData.map((cnyRate, i) =>
       usdkrw.chartData[i] / cnyRate
     );
-    // 위안 강세(USD/CNY 하락) → 원/위안 상승
     const cnyChangePercent = usdkrw.changePercent - usdcny.changePercent;
     krwForexList.push({
       id: 'cnykrw',
@@ -169,11 +220,11 @@ function calculateKRWForexData(): KRWForex[] {
       changePercent: cnyChangePercent,
       chartData: cnyKrwChartData,
       flags: '🇰🇷🇨🇳',
+      source: 'mock',
     });
   }
 
   // 6. 원/호주달러 (KRW/AUD) = USD/KRW × AUD/USD
-  // 국기 순서: 🇰🇷(한국) + 🇦🇺(호주)
   if (audusd) {
     const audKrwRate = usdkrw.rate * audusd.rate;
     const audKrwChartData = audusd.chartData.map((audRate, i) =>
@@ -188,10 +239,129 @@ function calculateKRWForexData(): KRWForex[] {
       changePercent: audusd.changePercent + usdkrw.changePercent,
       chartData: audKrwChartData,
       flags: '🇰🇷🇦🇺',
+      source: 'mock',
     });
   }
 
   return krwForexList;
+}
+
+/**
+ * 한국은행 API 데이터를 KRWForex 형식으로 변환
+ *
+ * @param apiData - 한국은행 API 응답 데이터
+ * @returns 원화 기준 환율 데이터 배열
+ */
+function convertAPIDataToKRWForex(apiData: BOKAPIResponse['data']): KRWForex[] {
+  if (!apiData) return [];
+
+  const krwForexList: KRWForex[] = [];
+
+  // 1. 원/달러 (USD/KRW) - 한국은행 직접 제공
+  if (apiData.usdkrw) {
+    krwForexList.push({
+      id: 'usdkrw',
+      pair: '원/달러',
+      name: '미국 달러',
+      krwRate: apiData.usdkrw.rate,
+      change: apiData.usdkrw.change,
+      changePercent: apiData.usdkrw.changePercent,
+      chartData: generateChartData(apiData.usdkrw.rate, apiData.usdkrw.changePercent),
+      flags: '🇰🇷🇺🇸',
+      date: apiData.usdkrw.date,
+      source: 'api',
+    });
+  }
+
+  // 2. 원/유로 (EUR/KRW) - 한국은행 직접 제공
+  if (apiData.eurkrw) {
+    krwForexList.push({
+      id: 'eurkrw',
+      pair: '원/유로',
+      name: '유럽 유로',
+      krwRate: apiData.eurkrw.rate,
+      change: apiData.eurkrw.change,
+      changePercent: apiData.eurkrw.changePercent,
+      chartData: generateChartData(apiData.eurkrw.rate, apiData.eurkrw.changePercent),
+      flags: '🇰🇷🇪🇺',
+      date: apiData.eurkrw.date,
+      source: 'api',
+    });
+  }
+
+  // 3. 원/100엔 (JPY/KRW) - 한국은행 직접 제공
+  if (apiData.jpykrw) {
+    krwForexList.push({
+      id: 'jpykrw',
+      pair: '원/100엔',
+      name: '일본 엔 (100엔당)',
+      krwRate: apiData.jpykrw.rate,
+      change: apiData.jpykrw.change,
+      changePercent: apiData.jpykrw.changePercent,
+      chartData: generateChartData(apiData.jpykrw.rate, apiData.jpykrw.changePercent),
+      flags: '🇰🇷🇯🇵',
+      date: apiData.jpykrw.date,
+      source: 'api',
+    });
+  }
+
+  // 4. 원/파운드 (GBP/KRW) - 한국은행 직접 제공
+  if (apiData.gbpkrw) {
+    krwForexList.push({
+      id: 'gbpkrw',
+      pair: '원/파운드',
+      name: '영국 파운드',
+      krwRate: apiData.gbpkrw.rate,
+      change: apiData.gbpkrw.change,
+      changePercent: apiData.gbpkrw.changePercent,
+      chartData: generateChartData(apiData.gbpkrw.rate, apiData.gbpkrw.changePercent),
+      flags: '🇰🇷🇬🇧',
+      date: apiData.gbpkrw.date,
+      source: 'api',
+    });
+  }
+
+  // 5, 6. 원/위안, 원/호주달러는 한국은행에서 직접 제공하지 않으므로
+  // mock 데이터에서 계산하여 추가
+  const mockData = calculateMockKRWForexData();
+  const cnyData = mockData.find(f => f.id === 'cnykrw');
+  const audData = mockData.find(f => f.id === 'audkrw');
+
+  if (cnyData) krwForexList.push(cnyData);
+  if (audData) krwForexList.push(audData);
+
+  return krwForexList;
+}
+
+/**
+ * 차트 데이터 생성 (간단한 시뮬레이션)
+ *
+ * API에서 차트 데이터를 제공하지 않으므로,
+ * 현재 환율과 변동률을 기반으로 추세 데이터 생성
+ *
+ * @param currentRate - 현재 환율
+ * @param changePercent - 변동률
+ * @returns 9개 포인트의 차트 데이터
+ */
+function generateChartData(currentRate: number, changePercent: number): number[] {
+  const points = 9;
+  const data: number[] = [];
+
+  // 변동률 기반 추세 생성
+  // 양수면 상승 추세, 음수면 하락 추세
+  const trend = changePercent / 100;
+  const volatility = Math.abs(trend) * 0.5; // 변동성
+
+  for (let i = 0; i < points; i++) {
+    // 과거(0)에서 현재(8)로 갈수록 현재 가격에 수렴
+    const progress = i / (points - 1);
+    const baseChange = trend * (1 - progress); // 과거일수록 차이 큼
+    const noise = (Math.random() - 0.5) * volatility * (1 - progress);
+    const rate = currentRate * (1 - baseChange + noise);
+    data.push(Math.round(rate * 100) / 100);
+  }
+
+  return data;
 }
 
 // ============================================
@@ -232,7 +402,6 @@ function MiniChart({ data, isPositive }: { data: number[]; isPositive: boolean }
 /**
  * 환율 카드 컴포넌트 (원화 기준)
  * 개별 환율 정보를 카드 형태로 표시
- * 모든 환율은 원화 기준으로 표시됩니다.
  */
 function ForexCard({ forex }: { forex: KRWForex }) {
   const router = useRouter();
@@ -306,30 +475,147 @@ function ForexCard({ forex }: { forex: KRWForex }) {
             {formatPercent(forex.changePercent)}
           </span>
         </div>
+        {/* 기준일 표시 (API 데이터인 경우) */}
+        {forex.date && forex.source === 'api' && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            기준일: {forex.date}
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 /**
+ * 로딩 스켈레톤 컴포넌트
+ */
+function ForexSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div
+          key={i}
+          className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 animate-pulse"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-8 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div>
+                <div className="w-20 h-5 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </div>
+            <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="w-24 h-5 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
  * 환율 콘텐츠 컴포넌트
- * 한국 사용자를 위해 모든 환율을 원화 기준으로 표시
+ *
+ * 한국은행 ECOS API를 통해 실시간 환율 데이터를 조회합니다.
+ * API 실패 시 mock 데이터로 fallback합니다.
  */
 export function ForexContent() {
-  // 원화 기준 환율 데이터 계산 (메모이제이션)
-  const krwForexData = useMemo(() => calculateKRWForexData(), []);
+  // 상태 관리
+  const [forexData, setForexData] = useState<KRWForex[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<'api' | 'mock'>('mock');
+
+  // 한국은행 API 호출
+  useEffect(() => {
+    async function loadExchangeRates() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // 한국은행 API 호출
+        const apiResponse = await fetchBOKExchangeRate();
+
+        if (apiResponse?.success && apiResponse.data) {
+          // API 데이터 변환
+          const krwForexData = convertAPIDataToKRWForex(apiResponse.data);
+          setForexData(krwForexData);
+          setDataSource('api');
+          console.log('[ForexContent] 한국은행 API 데이터 로드 성공');
+        } else {
+          // API 실패 - mock 데이터 사용
+          console.warn('[ForexContent] API 실패, mock 데이터 사용');
+          const mockData = calculateMockKRWForexData();
+          setForexData(mockData);
+          setDataSource('mock');
+          if (apiResponse?.error) {
+            setError(apiResponse.error);
+          }
+        }
+      } catch (err) {
+        // 예외 발생 - mock 데이터 사용
+        console.error('[ForexContent] 데이터 로드 실패:', err);
+        const mockData = calculateMockKRWForexData();
+        setForexData(mockData);
+        setDataSource('mock');
+        setError('환율 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadExchangeRates();
+  }, []);
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          환율
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+            (원화 기준)
+          </span>
+        </h2>
+        <ForexSkeleton />
+      </section>
+    );
+  }
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        환율
-        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-          (원화 기준)
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          환율
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+            (원화 기준)
+          </span>
+        </h2>
+        {/* 데이터 소스 표시 */}
+        <span className={`text-xs px-2 py-1 rounded-full ${
+          dataSource === 'api'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+        }`}>
+          {dataSource === 'api' ? '🏦 한국은행' : '📊 샘플 데이터'}
         </span>
-      </h2>
+      </div>
+
+      {/* 에러 메시지 */}
+      {error && dataSource === 'mock' && (
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <p className="text-sm text-yellow-700 dark:text-yellow-400">
+            ⚠️ {error} (샘플 데이터를 표시합니다)
+          </p>
+        </div>
+      )}
+
       {/* 환율 카드 그리드 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {krwForexData.map((forex) => (
+        {forexData.map((forex) => (
           <ForexCard key={forex.id} forex={forex} />
         ))}
       </div>
