@@ -111,31 +111,92 @@ export const SITE_CONTENT_INFO: Record<SiteContentType, { label: string; default
 // 공지사항 (announcements 컬렉션)
 // ============================================
 
+/** 공지사항 카테고리 타입 */
+export type AnnouncementCategory = 'notice' | 'update' | 'event' | 'maintenance';
+
+/** 공지사항 카테고리 정보 */
+export const ANNOUNCEMENT_CATEGORY_INFO: Record<AnnouncementCategory, { label: string; color: string; icon: string }> = {
+  notice: { label: '공지', color: 'blue', icon: '📢' },
+  update: { label: '업데이트', color: 'green', icon: '🚀' },
+  event: { label: '이벤트', color: 'purple', icon: '🎉' },
+  maintenance: { label: '점검', color: 'orange', icon: '🔧' },
+};
+
 /** 공지사항 문서 구조 */
 export interface Announcement {
-  id: string;                              // 문서 ID
+  id: string;                              // 문서 ID (Firestore auto-generated)
   title: string;                           // 공지 제목
-  content: string;                         // 공지 내용 (HTML/Markdown)
-  isActive: boolean;                       // 활성화 여부
+  content: string;                         // 공지 내용 (HTML - Tiptap)
+  category: AnnouncementCategory;          // 카테고리
   isPinned: boolean;                       // 상단 고정 여부
+  isPublished: boolean;                    // 발행 여부 (true: 발행, false: 임시저장)
   createdAt: Timestamp;                    // 작성일
   updatedAt: Timestamp;                    // 수정일
+  authorId: string;                        // 작성자 ID (Firebase UID)
+  authorName: string;                      // 작성자 이름/이메일
 }
 
 /** 공지사항 생성용 DTO */
 export interface CreateAnnouncementDTO {
   title: string;
   content: string;
-  isActive?: boolean;
+  category: AnnouncementCategory;
   isPinned?: boolean;
+  isPublished?: boolean;
 }
 
 /** 공지사항 수정용 DTO */
 export interface UpdateAnnouncementDTO {
   title?: string;
   content?: string;
-  isActive?: boolean;
+  category?: AnnouncementCategory;
   isPinned?: boolean;
+  isPublished?: boolean;
+}
+
+// ============================================
+// FAQ (faq 컬렉션)
+// ============================================
+
+/** FAQ 카테고리 타입 */
+export type FAQCategory = 'account' | 'feature' | 'payment' | 'other';
+
+/** FAQ 카테고리 정보 */
+export const FAQ_CATEGORY_INFO: Record<FAQCategory, { label: string; icon: string }> = {
+  account: { label: '계정', icon: '👤' },
+  feature: { label: '기능', icon: '⚙️' },
+  payment: { label: '결제', icon: '💳' },
+  other: { label: '기타', icon: '📋' },
+};
+
+/** FAQ 문서 구조 */
+export interface FAQ {
+  id: string;                              // 문서 ID (Firestore auto-generated)
+  question: string;                        // 질문
+  answer: string;                          // 답변 (HTML - Tiptap)
+  category: FAQCategory;                   // 카테고리
+  order: number;                           // 정렬 순서 (낮을수록 위)
+  isPublished: boolean;                    // 발행 여부
+  createdAt: Timestamp;                    // 작성일
+  updatedAt: Timestamp;                    // 수정일
+}
+
+/** FAQ 생성용 DTO */
+export interface CreateFAQDTO {
+  question: string;
+  answer: string;
+  category: FAQCategory;
+  order?: number;
+  isPublished?: boolean;
+}
+
+/** FAQ 수정용 DTO */
+export interface UpdateFAQDTO {
+  question?: string;
+  answer?: string;
+  category?: FAQCategory;
+  order?: number;
+  isPublished?: boolean;
 }
 
 // ============================================

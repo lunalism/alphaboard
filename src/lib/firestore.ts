@@ -163,6 +163,50 @@ export const etfHoldingsCollection = () => collection(db, 'etf_holdings');
  */
 export const etfHoldingsDoc = (symbol: string) => doc(db, 'etf_holdings', symbol);
 
+/**
+ * announcements 컬렉션 참조
+ * 공지사항 저장
+ *
+ * 문서 구조:
+ * - title: 공지 제목
+ * - content: 공지 내용 (HTML - Tiptap)
+ * - category: 카테고리 (notice, update, event, maintenance)
+ * - isPinned: 상단 고정 여부
+ * - isPublished: 발행 여부
+ * - authorId: 작성자 ID
+ * - authorName: 작성자 이름
+ * - createdAt: 작성일
+ * - updatedAt: 수정일
+ */
+export const announcementsCollection = () => collection(db, 'announcements');
+
+/**
+ * 특정 공지사항 문서 참조
+ * @param announcementId - 공지사항 ID
+ */
+export const announcementDoc = (announcementId: string) => doc(db, 'announcements', announcementId);
+
+/**
+ * faq 컬렉션 참조
+ * 자주 묻는 질문 저장
+ *
+ * 문서 구조:
+ * - question: 질문
+ * - answer: 답변 (HTML - Tiptap)
+ * - category: 카테고리 (account, feature, payment, other)
+ * - order: 정렬 순서
+ * - isPublished: 발행 여부
+ * - createdAt: 작성일
+ * - updatedAt: 수정일
+ */
+export const faqCollection = () => collection(db, 'faq');
+
+/**
+ * 특정 FAQ 문서 참조
+ * @param faqId - FAQ ID
+ */
+export const faqDoc = (faqId: string) => doc(db, 'faq', faqId);
+
 // ==================== 타임스탬프 변환 헬퍼 ====================
 
 /**

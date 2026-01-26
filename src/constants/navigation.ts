@@ -23,6 +23,9 @@ export const menuItems: MenuItem[] = [
   // 가격 알림 메뉴 - 로그인 시에만 표시 (Sidebar에서 필터링)
   { id: "alerts", icon: "notification", label: "가격 알림", emoji: "🔔", href: "/alerts" },
   { id: "glossary", icon: "book", label: "용어사전", emoji: "📖", href: "/glossary" },
+  // 공지사항/FAQ 메뉴
+  { id: "announcements", icon: "megaphone", label: "공지사항", emoji: "📢", href: "/announcements" },
+  { id: "faq", icon: "question", label: "FAQ", emoji: "❓", href: "/faq" },
 ];
 
 export const CATEGORY_COLORS: Record<string, string> = {
