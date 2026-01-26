@@ -415,53 +415,49 @@ const US_SECTORS: SectorData[] = [
 // ==================== 색상 함수 ====================
 
 /**
- * 등락률에 따른 배경색 반환 (CSS RGB 색상)
+ * Finviz 스타일 히트맵 색상 반환
  *
- * @param changePercent - 등락률
- * @param isKorean - 한국 시장 여부 (한국: 빨강=상승, 미국: 초록=상승)
- * @returns CSS RGB 색상 문자열
+ * 글로벌 표준 색상 체계 (한국/미국 동일):
+ * - 상승: 초록 (#30CC5A 밝음 ~ #1E5631 진함)
+ * - 하락: 빨강 (#F63538 밝음 ~ #8B0000 진함)
+ * - 보합: 어두운 회색 (#414554)
+ *
+ * 색상 강도는 등락률에 따라 연속적으로 변화:
+ * - ±0% ~ ±1%: 연한 색상
+ * - ±1% ~ ±3%: 중간 색상
+ * - ±3% ~ ±5%: 진한 색상
+ * - ±5% 이상: 가장 진한 색상
+ *
+ * @param changePercent - 등락률 (예: 1.5, -2.3)
+ * @returns CSS 색상 문자열
  */
-function getHeatmapColor(changePercent: number, isKorean: boolean): string {
+function getHeatmapColor(changePercent: number): string {
   const absChange = Math.abs(changePercent);
 
-  // 보합 (±0.1% 미만) - 회색
+  // 보합 (±0.1% 미만) - Finviz 어두운 회색
   if (absChange < 0.1) {
-    return '#6b7280'; // gray-500
+    return '#414554';
   }
 
   // 색상 강도 계산 (0~1) - 최대 5%에서 최대 강도
   const intensity = Math.min(absChange / 5, 1);
 
-  if (isKorean) {
-    // 한국 스타일: 상승=빨강, 하락=파랑
-    if (changePercent > 0) {
-      // 빨강 (밝음 → 진함): #fca5a5 → #dc2626
-      const r = Math.round(252 - intensity * (252 - 220));
-      const g = Math.round(165 - intensity * (165 - 38));
-      const b = Math.round(165 - intensity * (165 - 38));
-      return `rgb(${r}, ${g}, ${b})`;
-    } else {
-      // 파랑 (밝음 → 진함): #93c5fd → #2563eb
-      const r = Math.round(147 - intensity * (147 - 37));
-      const g = Math.round(197 - intensity * (197 - 99));
-      const b = Math.round(253 - intensity * (253 - 235));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
+  if (changePercent > 0) {
+    // ==================== 상승 (초록) ====================
+    // Finviz 초록: #30CC5A (밝음) → #1E5631 (진함)
+    // RGB: (48, 204, 90) → (30, 86, 49)
+    const r = Math.round(48 - intensity * (48 - 30));
+    const g = Math.round(204 - intensity * (204 - 86));
+    const b = Math.round(90 - intensity * (90 - 49));
+    return `rgb(${r}, ${g}, ${b})`;
   } else {
-    // 미국 스타일: 상승=초록, 하락=빨강
-    if (changePercent > 0) {
-      // 초록 (밝음 → 진함): #86efac → #16a34a
-      const r = Math.round(134 - intensity * (134 - 22));
-      const g = Math.round(239 - intensity * (239 - 163));
-      const b = Math.round(172 - intensity * (172 - 74));
-      return `rgb(${r}, ${g}, ${b})`;
-    } else {
-      // 빨강 (밝음 → 진함): #fca5a5 → #dc2626
-      const r = Math.round(252 - intensity * (252 - 220));
-      const g = Math.round(165 - intensity * (165 - 38));
-      const b = Math.round(165 - intensity * (165 - 38));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
+    // ==================== 하락 (빨강) ====================
+    // Finviz 빨강: #F63538 (밝음) → #8B0000 (진함)
+    // RGB: (246, 53, 56) → (139, 0, 0)
+    const r = Math.round(246 - intensity * (246 - 139));
+    const g = Math.round(53 - intensity * (53 - 0));
+    const b = Math.round(56 - intensity * (56 - 0));
+    return `rgb(${r}, ${g}, ${b})`;
   }
 }
 
@@ -590,15 +586,10 @@ function CustomTooltip({ tooltip, isKorean }: CustomTooltipProps) {
           <span className="font-semibold text-sm">
             {formatPrice(price, isKorean)}
           </span>
+          {/* Finviz 스타일: 상승=초록, 하락=빨강 */}
           <span
             className={`ml-2 text-xs font-medium ${
-              isPositive
-                ? isKorean
-                  ? 'text-red-400'
-                  : 'text-green-400'
-                : isKorean
-                  ? 'text-blue-400'
-                  : 'text-red-400'
+              isPositive ? 'text-green-400' : 'text-red-400'
             }`}
           >
             {formatPercent(change)}
@@ -676,15 +667,10 @@ function MobileListView({
                     <div className="font-medium text-sm text-gray-900 dark:text-white">
                       {formatPrice(stock.price, isKorean)}
                     </div>
+                    {/* Finviz 스타일: 상승=초록, 하락=빨강 */}
                     <div
                       className={`text-xs font-medium ${
-                        isPositive
-                          ? isKorean
-                            ? 'text-red-500'
-                            : 'text-green-500'
-                          : isKorean
-                            ? 'text-blue-500'
-                            : 'text-red-500'
+                        isPositive ? 'text-green-500' : 'text-red-500'
                       }`}
                     >
                       {formatPercent(stock.changePercent)}
@@ -773,16 +759,19 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
             ({totalStocks}개 종목)
           </span>
         </h2>
+        {/* Finviz 스타일 색상 표시 (한국/미국 동일) */}
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             <div
-              className={`w-3 h-3 rounded ${isKorean ? 'bg-red-500' : 'bg-green-500'}`}
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: '#30CC5A' }}
             />
             <span className="text-gray-600 dark:text-gray-400">상승</span>
           </div>
           <div className="flex items-center gap-1">
             <div
-              className={`w-3 h-3 rounded ${isKorean ? 'bg-blue-500' : 'bg-red-500'}`}
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: '#F63538' }}
             />
             <span className="text-gray-600 dark:text-gray-400">하락</span>
           </div>
@@ -821,24 +810,34 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
               if (node.pathComponents.length === 2) {
                 return '#1f2937';
               }
-              // 종목 노드는 등락률 기반 색상
+              // 종목 노드는 등락률 기반 Finviz 색상
               const change = node.data.change ?? 0;
-              return getHeatmapColor(change, isKorean);
+              return getHeatmapColor(change);
             }}
             // 테두리 설정
             borderWidth={1}
             borderColor="#374151"
             // ==================== 종목 라벨 설정 ====================
             // 종목명 + 등락률 표시 (예: "삼성전자 +1.2%")
+            // 텍스트 넘침 방지: 긴 종목명은 축약
             label={(node) => {
               // 종목 노드만 라벨 표시 (pathComponents: [root, sector, stock])
-              const name = node.data.name || node.id;
+              const fullName = node.data.name || node.id;
               const change = node.data.change ?? 0;
+
+              // 종목명 길이 제한 (최대 8자, 넘으면 축약)
+              // 예: "LG에너지솔루션" → "LG에너지…"
+              const maxLength = 8;
+              const name =
+                fullName.length > maxLength
+                  ? fullName.slice(0, maxLength - 1) + '…'
+                  : fullName;
+
               // 종목명 + 등락률
               return `${name} ${formatPercent(change)}`;
             }}
-            // 작은 박스에도 라벨 표시 (최소 크기 15px)
-            labelSkipSize={15}
+            // 텍스트 넘침 방지: 박스가 너무 작으면 라벨 숨김 (최소 35px)
+            labelSkipSize={35}
             labelTextColor="#ffffff"
             // ==================== 부모(섹터/root) 라벨 설정 ====================
             // root 라벨은 숨기고, 섹터 라벨만 표시
@@ -887,15 +886,10 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
                       <span className="font-semibold text-sm">
                         {formatPrice(price, isKorean)}
                       </span>
+                      {/* Finviz 스타일: 상승=초록, 하락=빨강 */}
                       <span
                         className={`ml-2 text-xs font-medium ${
-                          isPositive
-                            ? isKorean
-                              ? 'text-red-400'
-                              : 'text-green-400'
-                            : isKorean
-                              ? 'text-blue-400'
-                              : 'text-red-400'
+                          isPositive ? 'text-green-400' : 'text-red-400'
                         }`}
                       >
                         {formatPercent(change)}
@@ -933,47 +927,44 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
           />
         </div>
 
-        {/* 범례 */}
-        <div className="mt-4 flex items-center justify-center gap-8">
+        {/* ==================== 색상 범례 ==================== */}
+        {/* Finviz 스타일: 상승(초록) / 보합(회색) / 하락(빨강) */}
+        <div className="mt-4 flex items-center justify-center gap-6">
+          {/* 상승 범례 (초록) */}
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
                   className="w-4 h-4 rounded-sm"
-                  style={{
-                    backgroundColor: getHeatmapColor(
-                      i * (isKorean ? 1 : 1),
-                      isKorean
-                    ),
-                  }}
+                  style={{ backgroundColor: getHeatmapColor(i) }}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-500">
-              {isKorean ? '+1% ~ +5%' : '+1% ~ +5%'}
-            </span>
+            <span className="text-xs text-gray-500">+1% ~ +5%</span>
           </div>
-          <div className="w-4 h-4 rounded-sm bg-gray-500" />
-          <span className="text-xs text-gray-500">0%</span>
+
+          {/* 보합 범례 (회색) */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-4 h-4 rounded-sm"
+              style={{ backgroundColor: '#414554' }}
+            />
+            <span className="text-xs text-gray-500">0%</span>
+          </div>
+
+          {/* 하락 범례 (빨강) */}
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
                   className="w-4 h-4 rounded-sm"
-                  style={{
-                    backgroundColor: getHeatmapColor(
-                      -i * (isKorean ? 1 : 1),
-                      isKorean
-                    ),
-                  }}
+                  style={{ backgroundColor: getHeatmapColor(-i) }}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-500">
-              {isKorean ? '-1% ~ -5%' : '-1% ~ -5%'}
-            </span>
+            <span className="text-xs text-gray-500">-1% ~ -5%</span>
           </div>
         </div>
       </div>
