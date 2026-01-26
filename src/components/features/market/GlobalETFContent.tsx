@@ -153,8 +153,10 @@ function HoldingsSkeleton() {
  * 컴팩트 ETF 카드 (2열 그리드용)
  *
  * 간결한 정보 표시:
- * - 국기 + 심볼
- * - 한글 설명
+ * - 국기 + 이름/티커
+ *   - 미국 ETF: 티커 표시 (QQQ, SPY - 짧고 익숙함)
+ *   - 한국 ETF: 이름 표시 (TIGER S&P500 - 종목코드보다 직관적)
+ * - 보조 정보 (설명/종목코드)
  * - 현재가 + 등락률
  */
 function CompactETFCard({
@@ -167,7 +169,11 @@ function CompactETFCard({
   onClick: () => void;
 }) {
   const isPositive = etf.changePercent >= 0;
-  const description = ETF_DESCRIPTIONS[etf.symbol] || etf.name;
+
+  // 미국 ETF: 티커(QQQ) 메인, 설명(나스닥 100) 서브
+  // 한국 ETF: 이름(TIGER S&P500) 메인, 종목코드(360750) 서브
+  const displayName = etf.isUS ? etf.symbol : (ETF_DESCRIPTIONS[etf.symbol] || etf.name);
+  const subText = etf.isUS ? (ETF_DESCRIPTIONS[etf.symbol] || '') : etf.symbol;
 
   return (
     <div
@@ -179,17 +185,17 @@ function CompactETFCard({
           : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
         }`}
     >
-      {/* 상단: 국기 + 심볼 */}
+      {/* 상단: 국기 + 이름/티커 */}
       <div className="flex items-center gap-2 mb-1">
         <span className="text-sm">{etf.isUS ? '🇺🇸' : '🇰🇷'}</span>
-        <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded">
-          {etf.symbol}
+        <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded truncate max-w-[120px]">
+          {displayName}
         </span>
       </div>
 
-      {/* 중간: 설명 */}
+      {/* 중간: 보조 정보 (설명/종목코드) */}
       <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
-        {description}
+        {subText}
       </p>
 
       {/* 하단: 가격 + 등락률 */}
@@ -437,6 +443,10 @@ function SelectedETFPanel({
 
 /**
  * 모바일용 아코디언 카드
+ *
+ * 표시 방식:
+ * - 미국 ETF: 티커(QQQ) + 설명(나스닥 100)
+ * - 한국 ETF: 이름(TIGER S&P500) + 종목코드(360750)
  */
 function MobileAccordionCard({
   etf,
@@ -449,7 +459,11 @@ function MobileAccordionCard({
 }) {
   const router = useRouter();
   const isPositive = etf.changePercent >= 0;
-  const description = ETF_DESCRIPTIONS[etf.symbol] || etf.name;
+
+  // 미국 ETF: 티커 메인, 설명 서브
+  // 한국 ETF: 이름 메인, 종목코드 서브
+  const displayName = etf.isUS ? etf.symbol : (ETF_DESCRIPTIONS[etf.symbol] || etf.name);
+  const subText = etf.isUS ? (ETF_DESCRIPTIONS[etf.symbol] || '') : etf.symbol;
 
   const { holdings, isLoading } = useETFHoldings(isExpanded ? etf.symbol : null);
 
@@ -479,9 +493,9 @@ function MobileAccordionCard({
           <div className="flex items-center gap-2">
             <span className="text-sm">{etf.isUS ? '🇺🇸' : '🇰🇷'}</span>
             <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded">
-              {etf.symbol}
+              {displayName}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{subText}</span>
           </div>
           <svg
             className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
