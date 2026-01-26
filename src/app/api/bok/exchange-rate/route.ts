@@ -139,8 +139,8 @@ async function fetchBOKData(
     headers: {
       'Accept': 'application/json',
     },
-    // 캐시 설정: 1시간 동안 캐시
-    next: { revalidate: 3600 },
+    // 캐시 설정: 1분 (환율은 민감한 정보이므로 짧은 캐시)
+    next: { revalidate: 60 },
   });
 
   if (!response.ok) {

@@ -632,7 +632,7 @@ export function ForexContent() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             환율
             <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-              (원화 기준)
+              (매매기준율)
             </span>
             <span className="ml-2 text-xs font-normal text-green-600 dark:text-green-400">
               1분 자동갱신
@@ -646,13 +646,20 @@ export function ForexContent() {
           )}
         </div>
         {/* 데이터 소스 표시 */}
-        <span className={`text-xs px-2 py-1 rounded-full ${
-          dataSource === 'api'
-            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-        }`}>
-          {dataSource === 'api' ? '🏦 한국은행' : '📊 샘플 데이터'}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`text-xs px-2 py-1 rounded-full ${
+            dataSource === 'api'
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+          }`}>
+            {dataSource === 'api' ? '🏦 한국은행' : '📊 샘플 데이터'}
+          </span>
+          {dataSource === 'api' && (
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+              은행 간 기준환율
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 에러 메시지 */}
