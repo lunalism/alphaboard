@@ -11,7 +11,7 @@
  * 1. 하나의 큰 Treemap으로 모든 섹터/종목 표시 (Finviz 스타일)
  * 2. 종목명 표시 (종목 코드가 아닌 이름)
  * 3. 시가총액 기준 박스 크기 (Treemap 알고리즘)
- * 4. 등락률 기준 색상 (한국: 빨강=상승, 미국: 초록=상승)
+ * 4. 등락률 기준 색상 (한국/미국 동일: 초록=상승, 빨강=하락)
  * 5. 100개+ 종목으로 빽빽하게 채우기
  * 6. 호버 시 상세 툴팁 표시
  * 7. 종목 클릭 시 상세 페이지 이동
@@ -22,18 +22,31 @@
  * ┌─────────────────────────────────────────────────────────────┐
  * │ TECHNOLOGY           │ CONSUMER CYCLICAL    │ FINANCIAL    │
  * │ ┌────────┬──────────┐│ ┌───────┬──────────┐│ ┌──────────┐ │
- * │ │Microsoft│  NVIDIA │││ │Amazon │  Tesla   ││ │ JPMorgan │ │
+ * │ │삼성전자 │  NVIDIA │││ │Amazon │  Tesla   ││ │ JPMorgan │ │
  * │ │ +1.2%  │  +3.5%   │││ │ +2.1% │  -0.5%   ││ │  +0.8%   │ │
  * │ ├────────┼────┬─────┤│ ├───────┼────┬─────┤│ ├────┬─────┤ │
- * │ │Broadcom│AMD │Intel│││ │  HD   │MCD │ NKE ││ │Visa│ MA  │ │
+ * │ │SK하이닉스│AMD│Intel│││ │  HD   │MCD │ NKE ││ │Visa│ MA  │ │
  * │ └────────┴────┴─────┘│ └───────┴────┴─────┘│ └────┴─────┘ │
  * └─────────────────────────────────────────────────────────────┘
  *
  * ============================================================
- * 색상 규칙:
+ * Finviz 색상 규칙 (한국/미국 동일):
  * ============================================================
- * 한국 스타일: 상승=빨강(#dc2626~#fca5a5), 하락=파랑(#2563eb~#93c5fd)
- * 미국 스타일: 상승=초록(#16a34a~#86efac), 하락=빨강(#dc2626~#fca5a5)
+ * 상승 (초록 계열):
+ *   +5% 이상: #003D00 (가장 진한 초록)
+ *   +3~5%:   #006400
+ *   +2~3%:   #228B22
+ *   +1~2%:   #32CD32
+ *   +0~1%:   #90EE90 (연한 초록)
+ *
+ * 하락 (빨강 계열):
+ *   -5% 이상: #8B0000 (가장 진한 빨강)
+ *   -3~5%:   #B22222
+ *   -2~3%:   #DC143C
+ *   -1~2%:   #F08080
+ *   -0~1%:   #FFCCCB (연한 빨강)
+ *
+ * 보합 (0%): #374151 (어두운 회색)
  */
 
 import { useMemo, useCallback, useState } from 'react';
@@ -415,18 +428,25 @@ const US_SECTORS: SectorData[] = [
 // ==================== 색상 함수 ====================
 
 /**
- * Finviz 스타일 히트맵 색상 반환
+ * Finviz 정확한 색상 반환
  *
  * 글로벌 표준 색상 체계 (한국/미국 동일):
- * - 상승: 초록 (#30CC5A 밝음 ~ #1E5631 진함)
- * - 하락: 빨강 (#F63538 밝음 ~ #8B0000 진함)
- * - 보합: 어두운 회색 (#414554)
  *
- * 색상 강도는 등락률에 따라 연속적으로 변화:
- * - ±0% ~ ±1%: 연한 색상
- * - ±1% ~ ±3%: 중간 색상
- * - ±3% ~ ±5%: 진한 색상
- * - ±5% 이상: 가장 진한 색상
+ * 상승 (초록 계열) - 단계별 색상:
+ *   +5% 이상: #003D00 (가장 진한 초록)
+ *   +3~5%:   #006400 (진한 초록)
+ *   +2~3%:   #228B22 (초록)
+ *   +1~2%:   #32CD32 (라임그린)
+ *   +0~1%:   #90EE90 (연한 초록)
+ *
+ * 하락 (빨강 계열) - 단계별 색상:
+ *   -5% 이상: #8B0000 (가장 진한 빨강)
+ *   -3~5%:   #B22222 (진한 빨강)
+ *   -2~3%:   #DC143C (크림슨)
+ *   -1~2%:   #F08080 (연한 빨강)
+ *   -0~1%:   #FFCCCB (아주 연한 빨강)
+ *
+ * 보합 (0%): #374151 (어두운 회색)
  *
  * @param changePercent - 등락률 (예: 1.5, -2.3)
  * @returns CSS 색상 문자열
@@ -434,30 +454,25 @@ const US_SECTORS: SectorData[] = [
 function getHeatmapColor(changePercent: number): string {
   const absChange = Math.abs(changePercent);
 
-  // 보합 (±0.1% 미만) - Finviz 어두운 회색
+  // ==================== 보합 (±0.1% 미만) ====================
   if (absChange < 0.1) {
-    return '#414554';
+    return '#374151';  // 어두운 회색
   }
 
-  // 색상 강도 계산 (0~1) - 최대 5%에서 최대 강도
-  const intensity = Math.min(absChange / 5, 1);
-
   if (changePercent > 0) {
-    // ==================== 상승 (초록) ====================
-    // Finviz 초록: #30CC5A (밝음) → #1E5631 (진함)
-    // RGB: (48, 204, 90) → (30, 86, 49)
-    const r = Math.round(48 - intensity * (48 - 30));
-    const g = Math.round(204 - intensity * (204 - 86));
-    const b = Math.round(90 - intensity * (90 - 49));
-    return `rgb(${r}, ${g}, ${b})`;
+    // ==================== 상승 (초록 계열) ====================
+    if (absChange >= 5) return '#003D00';  // +5% 이상: 가장 진한 초록
+    if (absChange >= 3) return '#006400';  // +3~5%: 진한 초록
+    if (absChange >= 2) return '#228B22';  // +2~3%: 초록
+    if (absChange >= 1) return '#32CD32';  // +1~2%: 라임그린
+    return '#90EE90';                       // +0~1%: 연한 초록
   } else {
-    // ==================== 하락 (빨강) ====================
-    // Finviz 빨강: #F63538 (밝음) → #8B0000 (진함)
-    // RGB: (246, 53, 56) → (139, 0, 0)
-    const r = Math.round(246 - intensity * (246 - 139));
-    const g = Math.round(53 - intensity * (53 - 0));
-    const b = Math.round(56 - intensity * (56 - 0));
-    return `rgb(${r}, ${g}, ${b})`;
+    // ==================== 하락 (빨강 계열) ====================
+    if (absChange >= 5) return '#8B0000';  // -5% 이상: 가장 진한 빨강
+    if (absChange >= 3) return '#B22222';  // -3~5%: 진한 빨강
+    if (absChange >= 2) return '#DC143C';  // -2~3%: 크림슨
+    if (absChange >= 1) return '#F08080';  // -1~2%: 연한 빨강
+    return '#FFCCCB';                       // -0~1%: 아주 연한 빨강
   }
 }
 
@@ -759,19 +774,19 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
             ({totalStocks}개 종목)
           </span>
         </h2>
-        {/* Finviz 스타일 색상 표시 (한국/미국 동일) */}
+        {/* Finviz 스타일 색상 표시 (한국/미국 동일: 초록=상승, 빨강=하락) */}
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded"
-              style={{ backgroundColor: '#30CC5A' }}
+              style={{ backgroundColor: '#228B22' }}
             />
             <span className="text-gray-600 dark:text-gray-400">상승</span>
           </div>
           <div className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded"
-              style={{ backgroundColor: '#F63538' }}
+              style={{ backgroundColor: '#DC143C' }}
             />
             <span className="text-gray-600 dark:text-gray-400">하락</span>
           </div>
@@ -794,69 +809,70 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
             data={treemapData}
             identity="id"
             value="value"
-            // 부모 노드(섹터)와 리프 노드(종목) 설정
+            // ==================== 레이아웃 설정 ====================
+            // squarify: 가장 정사각형에 가깝게 배치 (Finviz 스타일)
             tile="squarify"
             leavesOnly={false}
-            innerPadding={2}
-            outerPadding={4}
-            // 색상 설정 - 등락률 기반
-            // pathComponents.length로 depth 계산: 2=섹터, 3=종목
+            innerPadding={1}        // 종목 간 간격 (좁게)
+            outerPadding={2}        // 섹터 외부 간격
+            // ==================== 색상 설정 ====================
+            // pathComponents.length로 depth 계산: 1=root, 2=섹터, 3=종목
             colors={(node) => {
-              // root 노드는 완전 투명 (보이지 않음)
+              // root 노드: 완전 투명
               if (node.pathComponents.length === 1) {
                 return 'transparent';
               }
-              // 섹터 노드는 어두운 회색 (pathComponents: [root, sector])
+              // 섹터 노드: 어두운 배경
               if (node.pathComponents.length === 2) {
-                return '#1f2937';
+                return '#111827';
               }
-              // 종목 노드는 등락률 기반 Finviz 색상
+              // 종목 노드: Finviz 등락률 기반 색상
               const change = node.data.change ?? 0;
               return getHeatmapColor(change);
             }}
-            // 테두리 설정
+            // ==================== 테두리 설정 ====================
             borderWidth={1}
-            borderColor="#374151"
+            borderColor="#1f2937"
             // ==================== 종목 라벨 설정 ====================
-            // 종목명 + 등락률 표시 (예: "삼성전자 +1.2%")
-            // 텍스트 넘침 방지: 긴 종목명은 축약
+            // 텍스트 넘침 완전 방지:
+            // - 박스 크기가 60px 미만이면 라벨 숨김
+            // - 종목명은 5자로 제한
+            // - 등락률은 항상 표시
             label={(node) => {
-              // 종목 노드만 라벨 표시 (pathComponents: [root, sector, stock])
               const fullName = node.data.name || node.id;
               const change = node.data.change ?? 0;
 
-              // 종목명 길이 제한 (최대 8자, 넘으면 축약)
-              // 예: "LG에너지솔루션" → "LG에너지…"
-              const maxLength = 8;
+              // 종목명 길이 제한 (최대 5자)
+              // 예: "LG에너지솔루션" → "LG에너…"
+              const maxLength = 5;
               const name =
                 fullName.length > maxLength
-                  ? fullName.slice(0, maxLength - 1) + '…'
+                  ? fullName.slice(0, maxLength) + '…'
                   : fullName;
 
-              // 종목명 + 등락률
-              return `${name} ${formatPercent(change)}`;
+              // 한 줄로 종목명 + 등락률
+              return `${name}\n${formatPercent(change)}`;
             }}
-            // 텍스트 넘침 방지: 박스가 너무 작으면 라벨 숨김 (최소 35px)
-            labelSkipSize={35}
+            // 텍스트 넘침 방지: 박스가 60px 미만이면 라벨 숨김
+            labelSkipSize={60}
             labelTextColor="#ffffff"
-            // ==================== 부모(섹터/root) 라벨 설정 ====================
-            // root 라벨은 숨기고, 섹터 라벨만 표시
+            // ==================== 섹터 라벨 설정 ====================
+            // Finviz 스타일: 섹터명은 좌상단에 작게 표시
             enableParentLabel={true}
             parentLabel={(node) => {
-              // root 노드는 빈 문자열 (라벨 숨김)
+              // root 노드: 빈 문자열 (숨김)
               if (node.pathComponents.length === 1) {
                 return '';
               }
-              // 섹터 노드는 섹터명 표시
-              return node.id;
+              // 섹터 노드: 대문자 섹터명
+              return node.id.toUpperCase();
             }}
             parentLabelPosition="top"
-            parentLabelPadding={8}
-            parentLabelTextColor="#9ca3af"
-            // 호버 시 툴팁
-            // pathComponents.length로 depth 계산: 2=섹터, 3=종목
+            parentLabelPadding={6}
+            parentLabelTextColor="#6b7280"
+            // ==================== 툴팁 설정 ====================
             tooltip={({ node }) => {
-              // 섹터 노드는 툴팁 없음 (pathComponents: [root, sector])
+              // 섹터 노드: 툴팁 없음
               if (node.pathComponents.length === 2) {
                 return null;
               }
@@ -865,41 +881,41 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
               const price = node.data.price ?? 0;
               const symbol = node.data.symbol ?? node.id;
               const isPositive = change >= 0;
-
-              // pathComponents에서 섹터명 가져오기 (두 번째 요소)
               const sector = node.pathComponents[1] ?? '';
 
               return (
-                <div className="bg-gray-900 text-white rounded-lg shadow-xl border border-gray-700 p-3 min-w-[200px]">
+                <div className="bg-gray-900 text-white rounded-lg shadow-xl border border-gray-600 p-3 min-w-[220px]">
                   {/* 종목명 + 심볼 */}
-                  <div className="font-bold text-sm mb-2">
+                  <div className="font-bold text-base mb-2 border-b border-gray-700 pb-2">
                     {node.data.name}
                     <span className="text-gray-400 ml-2 font-normal text-xs">
                       {symbol}
                     </span>
                   </div>
 
-                  {/* 현재가 + 등락률 */}
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300 text-xs">현재가</span>
-                    <div className="text-right">
-                      <span className="font-semibold text-sm">
-                        {formatPrice(price, isKorean)}
-                      </span>
-                      {/* Finviz 스타일: 상승=초록, 하락=빨강 */}
-                      <span
-                        className={`ml-2 text-xs font-medium ${
-                          isPositive ? 'text-green-400' : 'text-red-400'
-                        }`}
-                      >
-                        {formatPercent(change)}
-                      </span>
-                    </div>
+                  {/* 현재가 */}
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-gray-400 text-xs">현재가</span>
+                    <span className="font-semibold text-sm">
+                      {formatPrice(price, isKorean)}
+                    </span>
+                  </div>
+
+                  {/* 등락률 */}
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-gray-400 text-xs">등락률</span>
+                    <span
+                      className={`font-bold text-sm ${
+                        isPositive ? 'text-green-400' : 'text-red-400'
+                      }`}
+                    >
+                      {formatPercent(change)}
+                    </span>
                   </div>
 
                   {/* 시가총액 */}
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300 text-xs">시가총액</span>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-gray-400 text-xs">시가총액</span>
                     <span className="font-semibold text-sm">
                       {formatMarketCap(node.value, isKorean)}
                     </span>
@@ -907,64 +923,54 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
 
                   {/* 섹터 */}
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-xs">섹터</span>
-                    <span className="text-sm text-gray-200">{sector}</span>
+                    <span className="text-gray-400 text-xs">섹터</span>
+                    <span className="text-sm text-gray-300">{sector}</span>
                   </div>
                 </div>
               );
             }}
-            // 클릭 이벤트
-            // pathComponents.length로 depth 계산: 3=종목
+            // ==================== 클릭 이벤트 ====================
             onClick={(node) => {
-              // 종목 노드 클릭 시 상세 페이지로 이동 (pathComponents: [root, sector, stock])
+              // 종목 노드 클릭 시 상세 페이지로 이동
               if (node.pathComponents.length === 3 && node.data.symbol) {
                 handleStockClick(node.data.symbol);
               }
             }}
-            // 애니메이션
+            // ==================== 애니메이션 ====================
             animate={false}
             motionConfig="gentle"
           />
         </div>
 
         {/* ==================== 색상 범례 ==================== */}
-        {/* Finviz 스타일: 상승(초록) / 보합(회색) / 하락(빨강) */}
-        <div className="mt-4 flex items-center justify-center gap-6">
-          {/* 상승 범례 (초록) */}
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-4 h-4 rounded-sm"
-                  style={{ backgroundColor: getHeatmapColor(i) }}
-                />
-              ))}
-            </div>
-            <span className="text-xs text-gray-500">+1% ~ +5%</span>
+        {/* Finviz 정확한 색상 범례 */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
+          {/* 상승 범례 (초록 계열) - 연한색 → 진한색 */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500 mr-1">상승</span>
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#90EE90' }} title="+0~1%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#32CD32' }} title="+1~2%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#228B22' }} title="+2~3%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#006400' }} title="+3~5%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#003D00' }} title="+5%↑" />
+            <span className="text-xs text-gray-500 ml-1">+5%</span>
           </div>
 
           {/* 보합 범례 (회색) */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded-sm"
-              style={{ backgroundColor: '#414554' }}
-            />
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#374151' }} />
             <span className="text-xs text-gray-500">0%</span>
           </div>
 
-          {/* 하락 범례 (빨강) */}
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-4 h-4 rounded-sm"
-                  style={{ backgroundColor: getHeatmapColor(-i) }}
-                />
-              ))}
-            </div>
-            <span className="text-xs text-gray-500">-1% ~ -5%</span>
+          {/* 하락 범례 (빨강 계열) - 연한색 → 진한색 */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500 mr-1">하락</span>
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#FFCCCB' }} title="-0~1%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#F08080' }} title="-1~2%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#DC143C' }} title="-2~3%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#B22222' }} title="-3~5%" />
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#8B0000' }} title="-5%↓" />
+            <span className="text-xs text-gray-500 ml-1">-5%</span>
           </div>
         </div>
       </div>
