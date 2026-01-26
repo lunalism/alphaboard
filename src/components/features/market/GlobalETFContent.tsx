@@ -215,6 +215,11 @@ function CompactETFCard({
 
 /**
  * 미니 ETF 카드 (분할 뷰 오른쪽 리스트용)
+ *
+ * 개선된 디자인:
+ * - 2줄 레이아웃 (이름 + 심볼/등락률)
+ * - 한국 ETF는 이름으로 표시 (TIGER S&P500 등)
+ * - 카드 형태로 구분
  */
 function MiniETFCard({
   etf,
@@ -226,33 +231,43 @@ function MiniETFCard({
   onClick: () => void;
 }) {
   const isPositive = etf.changePercent >= 0;
+  // 한국 ETF는 ETF_DESCRIPTIONS에서 이름 사용, 미국 ETF는 심볼 사용
+  const displayName = etf.isUS ? etf.symbol : (ETF_DESCRIPTIONS[etf.symbol] || etf.name);
+  // 한국 ETF의 경우 심볼(종목코드) 표시, 미국 ETF는 설명 표시
+  const subText = etf.isUS ? (ETF_DESCRIPTIONS[etf.symbol] || '') : etf.symbol;
 
   return (
     <div
       onClick={onClick}
-      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer
-        transition-all duration-150
+      className={`p-3 rounded-xl cursor-pointer transition-all duration-150 border
         ${isSelected
-          ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
-          : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600 shadow-sm'
+          : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-sm'
         }`}
     >
-      {/* 왼쪽: 국기 + 심볼 */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs">{etf.isUS ? '🇺🇸' : '🇰🇷'}</span>
-        <span className="text-xs font-medium text-gray-900 dark:text-white">
-          {etf.symbol}
+      {/* 상단: 국기 + 이름 */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-sm">{etf.isUS ? '🇺🇸' : '🇰🇷'}</span>
+        <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+          {displayName}
         </span>
       </div>
 
-      {/* 오른쪽: 등락률 */}
-      <span
-        className={`text-xs font-medium ${
-          isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-        }`}
-      >
-        {formatPercent(etf.changePercent)}
-      </span>
+      {/* 하단: 심볼/설명 + 등락률 */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {subText}
+        </span>
+        <span
+          className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+            isPositive
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          }`}
+        >
+          {formatPercent(etf.changePercent)}
+        </span>
+      </div>
     </div>
   );
 }
@@ -657,9 +672,10 @@ export function GlobalETFContent() {
         <div className="hidden md:block">
           {selectedETF ? (
             // 분할 뷰: 왼쪽 상세 + 오른쪽 리스트
+            // 비율: 55% / 45% (flex-[11] / flex-[9])
             <div className="flex gap-4">
-              {/* 왼쪽: 선택된 ETF 상세 (60%) */}
-              <div className="flex-[3]">
+              {/* 왼쪽: 선택된 ETF 상세 (55%) */}
+              <div className="flex-[11]">
                 <SelectedETFPanel
                   etf={selectedETF}
                   onClose={() => setSelectedSymbol(null)}
@@ -667,12 +683,20 @@ export function GlobalETFContent() {
                 />
               </div>
 
-              {/* 오른쪽: 나머지 ETF 리스트 (40%) */}
-              <div className="flex-[2] bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-3 max-h-[500px] overflow-y-auto">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">
-                  다른 ETF ({allETFs.length - 1}개)
-                </p>
-                <div className="space-y-1">
+              {/* 오른쪽: 나머지 ETF 리스트 (45%) */}
+              <div className="flex-[9] bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 max-h-[520px] overflow-y-auto">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    다른 ETF
+                  </h4>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                    {allETFs.length - 1}개
+                  </span>
+                </div>
+
+                {/* ETF 카드 그리드 (2열) */}
+                <div className="grid grid-cols-2 gap-2">
                   {allETFs
                     .filter((etf) => etf.symbol !== selectedSymbol)
                     .map((etf) => (
