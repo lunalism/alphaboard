@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@nivo/core": "^0.99.0",
     "@nivo/treemap": "^0.99.0",
     "@supabase/ssr": "^0.8.0",
@@ -50,6 +51,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "canvas": "^3.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
