@@ -43,7 +43,6 @@
  * }
  */
 
-import { v2 as cloudinary } from 'cloudinary';
 import { NextRequest, NextResponse } from 'next/server';
 
 // ==================== 상수 ====================
@@ -69,26 +68,18 @@ type ContentType = 'announcements' | 'faq' | 'general';
  * POST /api/upload
  *
  * 이미지 파일을 Cloudinary에 업로드합니다.
+ * SDK 대신 fetch API를 사용하여 안정성 향상
  */
 export async function POST(request: NextRequest) {
-  console.log('[API/upload] POST 요청 수신');
-
   try {
     // ========================================
-    // 1. Cloudinary 설정 (함수 내부에서 설정)
+    // 1. 환경 변수 확인
     // ========================================
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-    console.log('[API/upload] 환경 변수 확인:', {
-      cloudName: cloudName ? '설정됨' : '미설정',
-      apiKey: apiKey ? '설정됨' : '미설정',
-      apiSecret: apiSecret ? '설정됨' : '미설정',
-    });
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
     if (!cloudName || !apiKey || !apiSecret) {
-      console.error('[API/upload] Cloudinary 환경 변수 누락');
       return NextResponse.json(
         {
           success: false,
@@ -98,35 +89,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Cloudinary 설정 (요청마다 설정)
-    cloudinary.config({
-      cloud_name: cloudName,
-      api_key: apiKey,
-      api_secret: apiSecret,
-    });
-
     // ========================================
     // 2. FormData 파싱
     // ========================================
-    console.log('[API/upload] FormData 파싱 시작');
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const contentType = (formData.get('contentType') as ContentType) || 'general';
 
     // 파일 존재 확인
     if (!file) {
-      console.error('[API/upload] 파일 없음');
       return NextResponse.json(
         { success: false, error: '파일이 첨부되지 않았습니다.' },
         { status: 400 }
       );
     }
-
-    console.log('[API/upload] 파일 정보:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    });
 
     // ========================================
     // 3. 파일 검증
@@ -134,7 +110,6 @@ export async function POST(request: NextRequest) {
 
     // MIME 타입 검증
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      console.error('[API/upload] 지원하지 않는 MIME 타입:', file.type);
       return NextResponse.json(
         {
           success: false,
@@ -147,7 +122,6 @@ export async function POST(request: NextRequest) {
     // 파일 크기 검증
     if (file.size > MAX_FILE_SIZE) {
       const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-      console.error('[API/upload] 파일 크기 초과:', sizeMB, 'MB');
       return NextResponse.json(
         {
           success: false,
@@ -158,49 +132,62 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================
-    // 4. Cloudinary 폴더 경로 설정
+    // 4. 업로드 준비
     // ========================================
     const folder = `alphaboard/${contentType}`;
     const originalFilename = file.name || 'image';
-    // 파일명에서 특수문자 제거
     const safeFilename = originalFilename
-      .replace(/\.[^/.]+$/, '') // 확장자 제거
-      .replace(/[^a-zA-Z0-9가-힣_-]/g, '_') // 특수문자를 _로 대체
-      .slice(0, 50); // 최대 50자
-
-    console.log('[API/upload] 업로드 준비:', {
-      folder,
-      safeFilename,
-      contentType,
-    });
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9가-힣_-]/g, '_')
+      .slice(0, 50);
+    const publicId = `${folder}/${Date.now()}_${safeFilename}`;
 
     // ========================================
     // 5. File을 base64로 변환
     // ========================================
-    console.log('[API/upload] base64 변환 시작');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
-    console.log('[API/upload] base64 변환 완료, 길이:', base64.length);
+    const base64Data = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     // ========================================
-    // 6. Cloudinary에 업로드
+    // 6. Cloudinary Upload API 직접 호출
     // ========================================
-    console.log('[API/upload] Cloudinary 업로드 시작');
+    const timestamp = Math.round(Date.now() / 1000);
 
-    const result = await cloudinary.uploader.upload(base64, {
-      folder,
-      public_id: `${Date.now()}_${safeFilename}`,
-      resource_type: 'image',
-      // transformation 제거 (문제 가능성)
+    // 서명 생성
+    const crypto = await import('crypto');
+    const signatureString = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+    const signature = crypto
+      .createHash('sha1')
+      .update(signatureString)
+      .digest('hex');
+
+    // FormData 생성
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', base64Data);
+    uploadFormData.append('public_id', publicId);
+    uploadFormData.append('timestamp', timestamp.toString());
+    uploadFormData.append('api_key', apiKey);
+    uploadFormData.append('signature', signature);
+
+    // Cloudinary API 호출
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+    const response = await fetch(cloudinaryUrl, {
+      method: 'POST',
+      body: uploadFormData,
     });
 
-    console.log('[API/upload] Cloudinary 업로드 완료:', {
-      url: result.secure_url,
-      public_id: result.public_id,
-      format: result.format,
-      bytes: result.bytes,
-    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error?.message || '이미지 업로드에 실패했습니다.',
+        },
+        { status: 500 }
+      );
+    }
 
     // ========================================
     // 7. 성공 응답
@@ -211,19 +198,8 @@ export async function POST(request: NextRequest) {
       path: result.public_id,
       filename: originalFilename,
     });
-  } catch (error) {
-    // 상세 에러 로깅
-    console.error('[API/upload] 업로드 오류 발생');
-    console.error('[API/upload] 에러 타입:', typeof error);
-    console.error('[API/upload] 에러 객체:', error);
-
-    if (error instanceof Error) {
-      console.error('[API/upload] 에러 메시지:', error.message);
-      console.error('[API/upload] 에러 스택:', error.stack);
-    }
-
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-
     return NextResponse.json(
       {
         success: false,
