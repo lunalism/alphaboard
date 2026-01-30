@@ -46,14 +46,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { NextRequest, NextResponse } from 'next/server';
 
-// ==================== Cloudinary 설정 ====================
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 // ==================== 상수 ====================
 
 /** 허용되는 이미지 MIME 타입 */
@@ -65,8 +57,8 @@ const ALLOWED_MIME_TYPES = [
   'image/svg+xml',
 ];
 
-/** 최대 파일 크기 (5MB) */
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+/** 최대 파일 크기 (4MB - Vercel 서버리스 함수 제한 고려) */
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 /** 컨텐츠 타입 */
 type ContentType = 'announcements' | 'faq' | 'general';
@@ -79,12 +71,24 @@ type ContentType = 'announcements' | 'faq' | 'general';
  * 이미지 파일을 Cloudinary에 업로드합니다.
  */
 export async function POST(request: NextRequest) {
+  console.log('[API/upload] POST 요청 수신');
+
   try {
     // ========================================
-    // 1. Cloudinary 설정 확인
+    // 1. Cloudinary 설정 (함수 내부에서 설정)
     // ========================================
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
-      console.error('[API/upload] Cloudinary 환경 변수가 설정되지 않았습니다.');
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    console.log('[API/upload] 환경 변수 확인:', {
+      cloudName: cloudName ? '설정됨' : '미설정',
+      apiKey: apiKey ? '설정됨' : '미설정',
+      apiSecret: apiSecret ? '설정됨' : '미설정',
+    });
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.error('[API/upload] Cloudinary 환경 변수 누락');
       return NextResponse.json(
         {
           success: false,
@@ -94,20 +98,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Cloudinary 설정 (요청마다 설정)
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+
     // ========================================
     // 2. FormData 파싱
     // ========================================
+    console.log('[API/upload] FormData 파싱 시작');
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const contentType = (formData.get('contentType') as ContentType) || 'general';
 
     // 파일 존재 확인
     if (!file) {
+      console.error('[API/upload] 파일 없음');
       return NextResponse.json(
         { success: false, error: '파일이 첨부되지 않았습니다.' },
         { status: 400 }
       );
     }
+
+    console.log('[API/upload] 파일 정보:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
 
     // ========================================
     // 3. 파일 검증
@@ -115,6 +134,7 @@ export async function POST(request: NextRequest) {
 
     // MIME 타입 검증
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      console.error('[API/upload] 지원하지 않는 MIME 타입:', file.type);
       return NextResponse.json(
         {
           success: false,
@@ -127,10 +147,11 @@ export async function POST(request: NextRequest) {
     // 파일 크기 검증
     if (file.size > MAX_FILE_SIZE) {
       const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      console.error('[API/upload] 파일 크기 초과:', sizeMB, 'MB');
       return NextResponse.json(
         {
           success: false,
-          error: `파일 크기가 너무 큽니다. (${sizeMB}MB / 최대 5MB)`,
+          error: `파일 크기가 너무 큽니다. (${sizeMB}MB / 최대 4MB)`,
         },
         { status: 400 }
       );
@@ -141,38 +162,44 @@ export async function POST(request: NextRequest) {
     // ========================================
     const folder = `alphaboard/${contentType}`;
     const originalFilename = file.name || 'image';
+    // 파일명에서 특수문자 제거
+    const safeFilename = originalFilename
+      .replace(/\.[^/.]+$/, '') // 확장자 제거
+      .replace(/[^a-zA-Z0-9가-힣_-]/g, '_') // 특수문자를 _로 대체
+      .slice(0, 50); // 최대 50자
 
-    console.log('[API/upload] 업로드 시작:', {
-      filename: originalFilename,
-      size: `${(file.size / 1024).toFixed(1)}KB`,
-      type: file.type,
+    console.log('[API/upload] 업로드 준비:', {
       folder,
+      safeFilename,
+      contentType,
     });
 
     // ========================================
     // 5. File을 base64로 변환
     // ========================================
+    console.log('[API/upload] base64 변환 시작');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
+    console.log('[API/upload] base64 변환 완료, 길이:', base64.length);
 
     // ========================================
     // 6. Cloudinary에 업로드
     // ========================================
+    console.log('[API/upload] Cloudinary 업로드 시작');
+
     const result = await cloudinary.uploader.upload(base64, {
       folder,
-      // 파일명에서 확장자 제거하고 public_id로 사용
-      public_id: `${Date.now()}_${originalFilename.replace(/\.[^/.]+$/, '')}`,
-      // 이미지 자동 최적화
-      transformation: [
-        { quality: 'auto' },
-        { fetch_format: 'auto' },
-      ],
+      public_id: `${Date.now()}_${safeFilename}`,
+      resource_type: 'image',
+      // transformation 제거 (문제 가능성)
     });
 
-    console.log('[API/upload] 업로드 완료:', {
+    console.log('[API/upload] Cloudinary 업로드 완료:', {
       url: result.secure_url,
       public_id: result.public_id,
+      format: result.format,
+      bytes: result.bytes,
     });
 
     // ========================================
@@ -185,9 +212,17 @@ export async function POST(request: NextRequest) {
       filename: originalFilename,
     });
   } catch (error) {
-    console.error('[API/upload] 업로드 오류:', error);
+    // 상세 에러 로깅
+    console.error('[API/upload] 업로드 오류 발생');
+    console.error('[API/upload] 에러 타입:', typeof error);
+    console.error('[API/upload] 에러 객체:', error);
 
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+    if (error instanceof Error) {
+      console.error('[API/upload] 에러 메시지:', error.message);
+      console.error('[API/upload] 에러 스택:', error.stack);
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     return NextResponse.json(
       {
@@ -215,5 +250,6 @@ export async function GET() {
     status: 'ok',
     provider: 'cloudinary',
     configured: isConfigured,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'set' : 'not set',
   });
 }
