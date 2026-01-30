@@ -21,3 +21,4 @@ export {
 export * from './crawled-news';
 export * from './admin';
 export * from './feedback';
+export * from './rewritten-news';

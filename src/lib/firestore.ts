@@ -164,6 +164,31 @@ export const etfHoldingsCollection = () => collection(db, 'etf_holdings');
 export const etfHoldingsDoc = (symbol: string) => doc(db, 'etf_holdings', symbol);
 
 /**
+ * rewrittenNews 컬렉션 참조
+ * AI 재작성된 뉴스 캐시 저장
+ *
+ * 문서 구조:
+ * - originalNewsId: 원본 뉴스 ID
+ * - originalUrl: 원본 URL
+ * - originalTitle: 원본 제목
+ * - originalSource: 원본 출처
+ * - summary: AI 요약
+ * - content: 재작성된 본문
+ * - investmentPoints: 투자 포인트 배열
+ * - relatedStocks: 관련 종목 배열
+ * - sentiment: 투자 심리 (positive/negative/neutral)
+ * - createdAt: 생성일
+ * - expiresAt: 만료일 (24시간 TTL)
+ */
+export const rewrittenNewsCollection = () => collection(db, 'rewrittenNews');
+
+/**
+ * 특정 재작성 뉴스 문서 참조
+ * @param newsId - 원본 뉴스 ID
+ */
+export const rewrittenNewsDoc = (newsId: string) => doc(db, 'rewrittenNews', newsId);
+
+/**
  * feedbacks 컬렉션 참조
  * 피드백(건의사항/불편사항) 저장
  *
