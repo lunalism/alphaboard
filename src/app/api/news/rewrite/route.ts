@@ -3,7 +3,7 @@
  *
  * POST /api/news/rewrite
  *
- * Claude 3.5 Haiku를 사용하여 뉴스를 투자자 관점으로 재작성합니다.
+ * Claude Haiku 4.5를 사용하여 뉴스를 투자자 관점으로 재작성합니다.
  *
  * ============================================================
  * 기능:
@@ -52,8 +52,8 @@ const anthropic = new Anthropic({
 /** 캐시 TTL: 24시간 (밀리초) */
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-/** Claude 모델 */
-const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+/** Claude 모델 (비용 절감을 위해 Haiku 사용) */
+const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 
 // ============================================
 // 프롬프트 생성
