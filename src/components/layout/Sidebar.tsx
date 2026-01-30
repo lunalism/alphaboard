@@ -10,14 +10,14 @@
  * ============================================================
  * 새 공지사항 알림 배지:
  * ============================================================
- * - 사용자가 마지막으로 공지 페이지를 방문한 이후 새 공지가 있으면 표시
- * - localStorage에 마지막 확인 시간 저장
- * - 공지 페이지 방문 시 자동으로 배지 숨김
+ * - 읽지 않은 공지사항이 있으면 배지 표시
+ * - 공지를 클릭해서 펼쳐 읽어야 배지가 사라짐
+ * - 여러 개의 새 공지가 있으면 모두 읽어야 배지 사라짐
+ * - localStorage에 읽은 공지 ID 목록 저장
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { menuItems, infoMenuItems } from '@/constants';
 import { MenuIcon, UserAvatar } from '@/components/common';
 import { useAuth } from '@/components/providers/AuthProvider';
@@ -45,7 +45,6 @@ function NewBadge() {
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
 
   // 전역 인증 상태 사용 (자체 세션 체크 없음)
   const { userProfile, isLoading, isLoggedIn, isTestMode, isProfileLoading } = useAuth();
@@ -53,20 +52,15 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   // 관리자 권한 확인
   const { isAdmin } = useAdmin();
 
-  // 새 공지사항 확인
-  const { hasNewAnnouncement, markAsRead } = useNewAnnouncement();
+  // 새 공지사항 확인 (읽지 않은 공지가 있는지)
+  // NOTE: 페이지 방문만으로는 배지가 사라지지 않음
+  // 공지를 클릭해서 펼쳐 읽어야 배지가 사라짐 (announcements/page.tsx에서 처리)
+  const { hasNewAnnouncement } = useNewAnnouncement();
 
   // 클라이언트 마운트 확인 (hydration 방지)
   useState(() => {
     setMounted(true);
   });
-
-  // 공지사항 페이지 방문 시 읽음 처리
-  useEffect(() => {
-    if (pathname === '/announcements') {
-      markAsRead();
-    }
-  }, [pathname, markAsRead]);
 
 
   // 사용자 정보 (우선순위: nickname > displayName > 기본값)

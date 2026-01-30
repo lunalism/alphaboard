@@ -7,7 +7,14 @@
  * - 카드 형태의 목록
  * - 카테고리 필터
  * - 상단 고정 공지 표시
- * - 클릭 시 아코디언 펼침
+ * - 클릭 시 아코디언 펼침 + 읽음 처리
+ *
+ * ============================================================
+ * 읽음 처리 로직:
+ * ============================================================
+ * - 공지를 클릭해서 펼치면 해당 공지를 읽음 처리
+ * - useNewAnnouncement 훅의 markAsRead 호출
+ * - 모든 공지를 읽어야 사이드바 배지가 사라짐
  *
  * ============================================================
  * 레이아웃:
@@ -17,8 +24,9 @@
  * - MobileSearchHeader (모바일)
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { useNewAnnouncement } from '@/hooks/useNewAnnouncement';
 import { ANNOUNCEMENT_CATEGORY_INFO } from '@/types/admin';
 import type { AnnouncementCategory, Announcement } from '@/types/admin';
 import { Sidebar, BottomNav } from '@/components/layout';
@@ -30,13 +38,26 @@ type FilterCategory = AnnouncementCategory | 'all';
 
 // ==================== 공지사항 카드 컴포넌트 ====================
 
+/**
+ * 공지사항 카드 컴포넌트
+ *
+ * 개별 공지사항을 카드 형태로 표시합니다.
+ * 클릭하면 내용이 펼쳐지고, 읽지 않은 공지는 배지로 표시됩니다.
+ *
+ * @param announcement - 공지사항 데이터
+ * @param isExpanded - 펼침 상태
+ * @param isUnread - 읽지 않은 공지 여부
+ * @param onToggle - 펼침 토글 콜백 (읽음 처리 포함)
+ */
 function AnnouncementCard({
   announcement,
   isExpanded,
+  isUnread,
   onToggle,
 }: {
   announcement: Announcement;
   isExpanded: boolean;
+  isUnread: boolean;
   onToggle: () => void;
 }) {
   const categoryInfo = ANNOUNCEMENT_CATEGORY_INFO[announcement.category];
@@ -85,9 +106,15 @@ function AnnouncementCard({
               {dateStr}
             </span>
           </div>
-          {/* 제목 */}
-          <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
+          {/* 제목 + 읽지 않음 배지 */}
+          <h3 className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-2">
             {announcement.title}
+            {/* 읽지 않은 공지 배지 */}
+            {isUnread && (
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded">
+                N
+              </span>
+            )}
           </h3>
         </div>
         {/* 화살표 아이콘 */}
@@ -123,6 +150,28 @@ export default function AnnouncementsPage() {
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeMenu] = useState('announcements');
+
+  // 새 공지사항 읽음 처리 훅
+  // - markAsRead: 공지 클릭(펼침) 시 읽음 처리
+  // - isRead: 특정 공지가 읽음 상태인지 확인
+  const { markAsRead, isRead } = useNewAnnouncement();
+
+  /**
+   * 공지사항 토글 핸들러
+   *
+   * 공지를 펼칠 때 읽음 처리를 함께 수행합니다.
+   * 이미 펼쳐진 공지를 클릭하면 접기만 수행합니다.
+   *
+   * @param announcementId - 토글할 공지 ID
+   */
+  const handleToggle = useCallback((announcementId: string) => {
+    // 현재 접힌 상태에서 펼치는 경우에만 읽음 처리
+    if (expandedId !== announcementId) {
+      markAsRead(announcementId);
+    }
+    // 토글 상태 변경
+    setExpandedId(expandedId === announcementId ? null : announcementId);
+  }, [expandedId, markAsRead]);
 
   // 카테고리 필터링
   const filteredAnnouncements = filterCategory === 'all'
@@ -224,9 +273,8 @@ export default function AnnouncementsPage() {
                   key={announcement.id}
                   announcement={announcement}
                   isExpanded={expandedId === announcement.id}
-                  onToggle={() => setExpandedId(
-                    expandedId === announcement.id ? null : announcement.id
-                  )}
+                  isUnread={!isRead(announcement.id)}
+                  onToggle={() => handleToggle(announcement.id)}
                 />
               ))}
             </div>
