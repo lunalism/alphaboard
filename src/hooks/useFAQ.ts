@@ -95,9 +95,11 @@ export function useFAQ(options: UseFAQOptions = {}): UseFAQReturn {
       setError(null);
 
       // 쿼리 조건 구성
+      // NOTE: Firestore 복합 인덱스 없이 동작하도록 단순 쿼리 사용
+      // 필터링과 정렬은 클라이언트에서 수행
       const constraints = [];
 
-      // 발행된 것만 조회
+      // 발행된 것만 조회 시 where 조건만 사용 (orderBy 제외)
       if (publishedOnly) {
         constraints.push(where('isPublished', '==', true));
       }
@@ -107,15 +109,18 @@ export function useFAQ(options: UseFAQOptions = {}): UseFAQReturn {
         constraints.push(where('category', '==', category));
       }
 
-      // 정렬: order 순서
-      constraints.push(orderBy('order', 'asc'));
+      // orderBy는 제외하고 클라이언트에서 정렬
+      // (복합 인덱스 에러 방지)
 
       const data = await queryCollection<Omit<FAQ, 'id'>>(
         faqCollection(),
         constraints
       );
 
-      setFaqs(data as FAQ[]);
+      // 클라이언트 정렬: order 오름차순
+      const sorted = [...data].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      setFaqs(sorted as FAQ[]);
     } catch (err) {
       console.error('[useFAQ] 조회 실패:', err);
       setError('FAQ를 불러오는데 실패했습니다.');

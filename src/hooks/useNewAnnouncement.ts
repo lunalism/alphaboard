@@ -31,8 +31,6 @@ import {
   announcementsCollection,
   queryCollection,
   where,
-  orderBy,
-  limit,
 } from '@/lib/firestore';
 import type { Announcement } from '@/types/admin';
 
@@ -106,17 +104,26 @@ export function useNewAnnouncement(): UseNewAnnouncementReturn {
       try {
         setIsLoading(true);
 
-        // 최신 발행된 공지사항 1개 조회
+        // 발행된 공지사항 조회
+        // NOTE: orderBy + limit 없이 조회 후 클라이언트에서 정렬
+        // (복합 인덱스 에러 방지)
         const constraints = [
           where('isPublished', '==', true),
-          orderBy('createdAt', 'desc'),
-          limit(1),
         ];
 
-        const announcements = await queryCollection<Omit<Announcement, 'id'>>(
+        const allAnnouncements = await queryCollection<Omit<Announcement, 'id'>>(
           announcementsCollection(),
           constraints
         );
+
+        // 클라이언트에서 최신순 정렬 후 1개만 사용
+        const announcements = [...allAnnouncements]
+          .sort((a, b) => {
+            const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+            const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+            return bTime - aTime;
+          })
+          .slice(0, 1);
 
         if (announcements.length === 0) {
           // 공지사항 없음

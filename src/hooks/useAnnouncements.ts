@@ -98,9 +98,11 @@ export function useAnnouncements(options: UseAnnouncementsOptions = {}): UseAnno
       setError(null);
 
       // 쿼리 조건 구성
+      // NOTE: Firestore 복합 인덱스 없이 동작하도록 단순 쿼리 사용
+      // 필터링과 정렬은 클라이언트에서 수행
       const constraints = [];
 
-      // 발행된 것만 조회
+      // 발행된 것만 조회 시 where 조건만 사용 (orderBy 제외)
       if (publishedOnly) {
         constraints.push(where('isPublished', '==', true));
       }
@@ -110,22 +112,24 @@ export function useAnnouncements(options: UseAnnouncementsOptions = {}): UseAnno
         constraints.push(where('category', '==', category));
       }
 
-      // 정렬: 상단 고정 우선, 그 다음 최신순
-      // Firestore 복합 쿼리 제한으로 인해 클라이언트에서 정렬
-      constraints.push(orderBy('createdAt', 'desc'));
+      // orderBy는 제외하고 클라이언트에서 정렬
+      // (복합 인덱스 에러 방지)
 
       const data = await queryCollection<Omit<Announcement, 'id'>>(
         announcementsCollection(),
         constraints
       );
 
-      // 상단 고정 우선 정렬
+      // 클라이언트 정렬: 상단 고정 우선 → 최신순
       const sorted = [...data].sort((a, b) => {
-        // 상단 고정된 것 우선
+        // 1. 상단 고정된 것 우선
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
-        // 그 외 최신순 유지
-        return 0;
+
+        // 2. 최신순 정렬 (createdAt 내림차순)
+        const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
       });
 
       setAnnouncements(sorted as Announcement[]);

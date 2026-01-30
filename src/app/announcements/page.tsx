@@ -8,12 +8,21 @@
  * - 카테고리 필터
  * - 상단 고정 공지 표시
  * - 클릭 시 아코디언 펼침
+ *
+ * ============================================================
+ * 레이아웃:
+ * ============================================================
+ * - Sidebar (데스크톱)
+ * - BottomNav (모바일)
+ * - MobileSearchHeader (모바일)
  */
 
 import { useState } from 'react';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { ANNOUNCEMENT_CATEGORY_INFO } from '@/types/admin';
 import type { AnnouncementCategory, Announcement } from '@/types/admin';
+import { Sidebar, BottomNav } from '@/components/layout';
+import { MobileSearchHeader } from '@/components/features/search';
 
 // ==================== 타입 정의 ====================
 
@@ -57,7 +66,7 @@ function AnnouncementCard({
               <span className="text-yellow-500" title="상단 고정">📌</span>
             )}
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-${categoryInfo.color}-100 text-${categoryInfo.color}-700 dark:bg-${categoryInfo.color}-900/30 dark:text-${categoryInfo.color}-400`}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full`}
               style={{
                 backgroundColor: categoryInfo.color === 'blue' ? '#dbeafe' :
                                  categoryInfo.color === 'green' ? '#dcfce7' :
@@ -113,6 +122,7 @@ export default function AnnouncementsPage() {
   const { announcements, isLoading, error } = useAnnouncements({ publishedOnly: true });
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeMenu] = useState('announcements');
 
   // 카테고리 필터링
   const filteredAnnouncements = filterCategory === 'all'
@@ -124,101 +134,105 @@ export default function AnnouncementsPage() {
     new Set(announcements.map((a) => a.category))
   );
 
-  // 로딩 상태
-  if (isLoading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* 헤더 스켈레톤 */}
-        <div className="mb-8">
-          <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-          <div className="w-48 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-        </div>
-        {/* 카드 스켈레톤 */}
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* 페이지 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          📢 공지사항
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          AlphaBoard의 새로운 소식과 업데이트를 확인하세요.
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
+      {/* 모바일 헤더 */}
+      <MobileSearchHeader title="공지사항" />
 
-      {/* 에러 표시 */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
-          {error}
-        </div>
-      )}
+      {/* Sidebar - 데스크톱 */}
+      <Sidebar activeMenu={activeMenu} />
 
-      {/* 카테고리 필터 */}
-      {availableCategories.length > 1 && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterCategory('all')}
-            className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-              filterCategory === 'all'
-                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            전체
-          </button>
-          {availableCategories.map((cat) => {
-            const info = ANNOUNCEMENT_CATEGORY_INFO[cat];
-            return (
+      {/* Bottom Navigation - 모바일 */}
+      <BottomNav activeMenu={activeMenu} />
+
+      {/* Main Content */}
+      <main className="md:pl-[72px] lg:pl-60 transition-all duration-300 pt-14 md:pt-0">
+        <div className="max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8">
+          {/* 페이지 헤더 */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              📢 공지사항
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              AlphaBoard의 새로운 소식과 업데이트를 확인하세요.
+            </p>
+          </div>
+
+          {/* 로딩 상태 */}
+          {isLoading && (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {/* 에러 표시 */}
+          {error && !isLoading && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* 카테고리 필터 */}
+          {!isLoading && availableCategories.length > 1 && (
+            <div className="mb-6 flex flex-wrap gap-2">
               <button
-                key={cat}
-                onClick={() => setFilterCategory(cat)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  filterCategory === cat
+                onClick={() => setFilterCategory('all')}
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  filterCategory === 'all'
                     ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                 }`}
               >
-                <span>{info.icon}</span>
-                <span>{info.label}</span>
+                전체
               </button>
-            );
-          })}
-        </div>
-      )}
+              {availableCategories.map((cat) => {
+                const info = ANNOUNCEMENT_CATEGORY_INFO[cat];
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterCategory(cat)}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                      filterCategory === cat
+                        ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <span>{info.icon}</span>
+                    <span>{info.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
-      {/* 공지사항 목록 */}
-      {filteredAnnouncements.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-4xl mb-4">📭</div>
-          <p className="text-gray-500 dark:text-gray-400">
-            {filterCategory === 'all'
-              ? '아직 공지사항이 없습니다.'
-              : '해당 카테고리의 공지사항이 없습니다.'}
-          </p>
+          {/* 공지사항 목록 */}
+          {!isLoading && filteredAnnouncements.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">📭</div>
+              <p className="text-gray-500 dark:text-gray-400">
+                {filterCategory === 'all'
+                  ? '아직 공지사항이 없습니다.'
+                  : '해당 카테고리의 공지사항이 없습니다.'}
+              </p>
+            </div>
+          ) : !isLoading && (
+            <div className="space-y-4">
+              {filteredAnnouncements.map((announcement) => (
+                <AnnouncementCard
+                  key={announcement.id}
+                  announcement={announcement}
+                  isExpanded={expandedId === announcement.id}
+                  onToggle={() => setExpandedId(
+                    expandedId === announcement.id ? null : announcement.id
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredAnnouncements.map((announcement) => (
-            <AnnouncementCard
-              key={announcement.id}
-              announcement={announcement}
-              isExpanded={expandedId === announcement.id}
-              onToggle={() => setExpandedId(
-                expandedId === announcement.id ? null : announcement.id
-              )}
-            />
-          ))}
-        </div>
-      )}
+      </main>
     </div>
   );
 }
