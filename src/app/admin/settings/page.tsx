@@ -230,7 +230,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* 설정 카드 그리드 */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 관리자 이메일 관리 */}
         <AdminEmailsCard
           adminEmails={adminEmails}
@@ -239,8 +239,34 @@ export default function AdminSettingsPage() {
           isLoading={isLoading}
         />
 
-        {/* 추후 추가될 설정 카드들을 위한 공간 */}
-        {/* 예: 사이트 설정, 콘텐츠 관리 등 */}
+        {/* 환영 팝업 관리 링크 */}
+        <a
+          href="/admin/settings/popup"
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors group"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                환영 팝업 관리
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                클로즈베타 환영 팝업 설정
+              </p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            첫 방문 사용자에게 표시되는 환영 팝업의 내용을 관리합니다.
+            제목, 설명, 이미지, 주의사항 등을 설정할 수 있습니다.
+          </p>
+        </a>
       </div>
     </div>
   );

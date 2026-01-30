@@ -20,7 +20,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider, ToastProvider, AuthProvider, PriceAlertProvider } from "@/components/providers";
-import { OfflineIndicator } from "@/components/common";
+import { OfflineIndicator, BetaWelcomeModal } from "@/components/common";
 
 // ==================== 메타데이터 설정 ====================
 
@@ -163,6 +163,7 @@ export default function RootLayout({
             <PriceAlertProvider>
               <ToastProvider />
               <OfflineIndicator />
+              <BetaWelcomeModal />
               {children}
             </PriceAlertProvider>
           </AuthProvider>
