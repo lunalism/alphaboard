@@ -597,3 +597,62 @@ article.prose p:has(> br:only-child) {
   min-height: 1.5em;
   display: block;
 }
+
+/* ========================================
+   Tiptap 이미지 리사이즈 스타일
+   ======================================== */
+
+/**
+ * 에디터 내부 이미지 기본 스타일
+ */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+/**
+ * 선택된 이미지 강조 (NodeView에서 처리하지만 fallback용)
+ */
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/**
+ * 리사이즈 중 선택 방지
+ */
+.ProseMirror .resizing {
+  user-select: none;
+}
+
+/**
+ * prose 내부 이미지 스타일 (렌더링 페이지)
+ * - 리사이즈된 이미지도 inline style로 width가 지정됨
+ */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/**
+ * 이미지 정렬 스타일
+ * Tiptap에서 정렬 속성이 추가될 경우 사용
+ */
+.prose img[style*="margin-left: auto"][style*="margin-right: auto"] {
+  display: block;
+}
+
+.prose img[style*="margin-left: auto"]:not([style*="margin-right: auto"]) {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.prose img[style*="margin-right: auto"]:not([style*="margin-left: auto"]) {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+}

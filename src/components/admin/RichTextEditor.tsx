@@ -25,8 +25,8 @@ import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
+import ResizableImage from './extensions/ResizableImage';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
@@ -432,14 +432,8 @@ export function RichTextEditor({
           class: 'text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300',
         },
       }),
-      // 이미지 확장
-      Image.configure({
-        inline: false,
-        allowBase64: false,
-        HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg my-4',
-        },
-      }),
+      // 이미지 확장 (리사이즈 기능 포함)
+      ResizableImage,
       // 텍스트 정렬 확장
       TextAlign.configure({
         types: ['heading', 'paragraph'],
