@@ -455,6 +455,11 @@ function KoreanAssetDetailPage({ ticker }: { ticker: string }) {
       return;
     }
 
+    // undefined면 추가 실패 (제한 초과 등) - 훅에서 이미 토스트 표시됨
+    if (result === undefined) {
+      return;
+    }
+
     // true면 추가됨, false면 제거됨
     if (result) {
       showSuccess(`${stockName}을(를) 관심종목에 추가했습니다`);
@@ -1007,6 +1012,11 @@ function USAssetDetailPage({ ticker }: { ticker: string }) {
       return;
     }
 
+    // undefined면 추가 실패 (제한 초과 등) - 훅에서 이미 토스트 표시됨
+    if (result === undefined) {
+      return;
+    }
+
     // true면 추가됨, false면 제거됨
     if (result) {
       showSuccess(`${stockName}을(를) 관심종목에 추가했습니다`);
@@ -1366,6 +1376,11 @@ export default function AssetDetailPage({ params }: { params: Promise<{ ticker: 
     // null이면 비로그인 상태 - 로그인 안내
     if (result === null) {
       showError('로그인이 필요합니다');
+      return;
+    }
+
+    // undefined면 추가 실패 (제한 초과 등) - 훅에서 이미 토스트 표시됨
+    if (result === undefined) {
       return;
     }
 

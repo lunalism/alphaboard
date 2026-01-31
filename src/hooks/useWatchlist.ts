@@ -276,8 +276,15 @@ export function useWatchlist() {
   // ========================================
   // 관심종목 토글 (추가/제거) - 로그인 필수
   // ========================================
+  /**
+   * 반환값:
+   * - null: 비로그인 상태 (로그인 필요)
+   * - true: 추가됨
+   * - false: 제거됨
+   * - undefined: 추가 실패 (제한 초과 등) - 훅에서 이미 토스트 표시됨
+   */
   const toggleWatchlist = useCallback(
-    async (item: Omit<WatchlistItem, 'addedAt' | 'id'>): Promise<boolean | null> => {
+    async (item: Omit<WatchlistItem, 'addedAt' | 'id'>): Promise<boolean | null | undefined> => {
       // 비로그인 시 null 반환 (로그인 필요 표시용)
       if (!user) {
         return null;
@@ -288,7 +295,11 @@ export function useWatchlist() {
         await removeFromWatchlist(item.ticker);
         return false; // 제거됨
       } else {
-        await addToWatchlist(item);
+        const success = await addToWatchlist(item);
+        if (!success) {
+          // 제한 초과 등으로 추가 실패 - showWatchlistLimitReached에서 이미 토스트 표시됨
+          return undefined;
+        }
         return true; // 추가됨
       }
     },
