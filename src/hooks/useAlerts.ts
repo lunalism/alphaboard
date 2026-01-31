@@ -28,6 +28,7 @@ import {
   AlertListResponse,
   AlertApiResponse,
 } from '@/types/priceAlert';
+import { canAddAlert, showAlertLimitReached } from '@/utils/subscription';
 
 /**
  * useAlerts 훅 반환 타입
@@ -79,7 +80,7 @@ export function useAlerts(): UseAlertsReturn {
    * isLoading: Firebase Auth 초기화 로딩 상태
    * - 로딩 중에는 아직 로그인 여부를 판단할 수 없음
    */
-  const { isLoggedIn, isLoading: isAuthLoading, isTestMode, userProfile } = useAuth();
+  const { isLoggedIn, isLoading: isAuthLoading, isTestMode, userProfile, isPremium } = useAuth();
 
   // 디버그 로그: 인증 상태 확인
   useEffect(() => {
@@ -143,7 +144,7 @@ export function useAlerts(): UseAlertsReturn {
   }, [fetchAlerts]);
 
   /**
-   * 새 알림 추가
+   * 새 알림 추가 (무료 회원 3개 제한)
    *
    * @param request 알림 생성 요청 데이터
    * @returns 성공 여부
@@ -161,6 +162,13 @@ export function useAlerts(): UseAlertsReturn {
       if (!isLoggedIn) {
         debug.log('[useAlerts] 비로그인 상태 - 알림 추가 실패');
         return { success: false, error: '로그인이 필요합니다' };
+      }
+
+      // 무료 회원 알림 제한 확인 (3개)
+      if (!canAddAlert(isPremium, alerts.length)) {
+        debug.log('[useAlerts] 무료 회원 알림 제한 초과');
+        showAlertLimitReached();
+        return { success: false, error: '무료 회원은 가격 알림을 최대 3개까지 등록할 수 있습니다' };
       }
 
       try {
@@ -189,7 +197,7 @@ export function useAlerts(): UseAlertsReturn {
         return { success: false, error: '네트워크 에러가 발생했습니다' };
       }
     },
-    [isLoggedIn, isAuthLoading, userProfile?.id]
+    [isLoggedIn, isAuthLoading, userProfile?.id, isPremium, alerts.length]
   );
 
   /**

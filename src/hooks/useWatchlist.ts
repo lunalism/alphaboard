@@ -53,6 +53,7 @@ import {
   type FirestoreWatchlistItem,
 } from '@/lib/firestore';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { canAddWatchlist, showWatchlistLimitReached } from '@/utils/subscription';
 
 // ==================== 타입 정의 ====================
 
@@ -128,7 +129,7 @@ export function useWatchlist() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // 인증 상태에서 사용자 정보 가져오기
-  const { user, isLoading: authLoading, isLoggedIn } = useAuth();
+  const { user, isLoading: authLoading, isLoggedIn, isPremium } = useAuth();
 
   // ========================================
   // Firestore에서 관심종목 불러오기
@@ -178,7 +179,7 @@ export function useWatchlist() {
   }, [user, authLoading, fetchFromFirestore]);
 
   // ========================================
-  // 관심종목 추가 (로그인 필수)
+  // 관심종목 추가 (로그인 필수, 무료 회원 3개 제한)
   // ========================================
   const addToWatchlist = useCallback(async (item: Omit<WatchlistItem, 'addedAt' | 'id'>): Promise<boolean> => {
     // 비로그인 시 실패 반환
@@ -189,6 +190,12 @@ export function useWatchlist() {
     // 이미 존재하는지 확인
     const exists = watchlist.some((w) => w.ticker === item.ticker);
     if (exists) {
+      return false;
+    }
+
+    // 무료 회원 관심종목 제한 확인 (3개)
+    if (!canAddWatchlist(isPremium, watchlist.length)) {
+      showWatchlistLimitReached();
       return false;
     }
 
@@ -216,7 +223,7 @@ export function useWatchlist() {
       console.error('[useWatchlist] 추가 에러:', err);
       return false;
     }
-  }, [watchlist, user]);
+  }, [watchlist, user, isPremium]);
 
   // ========================================
   // 관심종목 제거 (로그인 필수)

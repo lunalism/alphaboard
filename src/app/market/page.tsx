@@ -25,6 +25,8 @@ import { MarketRegion, MarketCategory, MarketType } from '@/types';
 import { debug } from '@/lib/debug';
 import { Sidebar, BottomNav } from '@/components/layout';
 import { MobileSearchHeader, GlobalSearch } from '@/components/features/search';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { canAccessMarket, showMarketAccessDenied, showPremiumRequired, type MarketCode } from '@/utils/subscription';
 import {
   MarketTabs,
   MarketTypeTabs,
@@ -83,6 +85,9 @@ function MarketContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 프리미엄 사용자 여부 확인
+  const { isPremium } = useAuth();
+
   // URL에서 초기값 읽기
   // 한국 서비스이므로 기본 국가를 한국(kr)으로 설정
   const initialType = (searchParams.get('type') as MarketType) || 'country';
@@ -133,8 +138,15 @@ function MarketContent() {
   /**
    * 1차 탭 변경 핸들러
    * 타입 변경 시 카테고리를 'all'로 초기화
+   * 글로벌 시장은 프리미엄 전용
    */
   const handleTypeChange = (type: MarketType) => {
+    // 글로벌 시장은 프리미엄 전용
+    if (type === 'global' && !isPremium) {
+      showPremiumRequired('글로벌 시장');
+      return;
+    }
+
     setActiveType(type);
     setActiveCategory('all');
     updateURL(type, activeMarket, 'all');
@@ -142,8 +154,15 @@ function MarketContent() {
 
   /**
    * 국가 탭 변경 핸들러
+   * 무료 사용자는 한국 시장만 접근 가능
    */
   const handleMarketChange = (market: MarketRegion) => {
+    // 시장 접근 권한 확인
+    if (!canAccessMarket(isPremium, market as MarketCode)) {
+      showMarketAccessDenied(market as MarketCode);
+      return;
+    }
+
     setActiveMarket(market);
     updateURL(activeType, market, activeCategory);
   };
@@ -775,7 +794,7 @@ function MarketContent() {
 
           {/* 1차 탭: 국가별 시장 / 글로벌 시장 */}
           <div className="mb-6">
-            <MarketTypeTabs activeType={activeType} onTypeChange={handleTypeChange} />
+            <MarketTypeTabs activeType={activeType} onTypeChange={handleTypeChange} isPremium={isPremium} />
           </div>
 
           {/* ========== 필터 탭 영역 ========== */}
@@ -793,7 +812,7 @@ function MarketContent() {
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               {/* 국가 탭 - 왼쪽 정렬 */}
               <div className="flex-shrink-0">
-                <MarketTabs activeMarket={activeMarket} onMarketChange={handleMarketChange} />
+                <MarketTabs activeMarket={activeMarket} onMarketChange={handleMarketChange} isPremium={isPremium} />
               </div>
               {/* 카테고리 탭 - 오른쪽 정렬 (데스크톱), 왼쪽 정렬 (모바일) */}
               <div className="flex-shrink-0">
