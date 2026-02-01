@@ -2,7 +2,7 @@
 
 <br />
 
-# ✦ Tickerbird
+# 🐦 Tickerbird
 
 <h3>
   <em>Smart Investing Starts Here</em>
@@ -10,25 +10,23 @@
 
 <br />
 
-**한국 · 미국 주식을 한눈에** | **AI 뉴스 요약** | **투자자 커뮤니티**
+**글로벌 주식을 한눈에** | **AI 뉴스 분석** | **실시간 시세** | **투자자 커뮤니티**
 
 <br />
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-tickerbird-blue)](https://tickerbird.vercel.app)
-[![Next.js](https://img.shields.io/badge/Next.js_15-000?logo=nextdotjs&logoColor=fff)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=000)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
-[![Tailwind](https://img.shields.io/badge/Tailwind_4-06B6D4?logo=tailwindcss&logoColor=fff)](https://tailwindcss.com/)
-[![Firebase](https://img.shields.io/badge/Firebase-DD2C00?logo=firebase&logoColor=fff)](https://firebase.google.com/)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-tickerbird.vercel.app-0ea5e9?style=for-the-badge)](https://tickerbird.vercel.app)
+
+[![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-DD2C00?style=flat-square&logo=firebase&logoColor=white)](https://firebase.google.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
 
 <br />
 
-<a href="#-features">Features</a> ·
-<a href="#-tech-stack">Tech Stack</a> ·
-<a href="#-getting-started">Getting Started</a> ·
-<a href="#-contributing">Contributing</a>
+[Features](#-features) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [License](#-license)
 
-<br />
 <br />
 
 </div>
@@ -37,11 +35,52 @@
 
 <br />
 
-## 📌 Overview
+## 📌 소개
 
 > **Tickerbird**는 글로벌 투자자를 위한 올인원 금융 플랫폼입니다.
 >
-> 실시간 주식 시세, AI 기반 뉴스 요약, 투자자 커뮤니티를 하나의 서비스에서 경험하세요.
+> 실시간 주식 시세, AI 기반 뉴스 분석, 가격 알림, 투자자 커뮤니티를 하나의 서비스에서 경험하세요.
+
+<br />
+
+### 💡 주요 특징
+
+| | 특징 | 설명 |
+|:---:|:---|:---|
+| 🌍 | **글로벌 시장** | 한국(KOSPI/KOSDAQ) + 미국(NYSE/NASDAQ) 실시간 시세 |
+| 🤖 | **AI 뉴스 분석** | Claude AI 기반 뉴스 요약 및 투자 관점 분석 |
+| ⚡ | **실시간 시세** | 한국투자증권 API 연동 실시간 가격 정보 |
+| 🔔 | **가격 알림** | 목표가 도달 시 알림 (상승/하락 조건 설정) |
+| 📱 | **PWA 지원** | 앱처럼 설치하여 사용 가능 |
+
+<br />
+
+## 🌐 지원 시장
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### 현재 지원
+
+🇰🇷 **한국** (KOSPI, KOSDAQ)
+
+🇺🇸 **미국** (NYSE, NASDAQ)
+
+</td>
+<td align="center" width="50%">
+
+### 예정
+
+🇯🇵 일본 (TSE)
+
+🇭🇰 홍콩 (HKEX)
+
+🇨🇳 중국 (SSE, SZSE)
+
+</td>
+</tr>
+</table>
 
 <br />
 
@@ -51,27 +90,7 @@
 <tr>
 <td width="50%" valign="top">
 
-### 🔐 Authentication
-Firebase 기반 안전한 인증
-- Google OAuth 2.0 로그인
-- 신규 사용자 온보딩 플로우
-- 프로필 & 설정 관리
-
-</td>
-<td width="50%" valign="top">
-
-### 📰 News & AI 분석
-AI 기반 글로벌 금융 뉴스
-- 카테고리별 뉴스 분류
-- **Claude AI 요약** 기능
-- 투자 관점 분석 (호재/악재/중립)
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 💹 Real-time Quotes
+### 💹 실시간 시세
 한국투자증권 API 연동
 - 🇰🇷 KOSPI/KOSDAQ 실시간 시세
 - 🇺🇸 NYSE/NASDAQ 실시간 시세
@@ -81,42 +100,44 @@ AI 기반 글로벌 금융 뉴스
 </td>
 <td width="50%" valign="top">
 
-### 👥 Community
-투자자 소통 공간
-- 게시글/댓글 CRUD
-- 좋아요 & 종목 태그 (`$AAPL`)
-- 태그 종목 실시간 시세 카드
+### 📰 AI 뉴스 분석
+Claude AI 기반 뉴스 서비스
+- 카테고리별 뉴스 분류
+- **AI 요약** 기능
+- 투자 관점 분석 (호재/악재/중립)
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### ⭐ Watchlist
+### ⭐ 관심종목
 나만의 관심종목 관리
 - 종목 검색 & 추가
 - 실시간 시세 모니터링
 - 드래그로 순서 변경
+- 🔒 프리미엄: 무제한 종목
 
 </td>
 <td width="50%" valign="top">
 
-### 🔔 Price Alerts
+### 🔔 가격 알림
 목표가 알림 시스템
 - 종목별 목표가 설정
 - 상승/하락 조건 선택
 - 알림 히스토리
+- 🔒 프리미엄: 무제한 알림
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### 🔍 Search
-빠른 종목 검색
-- 한글/영문 종목명 검색
-- 티커 코드 검색
-- 검색 결과 즉시 이동
+### 👥 커뮤니티
+투자자 소통 공간
+- 게시글/댓글 CRUD
+- 좋아요 & 종목 태그 (`$AAPL`)
+- 태그 종목 실시간 시세 카드
 
 </td>
 <td width="50%" valign="top">
@@ -132,18 +153,19 @@ AI 기반 글로벌 금융 뉴스
 <tr>
 <td width="50%" valign="top">
 
-### 🌙 Dark Mode
-눈 편한 다크 테마
-- 시스템 테마 자동 감지
-- 수동 테마 전환
+### 🔍 종목 검색
+빠른 종목 검색
+- 한글/영문 종목명 검색
+- 티커 코드 검색
+- 검색 결과 즉시 이동
 
 </td>
 <td width="50%" valign="top">
 
-### 📱 PWA 지원
-앱처럼 사용 가능
-- 홈 화면에 추가
-- 오프라인 기본 지원
+### 🌙 다크 모드 & PWA
+편의 기능
+- 시스템 테마 자동 감지
+- 홈 화면에 추가 (PWA)
 - 반응형 디자인
 
 </td>
@@ -152,94 +174,99 @@ AI 기반 글로벌 금융 뉴스
 
 <br />
 
+## 💎 요금제
+
+| 기능 | Free | Premium |
+|:---|:---:|:---:|
+| 지원 시장 | 🇰🇷 한국만 | 🇰🇷🇺🇸 한국+미국 |
+| 관심종목 | 5개 | 무제한 |
+| 가격 알림 | 3개 | 무제한 |
+| AI 뉴스 분석 | ✅ | ✅ |
+| 커뮤니티 | ✅ | ✅ |
+
+<br />
+
 ## 🛠 Tech Stack
 
 <div align="center">
 
-|  |  |  |  |  |  |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="https://skillicons.dev/icons?i=nextjs" width="48" height="48" alt="Next.js" /><br />**Next.js 16** | <img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" /><br />**React 19** | <img src="https://skillicons.dev/icons?i=ts" width="48" height="48" alt="TypeScript" /><br />**TypeScript** | <img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" /><br />**Tailwind 4** | <img src="https://skillicons.dev/icons?i=firebase" width="48" height="48" alt="Firebase" /><br />**Firebase** | <img src="https://skillicons.dev/icons?i=supabase" width="48" height="48" alt="Supabase" /><br />**Supabase** |
+| Frontend | Backend | API | Deploy |
+|:---:|:---:|:---:|:---:|
+| Next.js 16 | Firebase | 한국투자증권 | Vercel |
+| React 19 | Firestore | Claude AI | |
+| TypeScript 5 | Supabase | | |
+| Tailwind CSS 4 | Upstash Redis | | |
 
 </div>
 
 <br />
 
 <details>
-<summary><strong>📦 Dependencies</strong></summary>
+<summary><strong>📦 주요 의존성</strong></summary>
 
 <br />
 
 | Category | Technologies |
 |:---------|:-------------|
-| **Framework** | Next.js 15, React 19 |
+| **Framework** | Next.js 16, React 19 |
 | **Language** | TypeScript 5 |
-| **Styling** | Tailwind CSS 4 |
-| **Auth & DB** | Firebase (Auth, Firestore) |
-| **Charts** | Recharts 3 |
+| **Styling** | Tailwind CSS 4, @tailwindcss/typography |
+| **Auth & DB** | Firebase (Auth, Firestore), Supabase |
+| **State** | Zustand |
+| **Charts** | Recharts 3, Lightweight Charts |
+| **Editor** | Tiptap |
 | **AI** | Claude API (Anthropic) |
 | **Image** | Cloudinary |
 | **Stock API** | 한국투자증권 OpenAPI |
+| **Cache** | Upstash Redis |
 | **Deploy** | Vercel |
 
 </details>
 
 <br />
 
-## 📸 Screenshots
-
-<div align="center">
-
-|  |  |
-|:---:|:---:|
-| **📰 News Feed**<br /><br />*Coming Soon* | **💹 Market**<br /><br />*Coming Soon* |
-| **👥 Community**<br /><br />*Coming Soon* | **📊 Stock Detail**<br /><br />*Coming Soon* |
-
-</div>
-
-<br />
-
 ## 🚀 Getting Started
 
-### Prerequisites
+### 요구사항
 
 - Node.js 18.17+
 - npm / yarn / pnpm
 
-### Installation
+### 설치
 
 ```bash
-# 1. Clone
+# 1. 클론
 git clone https://github.com/lunalism/tickerbird.git
 cd tickerbird
 
-# 2. Install dependencies
+# 2. 의존성 설치
 npm install
 
-# 3. Setup environment variables
+# 3. 환경변수 설정
 cp .env.local.example .env.local
 
-# 4. Run dev server
+# 4. 개발 서버 실행
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+[http://localhost:3000](http://localhost:3000) 에서 확인
 
 <br />
 
 <details>
-<summary><strong>⚙️ Environment Variables</strong></summary>
+<summary><strong>⚙️ 환경변수</strong></summary>
 
 <br />
 
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
 # Firebase
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Korea Investment API
 KIS_APP_KEY=your_kis_app_key
@@ -247,13 +274,17 @@ KIS_APP_SECRET=your_kis_app_secret
 
 # Claude AI
 ANTHROPIC_API_KEY=your_anthropic_api_key
+
+# Upstash Redis
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ```
 
 </details>
 
 <br />
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 src/
@@ -279,90 +310,6 @@ src/
 
 <br />
 
-## 🔌 API Reference
-
-<details>
-<summary><strong>Stock Price API</strong></summary>
-
-<br />
-
-```http
-GET /api/kis/stock/price?symbol=005930
-```
-
-```json
-{
-  "stockName": "삼성전자",
-  "currentPrice": 75000,
-  "changePercent": 1.35
-}
-```
-
-```http
-GET /api/kis/overseas/stock/price?symbol=AAPL
-```
-
-```json
-{
-  "name": "Apple Inc",
-  "nameKr": "애플",
-  "currentPrice": 185.50,
-  "changePercent": 2.15
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Community API</strong></summary>
-
-<br />
-
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| `GET` | `/api/community/posts` | 게시글 목록 |
-| `POST` | `/api/community/posts` | 게시글 작성 |
-| `GET` | `/api/community/posts/[id]` | 게시글 상세 |
-| `PUT` | `/api/community/posts/[id]` | 게시글 수정 |
-| `DELETE` | `/api/community/posts/[id]` | 게시글 삭제 |
-| `GET` | `/api/community/posts/[id]/comments` | 댓글 목록 |
-| `POST` | `/api/community/posts/[id]/comments` | 댓글 작성 |
-
-</details>
-
-<br />
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-```bash
-# Fork & Clone
-git checkout -b feature/amazing-feature
-git commit -m "feat: Add amazing feature"
-git push origin feature/amazing-feature
-# Open Pull Request
-```
-
-<details>
-<summary><strong>Commit Convention</strong></summary>
-
-<br />
-
-| Type | Description |
-|:-----|:------------|
-| `feat` | 새로운 기능 |
-| `fix` | 버그 수정 |
-| `docs` | 문서 수정 |
-| `style` | 포맷팅 |
-| `refactor` | 리팩토링 |
-| `test` | 테스트 |
-| `chore` | 기타 변경 |
-
-</details>
-
-<br />
-
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
@@ -376,6 +323,10 @@ This project is licensed under the [MIT License](LICENSE).
 <br />
 
 **Built with ❤️ for Global Investors**
+
+<br />
+
+🌐 [tickerbird.vercel.app](https://tickerbird.vercel.app)
 
 <br />
 
