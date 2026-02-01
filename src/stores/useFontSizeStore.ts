@@ -95,7 +95,7 @@ export const FONT_SIZE_LABELS: Record<FontSizeLevel, string> = {
 /**
  * 폰트 크기 관리 Zustand Store
  *
- * localStorage에 'alphaboard-font-size' 키로 저장되어
+ * localStorage에 'tickerbird-font-size' 키로 저장되어
  * 새로고침해도 설정이 유지됩니다.
  *
  * @example
@@ -128,7 +128,7 @@ export const useFontSizeStore = create<FontSizeState>()(
       resetFontSize: () => set({ titleSize: 'md', bodySize: 'md' }),
     }),
     {
-      name: 'alphaboard-font-size', // localStorage 키
+      name: 'tickerbird-font-size', // localStorage 키
     }
   )
 );

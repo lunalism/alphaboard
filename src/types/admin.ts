@@ -33,7 +33,7 @@ export interface AdminUserProfile {
   id: string;                              // Firebase UID
   email: string;                           // 이메일
   displayName?: string;                    // Google 표시명
-  nickname?: string;                       // AlphaBoard 닉네임
+  nickname?: string;                       // Tickerbird 닉네임
   photoURL?: string;                       // 프로필 사진 URL
   avatarId?: string;                       // 선택한 아바타 ID
 

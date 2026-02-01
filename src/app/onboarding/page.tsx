@@ -141,7 +141,7 @@ export default function OnboardingPage() {
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">🎉</div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              AlphaBoard에 오신 것을
+              Tickerbird에 오신 것을
             </h1>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               환영합니다!

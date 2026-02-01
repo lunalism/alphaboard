@@ -60,7 +60,7 @@ export function useCommunity(options: UseCommunityOptions = {}) {
    * Firebase Auth 사용자 정보를 헤더에 포함
    *
    * 사용자 이름(닉네임) 우선순위:
-   * 1. userProfile.nickname (AlphaBoard 닉네임)
+   * 1. userProfile.nickname (Tickerbird 닉네임)
    * 2. userProfile.displayName (프로필에서 가져온 이름)
    * 3. user.displayName (Firebase Auth의 Google 이름)
    * 4. user.email의 @ 앞부분

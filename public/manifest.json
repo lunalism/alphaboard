@@ -1,6 +1,6 @@
 {
-  "name": "AlphaBoard - 글로벌 투자 정보 플랫폼",
-  "short_name": "AlphaBoard",
+  "name": "Tickerbird - 글로벌 투자 정보 플랫폼",
+  "short_name": "Tickerbird",
   "description": "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼",
   "start_url": "/",
   "display": "standalone",

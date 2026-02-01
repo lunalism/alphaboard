@@ -39,8 +39,8 @@ interface WelcomePopupSettings {
 const DEFAULT_SETTINGS: WelcomePopupSettings = {
   enabled: true,
   title: '환영합니다! 🎉',
-  subtitle: 'AlphaBoard 클로즈베타',
-  description: '글로벌 투자 정보 플랫폼 AlphaBoard의 클로즈베타에 참여해주셔서 감사합니다!',
+  subtitle: 'Tickerbird 클로즈베타',
+  description: '글로벌 투자 정보 플랫폼 Tickerbird의 클로즈베타에 참여해주셔서 감사합니다!',
   imageUrl: null,
   notices: [
     '서비스가 불안정할 수 있습니다',
@@ -278,7 +278,7 @@ export default function PopupSettingsPage() {
                   value={settings.subtitle}
                   onChange={(e) => setSettings(prev => ({ ...prev, subtitle: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="AlphaBoard 클로즈베타"
+                  placeholder="Tickerbird 클로즈베타"
                 />
               </div>
 

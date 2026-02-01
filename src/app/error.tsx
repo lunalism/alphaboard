@@ -82,7 +82,7 @@ export default function Error({ error, reset }: ErrorProps) {
             문제가 계속되나요?
           </p>
           <a
-            href="mailto:support@alphaboard.co.kr"
+            href="mailto:support@tickerbird.co.kr"
             className="inline-flex items-center gap-2 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

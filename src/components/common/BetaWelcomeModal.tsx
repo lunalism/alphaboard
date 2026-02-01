@@ -43,8 +43,8 @@ interface WelcomePopupSettings {
 const DEFAULT_SETTINGS: WelcomePopupSettings = {
   enabled: true,
   title: '환영합니다! 🎉',
-  subtitle: 'AlphaBoard 클로즈베타',
-  description: '글로벌 투자 정보 플랫폼 AlphaBoard의 클로즈베타에 참여해주셔서 감사합니다!',
+  subtitle: 'Tickerbird 클로즈베타',
+  description: '글로벌 투자 정보 플랫폼 Tickerbird의 클로즈베타에 참여해주셔서 감사합니다!',
   imageUrl: null,
   notices: [
     '서비스가 불안정할 수 있습니다',
@@ -56,7 +56,7 @@ const DEFAULT_SETTINGS: WelcomePopupSettings = {
 };
 
 /** localStorage 키 */
-const STORAGE_KEY = 'alphaboard_beta_welcome_seen';
+const STORAGE_KEY = 'tickerbird_beta_welcome_seen';
 
 // ============================================
 // 메인 컴포넌트

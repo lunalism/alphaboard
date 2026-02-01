@@ -64,7 +64,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
 
   // 사용자 정보 (우선순위: nickname > displayName > 기본값)
-  // AlphaBoard 닉네임이 있으면 최우선, 없으면 Google displayName 사용
+  // Tickerbird 닉네임이 있으면 최우선, 없으면 Google displayName 사용
   const userName = userProfile?.nickname || userProfile?.displayName || '사용자';
   const userAvatar = userProfile?.avatarUrl;
 
@@ -80,9 +80,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         <div className="px-4 py-4 mb-2">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-lg">A</span>
+              <span className="text-white font-bold text-lg">T</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white hidden lg:block">AlphaBoard</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white hidden lg:block">Tickerbird</span>
           </Link>
         </div>
 

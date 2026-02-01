@@ -110,7 +110,7 @@ async function fetchNewsContent(url: string): Promise<string> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AlphaBoard/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Tickerbird/1.0)',
       },
     });
 

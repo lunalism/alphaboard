@@ -32,7 +32,7 @@
  * {
  *   success: true,
  *   url: "https://res.cloudinary.com/...",
- *   path: "alphaboard/announcements/...",
+ *   path: "tickerbird/announcements/...",
  *   filename: "original-filename.jpg"
  * }
  *
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     // ========================================
     // 4. 업로드 준비
     // ========================================
-    const folder = `alphaboard/${contentType}`;
+    const folder = `tickerbird/${contentType}`;
     const originalFilename = file.name || 'image';
     const safeFilename = originalFilename
       .replace(/\.[^/.]+$/, '')

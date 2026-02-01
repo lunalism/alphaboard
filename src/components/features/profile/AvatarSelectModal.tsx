@@ -162,7 +162,7 @@ export function AvatarSelectModal({
 
         {/* 안내 문구 */}
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          AlphaBoard에서 사용할 아바타를 선택하세요
+          Tickerbird에서 사용할 아바타를 선택하세요
         </p>
 
         {/* 아바타 그리드 (5열 x 2행) */}

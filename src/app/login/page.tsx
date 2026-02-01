@@ -126,7 +126,7 @@ export default function LoginPage() {
       // 테스트 로그인
       testLogin({
         id: 'test-user-id',
-        email: 'test@alphaboard.dev',
+        email: 'test@tickerbird.dev',
         name: '테스트 사용자',
       });
       // 메인 페이지로 이동
@@ -149,9 +149,9 @@ export default function LoginPage() {
             {/* Logo & Title */}
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-2xl">A</span>
+                <span className="text-white font-bold text-2xl">T</span>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">AlphaBoard</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Tickerbird</h1>
               <p className="text-gray-500 dark:text-gray-400">글로벌 투자 정보 플랫폼</p>
             </div>
 

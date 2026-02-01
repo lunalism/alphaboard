@@ -134,7 +134,7 @@ export function EditProfileModal({
 
     try {
       // Firestore users/{uid} 문서 업데이트
-      // nickname 필드를 업데이트 (AlphaBoard 전용 닉네임)
+      // nickname 필드를 업데이트 (Tickerbird 전용 닉네임)
       const userDocRef = doc(db, 'users', userId);
       await setDoc(userDocRef, {
         nickname: name.trim(),

@@ -59,13 +59,13 @@ function drawIcon(size) {
   ctx.fillStyle = gradient;
   ctx.fill();
 
-  // "A" 문자 그리기 (AlphaBoard의 A)
+  // "T" 문자 그리기 (Tickerbird의 T)
   const fontSize = size * 0.55;
   ctx.font = `bold ${fontSize}px "SF Pro Display", "Helvetica Neue", Arial, sans-serif`;
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('A', size / 2, size / 2 + size * 0.02);
+  ctx.fillText('T', size / 2, size / 2 + size * 0.02);
 
   // 작은 차트 아이콘 (오른쪽 아래)
   if (size >= 96) {

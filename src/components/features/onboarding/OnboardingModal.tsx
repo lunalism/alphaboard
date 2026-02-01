@@ -3,11 +3,11 @@
 /**
  * OnboardingModal - 신규 사용자 온보딩 모달
  *
- * 신규 사용자가 처음 로그인 시 AlphaBoard 전용 닉네임과 아바타를 설정하는 모달입니다.
+ * 신규 사용자가 처음 로그인 시 Tickerbird 전용 닉네임과 아바타를 설정하는 모달입니다.
  * 이 모달은 필수 입력이므로 배경 클릭이나 ESC 키로 닫을 수 없습니다.
  *
  * 기능:
- * - AlphaBoard 전용 닉네임 입력
+ * - Tickerbird 전용 닉네임 입력
  * - Google displayName을 기본값으로 제공 (수정 가능)
  * - 실시간 유효성 검사 (2-20자, 한글/영문/숫자만)
  * - 10종 동물 아바타 선택 (5x2 그리드)
@@ -162,7 +162,7 @@ export function OnboardingModal() {
       // - needsOnboarding 상태 업데이트 → 모달 자동 닫힘
       await completeOnboarding(nickname.trim(), selectedAvatar);
 
-      showSuccess('환영합니다!', `${nickname.trim()}님, AlphaBoard에 오신 것을 환영합니다!`);
+      showSuccess('환영합니다!', `${nickname.trim()}님, Tickerbird에 오신 것을 환영합니다!`);
     } catch (err) {
       console.error('[OnboardingModal] 온보딩 완료 에러:', err);
       showError('오류가 발생했습니다', '잠시 후 다시 시도해주세요');
@@ -207,7 +207,7 @@ export function OnboardingModal() {
 
           {/* 설명 */}
           <p className="text-gray-600 dark:text-gray-300">
-            AlphaBoard에서 사용할 닉네임을 설정해주세요
+            Tickerbird에서 사용할 닉네임을 설정해주세요
           </p>
         </div>
 

@@ -6,7 +6,7 @@
  * ============================================================
  * 접근 방법:
  * ============================================================
- * https://alphaboard-psi.vercel.app/robots.txt
+ * https://tickerbird.vercel.app/robots.txt
  *
  * ============================================================
  * 규칙 설명:
@@ -28,7 +28,7 @@
 import { MetadataRoute } from 'next';
 
 /** 사이트 기본 URL */
-const BASE_URL = 'https://alphaboard-psi.vercel.app';
+const BASE_URL = 'https://tickerbird.vercel.app';
 
 /**
  * robots.txt 생성 함수

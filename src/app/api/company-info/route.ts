@@ -239,7 +239,7 @@ async function fetchWikipediaInfo(
     const koResponse = await fetch(koUrl, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'AlphaBoard/1.0 (https://alphaboard.vercel.app; contact@alphaboard.com)',
+        'User-Agent': 'Tickerbird/1.0 (https://tickerbird.vercel.app; contact@tickerbird.com)',
       },
       signal: controller.signal,
     });
@@ -267,7 +267,7 @@ async function fetchWikipediaInfo(
     const enResponse = await fetch(enUrl, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'AlphaBoard/1.0 (https://alphaboard.vercel.app; contact@alphaboard.com)',
+        'User-Agent': 'Tickerbird/1.0 (https://tickerbird.vercel.app; contact@tickerbird.com)',
       },
       signal: controller.signal,
     });

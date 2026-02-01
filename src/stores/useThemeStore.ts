@@ -42,7 +42,7 @@ export const THEME_ICONS: Record<ThemeMode, string> = {
 /**
  * 테마 관리 Zustand Store
  *
- * localStorage에 'alphaboard-theme' 키로 저장되어
+ * localStorage에 'tickerbird-theme' 키로 저장되어
  * 새로고침해도 설정이 유지됩니다.
  *
  * @example
@@ -74,7 +74,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: 'alphaboard-theme', // localStorage 키
+      name: 'tickerbird-theme', // localStorage 키
     }
   )
 );

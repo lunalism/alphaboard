@@ -25,18 +25,18 @@ import { OfflineIndicator, BetaWelcomeModal } from "@/components/common";
 // ==================== 메타데이터 설정 ====================
 
 export const metadata: Metadata = {
-  // 기본 메타데이터
-  title: "AlphaBoard - 글로벌 투자 정보 플랫폼",
+  // 기본 메타데이터 (Tickerbird 브랜딩)
+  title: "Tickerbird - 글로벌 투자 정보 플랫폼",
   description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼. 주식, ETF, 암호화폐, 환율, 원자재 정보를 한눈에.",
 
   // 앱 이름 (PWA)
-  applicationName: "AlphaBoard",
+  applicationName: "Tickerbird",
 
   // 키워드
   keywords: ["투자", "주식", "ETF", "암호화폐", "환율", "원자재", "금융", "트레이딩"],
 
   // 작성자
-  authors: [{ name: "AlphaBoard Team" }],
+  authors: [{ name: "Tickerbird Team" }],
 
   // 생성기
   generator: "Next.js",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "AlphaBoard",
+    title: "Tickerbird",
   },
 
   // 포맷 감지 비활성화
@@ -75,28 +75,28 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  // Open Graph
+  // Open Graph (Tickerbird 브랜딩)
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "https://alphaboard-psi.vercel.app",
-    siteName: "AlphaBoard",
-    title: "AlphaBoard - 글로벌 투자 정보 플랫폼",
+    url: "https://tickerbird.vercel.app",
+    siteName: "Tickerbird",
+    title: "Tickerbird - 글로벌 투자 정보 플랫폼",
     description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼",
     images: [
       {
         url: "/icons/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "AlphaBoard 로고",
+        alt: "Tickerbird 로고",
       },
     ],
   },
 
-  // Twitter Card
+  // Twitter Card (Tickerbird 브랜딩)
   twitter: {
     card: "summary_large_image",
-    title: "AlphaBoard - 글로벌 투자 정보 플랫폼",
+    title: "Tickerbird - 글로벌 투자 정보 플랫폼",
     description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼",
     images: ["/icons/icon-512x512.png"],
   },
@@ -151,7 +151,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="AlphaBoard" />
+        <meta name="apple-mobile-web-app-title" content="Tickerbird" />
 
         {/* Microsoft 타일 */}
         <meta name="msapplication-TileColor" content="#3b82f6" />

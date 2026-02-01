@@ -55,7 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return;
 
     try {
-      const stored = localStorage.getItem('alphaboard-theme');
+      const stored = localStorage.getItem('tickerbird-theme');
       if (stored) {
         const parsed = JSON.parse(stored);
         const storedTheme = parsed.state?.theme as ThemeMode;

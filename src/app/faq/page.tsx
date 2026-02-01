@@ -118,7 +118,7 @@ export default function FAQPage() {
               ❓ 자주 묻는 질문
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              AlphaBoard 이용에 관해 자주 묻는 질문과 답변입니다.
+              Tickerbird 이용에 관해 자주 묻는 질문과 답변입니다.
             </p>
           </div>
 

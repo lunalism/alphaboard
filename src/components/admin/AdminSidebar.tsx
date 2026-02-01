@@ -94,10 +94,10 @@ export function AdminSidebar() {
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
         <Link href="/admin/dashboard" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
+            <span className="text-white font-bold text-lg">T</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">AlphaBoard</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">Tickerbird</span>
             <span className="block text-xs text-gray-500 dark:text-gray-400">관리자</span>
           </div>
         </Link>

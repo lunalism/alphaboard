@@ -43,7 +43,7 @@ import { debug } from '@/lib/debug';
  * Firebase Auth의 User 객체와 Firestore users 컬렉션 데이터를 조합
  *
  * 닉네임 표시 우선순위:
- * 1. nickname (AlphaBoard 전용 닉네임) - 최우선
+ * 1. nickname (Tickerbird 전용 닉네임) - 최우선
  * 2. displayName (Google 이름) - 닉네임 없을 때 fallback
  * 3. email의 @ 앞부분 - 둘 다 없을 때 fallback
  *
@@ -57,7 +57,7 @@ export interface UserProfile {
   id: string;
   // 사용자 이메일
   email: string;
-  // AlphaBoard 전용 닉네임 (온보딩에서 설정, 최우선 표시)
+  // Tickerbird 전용 닉네임 (온보딩에서 설정, 최우선 표시)
   nickname: string;
   // Google displayName (참고용, 닉네임 없을 때 fallback)
   displayName: string;
@@ -77,7 +77,7 @@ export interface UserProfile {
  */
 const TEST_USER_PROFILE: UserProfile = {
   id: 'test-user-id',
-  email: 'test@alphaboard.com',
+  email: 'test@tickerbird.com',
   nickname: '테스트 유저',
   displayName: 'Test User',
   avatarUrl: undefined,
@@ -155,7 +155,7 @@ const createUserProfile = (
 ): UserProfile => ({
   id: user.uid,
   email: user.email || '',
-  // AlphaBoard 닉네임 (온보딩에서 설정, 없으면 빈 문자열)
+  // Tickerbird 닉네임 (온보딩에서 설정, 없으면 빈 문자열)
   nickname: firestoreData?.nickname || '',
   // Google displayName (fallback용)
   displayName: user.displayName || user.email?.split('@')[0] || '사용자',
@@ -339,7 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Firestore users/{uid} 문서에 nickname, avatarId, onboardingCompleted 저장
    * 온보딩 모달에서 호출
    *
-   * @param nickname - AlphaBoard 전용 닉네임
+   * @param nickname - Tickerbird 전용 닉네임
    * @param avatarId - 선택한 아바타 ID (예: 'bull', 'bear' 등)
    */
   const completeOnboarding = useCallback(async (nickname: string, avatarId: string) => {

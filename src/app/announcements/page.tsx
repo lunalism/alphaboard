@@ -362,7 +362,7 @@ export default function AnnouncementsPage() {
                 📢 공지사항
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                AlphaBoard의 새로운 소식
+                Tickerbird의 새로운 소식
               </p>
             </div>
 
@@ -455,7 +455,7 @@ export default function AnnouncementsPage() {
               📢 공지사항
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              AlphaBoard의 새로운 소식과 업데이트
+              Tickerbird의 새로운 소식과 업데이트
             </p>
           </div>
 

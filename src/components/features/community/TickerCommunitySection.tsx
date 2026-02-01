@@ -164,7 +164,7 @@ export function TickerCommunitySection({
    * 댓글 작성 시 사용자 정보를 서버에 전달하기 위해 필요
    *
    * 사용자 이름(닉네임) 우선순위:
-   * 1. userProfile.nickname (AlphaBoard 닉네임)
+   * 1. userProfile.nickname (Tickerbird 닉네임)
    * 2. userProfile.displayName (Google displayName, Firestore 저장됨)
    * 3. user.displayName (Firebase Auth)
    * 4. userProfile.email 앞부분

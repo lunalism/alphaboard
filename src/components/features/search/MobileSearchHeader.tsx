@@ -19,7 +19,7 @@ interface MobileSearchHeaderProps {
   title?: string;
 }
 
-export function MobileSearchHeader({ title = "AlphaBoard" }: MobileSearchHeaderProps) {
+export function MobileSearchHeader({ title = "Tickerbird" }: MobileSearchHeaderProps) {
   const router = useRouter();
 
   /**
@@ -35,7 +35,7 @@ export function MobileSearchHeader({ title = "AlphaBoard" }: MobileSearchHeaderP
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">A</span>
+            <span className="text-white font-bold text-sm">T</span>
           </div>
           <span className="font-semibold text-gray-900 dark:text-white">
             {title}

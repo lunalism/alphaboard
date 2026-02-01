@@ -288,7 +288,7 @@ export default function AdminDashboardPage() {
           대시보드
         </h1>
         <p className="text-gray-500 dark:text-gray-400">
-          AlphaBoard 운영 현황을 한눈에 확인하세요.
+          Tickerbird 운영 현황을 한눈에 확인하세요.
         </p>
       </div>
 

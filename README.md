@@ -2,7 +2,7 @@
 
 <br />
 
-# ✦ AlphaBoard
+# ✦ Tickerbird
 
 <h3>
   <em>Smart Investing Starts Here</em>
@@ -14,7 +14,7 @@
 
 <br />
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-alphaboard-blue)](https://alphaboard-psi.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-tickerbird-blue)](https://tickerbird.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js_15-000?logo=nextdotjs&logoColor=fff)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=000)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
@@ -39,7 +39,7 @@
 
 ## 📌 Overview
 
-> **AlphaBoard**는 글로벌 투자자를 위한 올인원 금융 플랫폼입니다.
+> **Tickerbird**는 글로벌 투자자를 위한 올인원 금융 플랫폼입니다.
 >
 > 실시간 주식 시세, AI 기반 뉴스 요약, 투자자 커뮤니티를 하나의 서비스에서 경험하세요.
 
@@ -209,8 +209,8 @@ AI 기반 글로벌 금융 뉴스
 
 ```bash
 # 1. Clone
-git clone https://github.com/lunalism/alphaboard.git
-cd alphaboard
+git clone https://github.com/lunalism/tickerbird.git
+cd tickerbird
 
 # 2. Install dependencies
 npm install

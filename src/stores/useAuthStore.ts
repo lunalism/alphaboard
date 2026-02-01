@@ -145,7 +145,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       // localStorage 키
-      name: 'alphaboard-auth',
+      name: 'tickerbird-auth',
       // 저장할 필드 선택 (민감 정보 제외 가능)
       partialize: (state) => ({
         isLoggedIn: state.isLoggedIn,

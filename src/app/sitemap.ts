@@ -6,7 +6,7 @@
  * ============================================================
  * 접근 방법:
  * ============================================================
- * https://alphaboard-psi.vercel.app/sitemap.xml
+ * https://tickerbird.vercel.app/sitemap.xml
  *
  * ============================================================
  * changeFrequency 설명:
@@ -33,7 +33,7 @@
 import { MetadataRoute } from 'next';
 
 /** 사이트 기본 URL */
-const BASE_URL = 'https://alphaboard-psi.vercel.app';
+const BASE_URL = 'https://tickerbird.vercel.app';
 
 /**
  * 사이트맵 생성 함수

@@ -38,7 +38,7 @@ export function Footer({ className = '' }: FooterProps) {
 
           {/* 저작권 표시 */}
           <div className="text-sm text-gray-400 dark:text-gray-500">
-            &copy; {currentYear} AlphaBoard. All rights reserved.
+            &copy; {currentYear} Tickerbird. All rights reserved.
           </div>
         </div>
       </div>
