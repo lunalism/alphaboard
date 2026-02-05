@@ -318,6 +318,9 @@ export function useAdminUserDetail(userId: string): UseAdminUserDetailReturn {
         plan: (data.plan as PlanType) || 'free',
         planExpiresAt: data.planExpiresAt || undefined,
         isBanned: data.isBanned || false,
+        bannedAt: data.bannedAt || undefined,
+        banReason: data.banReason || undefined,
+        bannedBy: data.bannedBy || undefined,
         onboardingCompleted: data.onboardingCompleted || false,
         createdAt: data.createdAt || Timestamp.now(),
         updatedAt: data.updatedAt || undefined,
@@ -359,7 +362,20 @@ export function useAdminUserDetail(userId: string): UseAdminUserDetailReturn {
 
         if (updates.plan !== undefined) updateData.plan = updates.plan;
         if (updates.planExpiresAt !== undefined) updateData.planExpiresAt = updates.planExpiresAt;
-        if (updates.isBanned !== undefined) updateData.isBanned = updates.isBanned;
+        if (updates.isBanned !== undefined) {
+          updateData.isBanned = updates.isBanned;
+          if (updates.isBanned) {
+            // 밴 시 메타데이터 저장
+            if (updates.bannedAt !== undefined) updateData.bannedAt = updates.bannedAt;
+            if (updates.banReason !== undefined) updateData.banReason = updates.banReason;
+            if (updates.bannedBy !== undefined) updateData.bannedBy = updates.bannedBy;
+          } else {
+            // 밴 해제 시 메타데이터 제거
+            updateData.bannedAt = null;
+            updateData.banReason = null;
+            updateData.bannedBy = null;
+          }
+        }
         if (updates.role !== undefined) updateData.role = updates.role;
 
         await setDoc(userDocRef, updateData, { merge: true });

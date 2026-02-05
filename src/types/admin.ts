@@ -42,6 +42,9 @@ export interface AdminUserProfile {
   plan: PlanType;                          // 요금제
   planExpiresAt?: Timestamp;               // 구독 만료일 (null이면 무제한)
   isBanned: boolean;                       // 정지 여부
+  bannedAt?: Timestamp;                    // 정지 일시
+  banReason?: string;                      // 정지 사유
+  bannedBy?: string;                       // 정지 처리 관리자 이메일
 
   // 메타데이터
   onboardingCompleted?: boolean;           // 온보딩 완료 여부
@@ -195,6 +198,18 @@ export interface UpdateFAQDTO {
   category?: FAQCategory;
   order?: number;
   isPublished?: boolean;
+}
+
+// ============================================
+// 베타 화이트리스트 (betaWhitelist 컬렉션)
+// ============================================
+
+/** 베타 화이트리스트 항목 (문서 ID = 이메일) */
+export interface BetaWhitelistEntry {
+  email: string;                           // 이메일 (문서 ID와 동일)
+  addedAt: Timestamp;                      // 등록일
+  addedBy: string;                         // 등록한 관리자 이메일
+  note?: string;                           // 메모
 }
 
 // ============================================

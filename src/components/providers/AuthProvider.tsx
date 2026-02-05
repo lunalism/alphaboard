@@ -16,6 +16,7 @@
  */
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -88,6 +89,8 @@ interface AuthContextType {
   isPremium: boolean;
   // 온보딩 필요 여부 (nickname이 없거나 onboardingCompleted가 false)
   needsOnboarding: boolean;
+  // 접근 거부 사유 (banned: 정지됨, not-invited: 화이트리스트 미등록)
+  accessDeniedReason: 'banned' | 'not-invited' | null;
   // Google 로그인 실행
   signInWithGoogle: () => Promise<void>;
   // 로그아웃 실행
@@ -119,6 +122,10 @@ interface FirestoreUserData {
   avatarId?: string; // 선택한 아바타 ID
   onboardingCompleted?: boolean;
   plan?: 'free' | 'premium'; // 요금제
+  isBanned?: boolean;
+  bannedAt?: unknown;
+  banReason?: string;
+  bannedBy?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
 }
@@ -169,6 +176,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   // 온보딩 필요 여부 (nickname이 없거나 onboardingCompleted가 false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  // 접근 거부 사유
+  const [accessDeniedReason, setAccessDeniedReason] = useState<'banned' | 'not-invited' | null>(null);
+
+  // 라우팅
+  const pathname = usePathname();
+  const router = useRouter();
 
   /**
    * Firestore users 컬렉션에서 사용자 프로필 조회
@@ -182,8 +195,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const checkUserProfile = useCallback(async (firebaseUser: FirebaseUser): Promise<boolean> => {
     setIsProfileLoading(true);
+    setAccessDeniedReason(null);
+
     try {
-      // Firestore에서 users/{uid} 문서 조회
+      const email = firebaseUser.email || '';
+
+      // 1. 화이트리스트 체크 (BETA_MODE=closed일 때만)
+      if (process.env.NEXT_PUBLIC_BETA_MODE === 'closed') {
+        try {
+          const whitelistDoc = await getDoc(doc(db, 'betaWhitelist', email));
+          if (!whitelistDoc.exists()) {
+            // 관리자 이메일 바이패스 체크
+            const adminSettingsDoc = await getDoc(doc(db, 'adminSettings', 'config'));
+            const adminEmails: string[] = adminSettingsDoc.exists()
+              ? (adminSettingsDoc.data()?.adminEmails || [])
+              : [];
+
+            if (!adminEmails.includes(email)) {
+              debug.log('[AuthProvider] 화이트리스트 미등록:', email);
+              setAccessDeniedReason('not-invited');
+              await firebaseSignOut(auth);
+              return false;
+            }
+          }
+        } catch (err) {
+          // Firestore 읽기 실패 시 기본 차단 (보안 우선)
+          console.error('[AuthProvider] 화이트리스트 체크 에러:', err);
+          setAccessDeniedReason('not-invited');
+          await firebaseSignOut(auth);
+          return false;
+        }
+      }
+
+      // 2. Firestore에서 users/{uid} 문서 조회
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userDocRef);
 
@@ -207,14 +251,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true;
       }
 
-      // 문서가 있으면 onboardingCompleted와 nickname 확인
+      // 문서가 있으면 데이터 확인
       const userData = userDoc.data() as FirestoreUserData;
 
-      // 온보딩 완료 여부 확인: onboardingCompleted가 true이고 nickname이 있으면 완료
+      // 3. 밴 체크
+      if (userData.isBanned === true) {
+        debug.log('[AuthProvider] 밴 감지:', email);
+        setAccessDeniedReason('banned');
+        await firebaseSignOut(auth);
+        return false;
+      }
+
+      // 4. 온보딩 완료 여부 확인
       const isOnboardingComplete = userData.onboardingCompleted === true && !!userData.nickname;
 
       if (!isOnboardingComplete) {
-        // 온보딩 미완료
         debug.log('[AuthProvider] 온보딩 필요 - nickname 또는 onboardingCompleted 없음');
         setNeedsOnboarding(true);
         setUserProfile(createUserProfile(firebaseUser, userData));
@@ -227,9 +278,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserProfile(createUserProfile(firebaseUser, userData));
       return false;
     } catch (err) {
-      // 에러 시에도 기본 프로필 설정 (앱 사용은 가능하게)
+      // 에러 시 보안 우선 - 접근 차단
       console.error('[AuthProvider] 프로필 조회 에러:', err);
-      setUserProfile(createUserProfile(firebaseUser, null));
+      setAccessDeniedReason('not-invited');
+      await firebaseSignOut(auth);
       return false;
     } finally {
       setIsProfileLoading(false);
@@ -426,6 +478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setUserProfile(null);
         setNeedsOnboarding(false);
+        // accessDeniedReason은 유지 (리다이렉트용)
       }
 
       // 초기 로딩 완료
@@ -451,10 +504,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     debug.log('[AuthProvider] 사용자 프로필 실시간 감지 시작:', user.uid);
 
     const userDocRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
+    const unsubscribe = onSnapshot(userDocRef, async (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data() as FirestoreUserData;
         debug.log('[AuthProvider] 프로필 업데이트 감지:', { plan: userData.plan });
+
+        // 실시간 밴 감지
+        if (userData.isBanned === true) {
+          debug.log('[AuthProvider] 실시간 밴 감지');
+          setAccessDeniedReason('banned');
+          await firebaseSignOut(auth);
+          return;
+        }
 
         // 프로필 업데이트 (plan 변경 등 반영)
         setUserProfile(createUserProfile(user, userData));
@@ -473,6 +534,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
+  // 접근 거부 시 리다이렉트
+  useEffect(() => {
+    const excluded = ['/banned', '/not-invited', '/login'];
+    if (accessDeniedReason && !excluded.includes(pathname)) {
+      router.replace(accessDeniedReason === 'banned' ? '/banned' : '/not-invited');
+    }
+  }, [accessDeniedReason, pathname, router]);
+
   // 로그인 여부
   const isLoggedIn = !!user;
 
@@ -488,6 +557,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoggedIn,
     isPremium,
     needsOnboarding,
+    accessDeniedReason,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
     refreshProfile,

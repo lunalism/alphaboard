@@ -15,7 +15,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Timestamp } from 'firebase/firestore';
 import { useAdminUserDetail } from '@/hooks/useAdminUsers';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { PLAN_INFO, type PlanType } from '@/types/admin';
 import { toast } from 'sonner';
 
@@ -43,6 +45,7 @@ export default function AdminUserDetailPage() {
   const router = useRouter();
   const userId = params.id as string;
 
+  const { userProfile } = useAuth();
   const { user, isLoading, isSaving, error, updateUser, refreshUser } = useAdminUserDetail(userId);
 
   // 수정 가능한 필드 상태
@@ -51,6 +54,13 @@ export default function AdminUserDetailPage() {
 
   // 수정 여부 확인
   const [hasChanges, setHasChanges] = useState(false);
+
+  // 밴 사유 모달
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banReason, setBanReason] = useState('');
+
+  // 밴 해제 확인 모달
+  const [showUnbanModal, setShowUnbanModal] = useState(false);
 
   // 사용자 정보 로드 시 상태 초기화
   useEffect(() => {
@@ -61,20 +71,19 @@ export default function AdminUserDetailPage() {
     }
   }, [user]);
 
-  // 변경 감지
+  // 변경 감지 (밴 상태는 모달로 처리하므로 plan만 감지)
   useEffect(() => {
     if (user) {
-      const changed = editedPlan !== user.plan || editedIsBanned !== user.isBanned;
+      const changed = editedPlan !== user.plan;
       setHasChanges(changed);
     }
-  }, [editedPlan, editedIsBanned, user]);
+  }, [editedPlan, user]);
 
-  // 저장 핸들러
+  // 저장 핸들러 (요금제만)
   const handleSave = async () => {
     try {
       await updateUser({
         plan: editedPlan,
-        isBanned: editedIsBanned,
       });
       toast.success('사용자 정보가 저장되었습니다.');
       setHasChanges(false);
@@ -83,11 +92,44 @@ export default function AdminUserDetailPage() {
     }
   };
 
+  // 밴 처리 핸들러
+  const handleBan = async () => {
+    if (!banReason.trim()) {
+      toast.error('정지 사유를 입력해주세요.');
+      return;
+    }
+    try {
+      await updateUser({
+        isBanned: true,
+        bannedAt: Timestamp.now(),
+        banReason: banReason.trim(),
+        bannedBy: userProfile?.email || '',
+      });
+      toast.success('계정이 정지되었습니다.');
+      setShowBanModal(false);
+      setBanReason('');
+    } catch (err) {
+      toast.error('정지 처리에 실패했습니다.');
+    }
+  };
+
+  // 밴 해제 핸들러
+  const handleUnban = async () => {
+    try {
+      await updateUser({
+        isBanned: false,
+      });
+      toast.success('계정 정지가 해제되었습니다.');
+      setShowUnbanModal(false);
+    } catch (err) {
+      toast.error('정지 해제에 실패했습니다.');
+    }
+  };
+
   // 취소 핸들러 (변경 사항 되돌리기)
   const handleCancel = () => {
     if (user) {
       setEditedPlan(user.plan);
-      setEditedIsBanned(user.isBanned);
       setHasChanges(false);
     }
   };
@@ -243,28 +285,54 @@ export default function AdminUserDetailPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 계정 상태
               </label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setEditedIsBanned(false)}
-                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                    !editedIsBanned
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-2 ring-green-500'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  정상
-                </button>
-                <button
-                  onClick={() => setEditedIsBanned(true)}
-                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                    editedIsBanned
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-2 ring-red-500'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  정지
-                </button>
-              </div>
+              {user.isBanned ? (
+                <div className="space-y-3">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                    <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-1">정지됨</p>
+                    {user.banReason && (
+                      <p className="text-sm text-red-600 dark:text-red-300 mb-1">
+                        사유: {user.banReason}
+                      </p>
+                    )}
+                    {user.bannedAt?.toDate && (
+                      <p className="text-xs text-red-500 dark:text-red-400">
+                        {new Date(user.bannedAt.toDate()).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    )}
+                    {user.bannedBy && (
+                      <p className="text-xs text-red-500 dark:text-red-400">
+                        처리자: {user.bannedBy}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowUnbanModal(true)}
+                    disabled={isSaving}
+                    className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    정지 해제
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                    <p className="text-sm font-medium text-green-700 dark:text-green-400">정상</p>
+                  </div>
+                  <button
+                    onClick={() => setShowBanModal(true)}
+                    disabled={isSaving}
+                    className="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                  >
+                    계정 정지
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 저장/취소 버튼 */}
@@ -299,6 +367,77 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 밴 사유 입력 모달 */}
+      {showBanModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              계정 정지
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              <span className="font-medium text-gray-900 dark:text-white">{user.email}</span> 계정을 정지합니다.
+            </p>
+            <textarea
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+              placeholder="정지 사유를 입력하세요..."
+              rows={3}
+              className="w-full px-4 py-2.5 mb-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowBanModal(false);
+                  setBanReason('');
+                }}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleBan}
+                disabled={isSaving || !banReason.trim()}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? '처리 중...' : '정지'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 밴 해제 확인 모달 */}
+      {showUnbanModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              정지 해제
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <span className="font-medium text-gray-900 dark:text-white">{user.email}</span> 계정의 정지를 해제하시겠습니까?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowUnbanModal(false)}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUnban}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? '처리 중...' : '해제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
