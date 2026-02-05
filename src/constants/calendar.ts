@@ -242,6 +242,49 @@ export const calendarEvents: CalendarEvent[] = [
     description: '주간 신규실업수당 청구건수',
   },
 
+
+  // 글로벌 중앙은행 (2025년 1월)
+  {
+    id: 'boj-jan-2025',
+    date: '2025-01-24',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jan-2025',
+    date: '2025-01-30',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-jan-2025',
+    date: '2025-01-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-jan-2025',
+    date: '2025-01-29',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
+  },
+
   // 기업이벤트
   {
     id: 'ces-2025',
@@ -535,6 +578,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2024년 4분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2025년 2월)
+  {
+    id: 'boe-feb-2025',
+    date: '2025-02-06',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-feb-2025',
+    date: '2025-02-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-feb-2025',
+    date: '2025-02-18',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
   // 기업이벤트
   {
     id: 'mwc-2025',
@@ -818,6 +894,59 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2024년 4분기 GDP 확정치(3차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2025년 3월)
+  {
+    id: 'boj-mar-2025',
+    date: '2025-03-14',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-mar-2025',
+    date: '2025-03-06',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-mar-2025',
+    date: '2025-03-20',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-mar-2025',
+    date: '2025-03-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-mar-2025',
+    date: '2025-03-12',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
+  },
+
   // 암호화폐
   {
     id: 'eth-pectra-2025',
@@ -1046,6 +1175,59 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 4월)
+  {
+    id: 'boj-apr-2025',
+    date: '2025-04-25',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-apr-2025',
+    date: '2025-04-17',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-apr-2025',
+    date: '2025-04-21',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-apr-2025',
+    date: '2025-04-01',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-apr-2025',
+    date: '2025-04-16',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 실적발표
@@ -1379,6 +1561,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 1분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2025년 5월)
+  {
+    id: 'boe-may-2025',
+    date: '2025-05-08',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-may-2025',
+    date: '2025-05-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-may-2025',
+    date: '2025-05-20',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
   // 기업이벤트
   {
     id: 'google-io-2025',
@@ -1608,6 +1823,59 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2025년 1분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 6월)
+  {
+    id: 'boj-jun-2025',
+    date: '2025-06-13',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jun-2025',
+    date: '2025-06-05',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-jun-2025',
+    date: '2025-06-19',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-jun-2025',
+    date: '2025-06-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-jun-2025',
+    date: '2025-06-04',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -1849,6 +2117,59 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 7월)
+  {
+    id: 'boj-jul-2025',
+    date: '2025-07-25',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jul-2025',
+    date: '2025-07-17',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-jul-2025',
+    date: '2025-07-21',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-jul-2025',
+    date: '2025-07-08',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-jul-2025',
+    date: '2025-07-30',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -2184,6 +2505,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 2분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2025년 8월)
+  {
+    id: 'boe-aug-2025',
+    date: '2025-08-07',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-aug-2025',
+    date: '2025-08-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-aug-2025',
+    date: '2025-08-12',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
 // ==================== 2025년 9월 ====================
   // 경제지표
   {
@@ -2401,6 +2755,69 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2025년 2분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 9월)
+  {
+    id: 'boj-sep-2025',
+    date: '2025-09-19',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-sep-2025',
+    date: '2025-09-11',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-sep-2025',
+    date: '2025-09-18',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-sep-2025',
+    date: '2025-09-22',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-sep-2025',
+    date: '2025-09-30',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-sep-2025',
+    date: '2025-09-03',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -2632,6 +3049,49 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 10월)
+  {
+    id: 'boj-oct-2025',
+    date: '2025-10-31',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-oct-2025',
+    date: '2025-10-30',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-oct-2025',
+    date: '2025-10-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-oct-2025',
+    date: '2025-10-29',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 실적발표
@@ -2965,6 +3425,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 3분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2025년 11월)
+  {
+    id: 'boe-nov-2025',
+    date: '2025-11-06',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-nov-2025',
+    date: '2025-11-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-nov-2025',
+    date: '2025-11-04',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
 // ==================== 2025년 12월 ====================
   // 경제지표
   {
@@ -3182,6 +3675,69 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2025년 3분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2025년 12월)
+  {
+    id: 'boj-dec-2025',
+    date: '2025-12-19',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-dec-2025',
+    date: '2025-12-18',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-dec-2025',
+    date: '2025-12-18',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-dec-2025',
+    date: '2025-12-22',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-dec-2025',
+    date: '2025-12-09',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-dec-2025',
+    date: '2025-12-10',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
@@ -3415,6 +3971,49 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 1월)
+  {
+    id: 'boj-jan-2026',
+    date: '2026-01-23',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jan-2026',
+    date: '2026-01-29',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-jan-2026',
+    date: '2026-01-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-jan-2026',
+    date: '2026-01-28',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -3710,6 +4309,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 4분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2026년 2월)
+  {
+    id: 'boe-feb-2026',
+    date: '2026-02-05',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-feb-2026',
+    date: '2026-02-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-feb-2026',
+    date: '2026-02-17',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
   // 기업이벤트
   {
     id: 'mwc-2026',
@@ -3993,6 +4625,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 4분기 GDP 확정치(3차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2026년 3월)
+  {
+    id: 'boj-mar-2026',
+    date: '2026-03-13',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-mar-2026',
+    date: '2026-03-05',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-mar-2026',
+    date: '2026-03-19',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-mar-2026',
+    date: '2026-03-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-mar-2026',
+    date: '2026-03-31',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-mar-2026',
+    date: '2026-03-11',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
+  },
+
 // ==================== 2026년 4월 ====================
   // 경제지표
   {
@@ -4210,6 +4905,49 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 4월)
+  {
+    id: 'boj-apr-2026',
+    date: '2026-04-24',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-apr-2026',
+    date: '2026-04-16',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-apr-2026',
+    date: '2026-04-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-apr-2026',
+    date: '2026-04-15',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 실적발표
@@ -4543,6 +5281,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 1분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2026년 5월)
+  {
+    id: 'boe-may-2026',
+    date: '2026-05-07',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-may-2026',
+    date: '2026-05-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-may-2026',
+    date: '2026-05-19',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
   // 기업이벤트
   {
     id: 'google-io-2026',
@@ -4772,6 +5543,59 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2026년 1분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 6월)
+  {
+    id: 'boj-jun-2026',
+    date: '2026-06-12',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jun-2026',
+    date: '2026-06-04',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-jun-2026',
+    date: '2026-06-18',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-jun-2026',
+    date: '2026-06-22',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-jun-2026',
+    date: '2026-06-03',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -5013,6 +5837,59 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 7월)
+  {
+    id: 'boj-jul-2026',
+    date: '2026-07-24',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-jul-2026',
+    date: '2026-07-16',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-jul-2026',
+    date: '2026-07-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-jul-2026',
+    date: '2026-07-07',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-jul-2026',
+    date: '2026-07-29',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -5348,6 +6225,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 2분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2026년 8월)
+  {
+    id: 'boe-aug-2026',
+    date: '2026-08-06',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-aug-2026',
+    date: '2026-08-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-aug-2026',
+    date: '2026-08-11',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
 // ==================== 2026년 9월 ====================
   // 경제지표
   {
@@ -5565,6 +6475,69 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2026년 2분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 9월)
+  {
+    id: 'boj-sep-2026',
+    date: '2026-09-18',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-sep-2026',
+    date: '2026-09-10',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-sep-2026',
+    date: '2026-09-17',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-sep-2026',
+    date: '2026-09-21',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-sep-2026',
+    date: '2026-09-29',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-sep-2026',
+    date: '2026-09-02',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 기업이벤트
@@ -5796,6 +6769,49 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'low',
     time: '22:30',
     description: '주간 신규실업수당 청구건수',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 10월)
+  {
+    id: 'boj-oct-2026',
+    date: '2026-10-30',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-oct-2026',
+    date: '2026-10-29',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'pboc-oct-2026',
+    date: '2026-10-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'boc-oct-2026',
+    date: '2026-10-28',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
   // 실적발표
@@ -6129,6 +7145,39 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 3분기 GDP 잠정치(2차 추정)',
   },
 
+
+  // 글로벌 중앙은행 (2026년 11월)
+  {
+    id: 'boe-nov-2026',
+    date: '2026-11-05',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-nov-2026',
+    date: '2026-11-20',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-nov-2026',
+    date: '2026-11-03',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+
 // ==================== 2026년 12월 ====================
   // 경제지표
   {
@@ -6346,6 +7395,69 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'medium',
     time: '22:30',
     description: '2026년 3분기 GDP 확정치(3차 추정)',
+  },
+
+
+  // 글로벌 중앙은행 (2026년 12월)
+  {
+    id: 'boj-dec-2026',
+    date: '2026-12-18',
+    title: 'BOJ 금리결정',
+    category: 'institution',
+    countryCode: 'jp',
+    importance: 'high',
+    time: '12:00',
+    description: '일본은행 금융정책결정회합',
+  },
+  {
+    id: 'ecb-dec-2026',
+    date: '2026-12-17',
+    title: 'ECB 금리결정',
+    category: 'institution',
+    countryCode: 'eu',
+    importance: 'high',
+    time: '22:15',
+    description: '유럽중앙은행 통화정책 결정',
+  },
+  {
+    id: 'boe-dec-2026',
+    date: '2026-12-17',
+    title: 'BOE 금리결정',
+    category: 'institution',
+    countryCode: 'gb',
+    importance: 'high',
+    time: '21:00',
+    description: '영란은행 기준금리 결정',
+  },
+  {
+    id: 'pboc-dec-2026',
+    date: '2026-12-21',
+    title: 'PBOC LPR 발표',
+    category: 'institution',
+    countryCode: 'cn',
+    importance: 'high',
+    time: '10:15',
+    description: '중국인민은행 대출우대금리(LPR) 발표',
+  },
+  {
+    id: 'rba-dec-2026',
+    date: '2026-12-08',
+    title: 'RBA 금리결정',
+    category: 'institution',
+    countryCode: 'au',
+    importance: 'high',
+    time: '12:30',
+    description: '호주중앙은행 기준금리 결정',
+  },
+  {
+    id: 'boc-dec-2026',
+    date: '2026-12-09',
+    title: 'BOC 금리결정',
+    category: 'institution',
+    countryCode: 'ca',
+    importance: 'high',
+    time: '00:00',
+    description: '캐나다은행 기준금리 결정',
   },
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
