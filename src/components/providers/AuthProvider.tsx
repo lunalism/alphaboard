@@ -184,62 +184,111 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   /**
-   * Firestore users 컬렉션에서 사용자 프로필 조회
+   * 사용자 프로필 조회 및 접근 제어
    *
-   * - 프로필이 없으면 신규 사용자 → Firestore에 기본 정보 생성
-   * - onboardingCompleted가 false이거나 nickname이 없으면 온보딩 필요
-   * - 로그인 시 호출되어 온보딩 필요 여부 판별
+   * 로그인 직후 호출되어 다음 순서로 접근 권한을 검증합니다:
+   *
+   * ① isBanned 체크 → 정지된 계정이면 /banned으로 리다이렉트
+   * ② 관리자 여부 확인 → adminSettings에 등록된 관리자면 화이트리스트 체크 건너뜀
+   * ③ 화이트리스트 체크 → BETA_MODE=closed이고 관리자가 아닌 경우에만 실행
+   * ④ 온보딩 체크 → 닉네임/아바타 미설정 시 온보딩 모달 표시
+   * ⑤ 메인 페이지 → 모든 체크 통과 시 정상 접근
    *
    * @param firebaseUser - Firebase Auth User 객체
    * @returns 온보딩 필요 여부 (true: 필요, false: 불필요)
    */
   const checkUserProfile = useCallback(async (firebaseUser: FirebaseUser): Promise<boolean> => {
     setIsProfileLoading(true);
+    // 이전 접근 거부 상태 초기화
     setAccessDeniedReason(null);
 
     try {
       const email = firebaseUser.email || '';
 
-      // 1. 화이트리스트 체크 (BETA_MODE=closed일 때만)
-      if (process.env.NEXT_PUBLIC_BETA_MODE === 'closed') {
+      // ──────────────────────────────────────────────
+      // ① isBanned 체크: Firestore users/{uid} 문서에서 정지 여부 확인
+      //    - 정지된 계정은 다른 체크를 수행하지 않고 즉시 차단
+      //    - 신규 사용자(문서 없음)는 밴 상태가 아니므로 통과
+      // ──────────────────────────────────────────────
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      // 기존 사용자인 경우 밴 상태 우선 확인
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as FirestoreUserData;
+
+        if (userData.isBanned === true) {
+          debug.log('[AuthProvider] ① 밴 감지 - 접근 차단:', email);
+          setAccessDeniedReason('banned');
+          await firebaseSignOut(auth);
+          return false;
+        }
+      }
+
+      // ──────────────────────────────────────────────
+      // ② 관리자 여부 확인: adminSettings/config 문서에서 관리자 이메일 목록 조회
+      //    - 관리자는 화이트리스트에 등록되지 않아도 접근 가능
+      //    - 관리자 바이패스 플래그를 설정하여 ③번 체크를 건너뜀
+      // ──────────────────────────────────────────────
+      let isAdmin = false;
+      try {
+        const adminSettingsDoc = await getDoc(doc(db, 'adminSettings', 'config'));
+        const adminEmails: string[] = adminSettingsDoc.exists()
+          ? (adminSettingsDoc.data()?.adminEmails || [])
+          : [];
+        isAdmin = adminEmails.includes(email);
+
+        if (isAdmin) {
+          debug.log('[AuthProvider] ② 관리자 확인 - 화이트리스트 체크 건너뜀:', email);
+        }
+      } catch (err) {
+        // 관리자 설정 조회 실패 시 관리자가 아닌 것으로 처리
+        console.error('[AuthProvider] ② 관리자 설정 조회 에러:', err);
+      }
+
+      // ──────────────────────────────────────────────
+      // ③ 화이트리스트 체크: 클로즈드 베타 모드에서 초대된 사용자만 허용
+      //    - NEXT_PUBLIC_BETA_MODE가 'closed'인 경우에만 실행
+      //    - 관리자(②에서 확인)는 이 체크를 건너뜀
+      //    - betaWhitelist/{email} 문서가 있으면 초대된 사용자
+      //    - 문서가 없으면 미초대 → /not-invited로 리다이렉트
+      // ──────────────────────────────────────────────
+      if (!isAdmin && process.env.NEXT_PUBLIC_BETA_MODE === 'closed') {
         try {
           const whitelistDoc = await getDoc(doc(db, 'betaWhitelist', email));
-          if (!whitelistDoc.exists()) {
-            // 관리자 이메일 바이패스 체크
-            const adminSettingsDoc = await getDoc(doc(db, 'adminSettings', 'config'));
-            const adminEmails: string[] = adminSettingsDoc.exists()
-              ? (adminSettingsDoc.data()?.adminEmails || [])
-              : [];
 
-            if (!adminEmails.includes(email)) {
-              debug.log('[AuthProvider] 화이트리스트 미등록:', email);
-              setAccessDeniedReason('not-invited');
-              await firebaseSignOut(auth);
-              return false;
-            }
+          if (!whitelistDoc.exists()) {
+            debug.log('[AuthProvider] ③ 화이트리스트 미등록 - 접근 차단:', email);
+            setAccessDeniedReason('not-invited');
+            await firebaseSignOut(auth);
+            return false;
           }
+
+          debug.log('[AuthProvider] ③ 화이트리스트 확인 완료:', email);
         } catch (err) {
-          // Firestore 읽기 실패 시 기본 차단 (보안 우선)
-          console.error('[AuthProvider] 화이트리스트 체크 에러:', err);
+          // Firestore 읽기 실패 시 보안 우선 차단
+          // (네트워크 에러 등으로 화이트리스트 확인 불가 → 차단)
+          console.error('[AuthProvider] ③ 화이트리스트 체크 에러:', err);
           setAccessDeniedReason('not-invited');
           await firebaseSignOut(auth);
           return false;
         }
       }
 
-      // 2. Firestore에서 users/{uid} 문서 조회
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
+      // ──────────────────────────────────────────────
+      // ④ 온보딩 체크: 신규 사용자 또는 온보딩 미완료 사용자 처리
+      //    - users/{uid} 문서가 없으면 신규 사용자 → 문서 생성 + 온보딩
+      //    - onboardingCompleted가 false이거나 nickname이 없으면 온보딩 필요
+      // ──────────────────────────────────────────────
       if (!userDoc.exists()) {
-        // 문서가 없으면 신규 사용자 → Firestore에 기본 정보 저장
-        debug.log('[AuthProvider] 신규 사용자 - Firestore에 프로필 생성');
+        // 신규 사용자 → Firestore에 기본 프로필 문서 생성
+        debug.log('[AuthProvider] ④ 신규 사용자 - Firestore에 프로필 생성');
         const initialData: FirestoreUserData = {
           email: firebaseUser.email || '',
           displayName: firebaseUser.displayName || '',
           photoURL: firebaseUser.photoURL || '',
-          nickname: '', // 닉네임은 온보딩에서 설정
-          onboardingCompleted: false, // 온보딩 미완료 상태로 생성
+          nickname: '',                // 닉네임은 온보딩에서 설정
+          onboardingCompleted: false,  // 온보딩 미완료 상태로 생성
         };
         await setDoc(userDocRef, {
           ...initialData,
@@ -251,34 +300,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true;
       }
 
-      // 문서가 있으면 데이터 확인
+      // 기존 사용자 - 온보딩 완료 여부 확인
       const userData = userDoc.data() as FirestoreUserData;
-
-      // 3. 밴 체크
-      if (userData.isBanned === true) {
-        debug.log('[AuthProvider] 밴 감지:', email);
-        setAccessDeniedReason('banned');
-        await firebaseSignOut(auth);
-        return false;
-      }
-
-      // 4. 온보딩 완료 여부 확인
       const isOnboardingComplete = userData.onboardingCompleted === true && !!userData.nickname;
 
       if (!isOnboardingComplete) {
-        debug.log('[AuthProvider] 온보딩 필요 - nickname 또는 onboardingCompleted 없음');
+        debug.log('[AuthProvider] ④ 온보딩 필요 - nickname 또는 onboardingCompleted 없음');
         setNeedsOnboarding(true);
         setUserProfile(createUserProfile(firebaseUser, userData));
         return true;
       }
 
-      // 기존 사용자 - 온보딩 완료됨
-      debug.log('[AuthProvider] 기존 사용자:', userData.nickname);
+      // ──────────────────────────────────────────────
+      // ⑤ 모든 체크 통과 → 정상 접근 (메인 페이지)
+      // ──────────────────────────────────────────────
+      debug.log('[AuthProvider] ⑤ 모든 체크 통과 - 정상 접근:', userData.nickname);
       setNeedsOnboarding(false);
       setUserProfile(createUserProfile(firebaseUser, userData));
       return false;
     } catch (err) {
-      // 에러 시 보안 우선 - 접근 차단
+      // 예상치 못한 에러 발생 시 보안 우선 차단
       console.error('[AuthProvider] 프로필 조회 에러:', err);
       setAccessDeniedReason('not-invited');
       await firebaseSignOut(auth);
