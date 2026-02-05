@@ -97,6 +97,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2025년 1월)
+  {
+    id: 'kr-export-jan-2025',
+    date: '2025-01-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '12월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jan-2025',
+    date: '2025-01-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '12월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jan-2025',
+    date: '2025-01-15',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '12월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jan-2025',
+    date: '2025-01-28',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '1월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jan-2025',
+    date: '2025-01-30',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '12월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q4-2024',
+    date: '2025-01-23',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2024년 4분기 GDP 성장률 속보치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2025년 1월)
   {
     id: 'us-ism-services-jan-2025',
@@ -327,6 +390,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2025년 2월)
+  {
+    id: 'kr-export-feb-2025',
+    date: '2025-02-03',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '1월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-feb-2025',
+    date: '2025-02-07',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '1월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-feb-2025',
+    date: '2025-02-12',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '1월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-feb-2025',
+    date: '2025-02-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '2월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-feb-2025',
+    date: '2025-02-27',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '1월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2025년 2월)
   {
     id: 'us-ism-services-feb-2025',
@@ -547,6 +663,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2025년 3월)
+  {
+    id: 'kr-export-mar-2025',
+    date: '2025-03-03',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '2월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-mar-2025',
+    date: '2025-03-07',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '2월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-mar-2025',
+    date: '2025-03-12',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '2월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-mar-2025',
+    date: '2025-03-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '3월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-mar-2025',
+    date: '2025-03-28',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '2월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q4-2024',
+    date: '2025-03-06',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2024년 4분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2025년 3월)
   {
     id: 'us-ism-services-mar-2025',
@@ -723,6 +902,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 1분기 GDP 속보치',
   },
 
+
+
+  // 추가 한국 경제지표 (2025년 4월)
+  {
+    id: 'kr-export-apr-2025',
+    date: '2025-04-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '3월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-apr-2025',
+    date: '2025-04-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '3월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-apr-2025',
+    date: '2025-04-16',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '3월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-apr-2025',
+    date: '2025-04-28',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '4월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-apr-2025',
+    date: '2025-04-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '3월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q1-2025',
+    date: '2025-04-24',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 1분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2025년 4월)
   {
@@ -992,6 +1234,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2025년 5월)
+  {
+    id: 'kr-export-may-2025',
+    date: '2025-05-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '4월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-may-2025',
+    date: '2025-05-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '4월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-may-2025',
+    date: '2025-05-14',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '4월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-may-2025',
+    date: '2025-05-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '5월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-may-2025',
+    date: '2025-05-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '4월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2025년 5월)
   {
     id: 'us-ism-services-may-2025',
@@ -1160,6 +1455,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2025년 6월)
+  {
+    id: 'kr-export-jun-2025',
+    date: '2025-06-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '5월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jun-2025',
+    date: '2025-06-09',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '5월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jun-2025',
+    date: '2025-06-11',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '5월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jun-2025',
+    date: '2025-06-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '6월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jun-2025',
+    date: '2025-06-27',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '5월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q1-2025',
+    date: '2025-06-05',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 1분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2025년 6월)
   {
     id: 'us-ism-services-jun-2025',
@@ -1308,7 +1666,7 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     id: 'bok-jul-2025',
-    date: '2025-07-17',
+    date: '2025-07-10',
     title: '한국은행 금리결정',
     category: 'institution',
     countryCode: 'kr',
@@ -1347,6 +1705,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '연준 기준금리 결정',
   },
 
+
+
+  // 추가 한국 경제지표 (2025년 7월)
+  {
+    id: 'kr-export-jul-2025',
+    date: '2025-07-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '6월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jul-2025',
+    date: '2025-07-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '6월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jul-2025',
+    date: '2025-07-16',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '6월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jul-2025',
+    date: '2025-07-28',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '7월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jul-2025',
+    date: '2025-07-30',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '6월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q2-2025',
+    date: '2025-07-24',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 2분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2025년 7월)
   {
@@ -1588,7 +2009,7 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     id: 'bok-aug-2025',
-    date: '2025-08-28',
+    date: '2025-08-21',
     title: '한국은행 금리결정',
     category: 'institution',
     countryCode: 'kr',
@@ -1618,6 +2039,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2025년 8월)
+  {
+    id: 'kr-export-aug-2025',
+    date: '2025-08-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '7월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-aug-2025',
+    date: '2025-08-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '7월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-aug-2025',
+    date: '2025-08-13',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '7월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-aug-2025',
+    date: '2025-08-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '8월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-aug-2025',
+    date: '2025-08-28',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '7월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2025년 8월)
   {
     id: 'us-ism-services-aug-2025',
@@ -1773,6 +2247,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '8월 개인소비지출 물가지수',
   },
 
+
+
+  // 추가 한국 경제지표 (2025년 9월)
+  {
+    id: 'kr-export-sep-2025',
+    date: '2025-09-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '8월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-sep-2025',
+    date: '2025-09-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '8월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-sep-2025',
+    date: '2025-09-10',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '8월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-sep-2025',
+    date: '2025-09-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '9월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-sep-2025',
+    date: '2025-09-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '8월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q2-2025',
+    date: '2025-09-04',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 2분기 GDP 성장률 잠정치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2025년 9월)
   {
@@ -1951,6 +2488,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 3분기 GDP 속보치',
   },
 
+
+
+  // 추가 한국 경제지표 (2025년 10월)
+  {
+    id: 'kr-export-oct-2025',
+    date: '2025-10-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '9월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-oct-2025',
+    date: '2025-10-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '9월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-oct-2025',
+    date: '2025-10-15',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '9월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-oct-2025',
+    date: '2025-10-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '10월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-oct-2025',
+    date: '2025-10-30',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '9월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q3-2025',
+    date: '2025-10-23',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 3분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2025년 10월)
   {
@@ -2220,6 +2820,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2025년 11월)
+  {
+    id: 'kr-export-nov-2025',
+    date: '2025-11-03',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '10월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-nov-2025',
+    date: '2025-11-07',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '10월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-nov-2025',
+    date: '2025-11-12',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '10월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-nov-2025',
+    date: '2025-11-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '11월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-nov-2025',
+    date: '2025-11-27',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '10월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2025년 11월)
   {
     id: 'us-ism-services-nov-2025',
@@ -2376,6 +3029,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2025년 12월)
+  {
+    id: 'kr-export-dec-2025',
+    date: '2025-12-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '11월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-dec-2025',
+    date: '2025-12-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '11월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-dec-2025',
+    date: '2025-12-10',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '11월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-dec-2025',
+    date: '2025-12-23',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '12월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-dec-2025',
+    date: '2025-12-30',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '11월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q3-2025',
+    date: '2025-12-04',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 3분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2025년 12월)
   {
     id: 'us-ism-services-dec-2025',
@@ -2555,6 +3271,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '12월 개인소비지출 물가지수',
   },
 
+
+
+  // 추가 한국 경제지표 (2026년 1월)
+  {
+    id: 'kr-export-jan-2026',
+    date: '2026-01-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '12월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jan-2026',
+    date: '2026-01-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '12월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jan-2026',
+    date: '2026-01-14',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '12월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jan-2026',
+    date: '2026-01-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '1월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jan-2026',
+    date: '2026-01-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '12월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q4-2025',
+    date: '2026-01-22',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 4분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2026년 1월)
   {
@@ -2786,6 +3565,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2026년 2월)
+  {
+    id: 'kr-export-feb-2026',
+    date: '2026-02-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '1월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-feb-2026',
+    date: '2026-02-09',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '1월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-feb-2026',
+    date: '2026-02-11',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '1월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-feb-2026',
+    date: '2026-02-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '2월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-feb-2026',
+    date: '2026-02-26',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '1월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2026년 2월)
   {
     id: 'us-ism-services-feb-2026',
@@ -3006,6 +3838,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2026년 3월)
+  {
+    id: 'kr-export-mar-2026',
+    date: '2026-03-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '2월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-mar-2026',
+    date: '2026-03-09',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '2월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-mar-2026',
+    date: '2026-03-11',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '2월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-mar-2026',
+    date: '2026-03-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '3월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-mar-2026',
+    date: '2026-03-30',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '2월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q4-2025',
+    date: '2026-03-05',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2025년 4분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2026년 3월)
   {
     id: 'us-ism-services-mar-2026',
@@ -3171,6 +4066,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 1분기 GDP 속보치',
   },
 
+
+
+  // 추가 한국 경제지표 (2026년 4월)
+  {
+    id: 'kr-export-apr-2026',
+    date: '2026-04-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '3월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-apr-2026',
+    date: '2026-04-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '3월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-apr-2026',
+    date: '2026-04-15',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '3월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-apr-2026',
+    date: '2026-04-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '4월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-apr-2026',
+    date: '2026-04-28',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '3월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q1-2026',
+    date: '2026-04-23',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 1분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2026년 4월)
   {
@@ -3440,6 +4398,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2026년 5월)
+  {
+    id: 'kr-export-may-2026',
+    date: '2026-05-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '4월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-may-2026',
+    date: '2026-05-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '4월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-may-2026',
+    date: '2026-05-13',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '4월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-may-2026',
+    date: '2026-05-26',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '5월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-may-2026',
+    date: '2026-05-28',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '4월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2026년 5월)
   {
     id: 'us-ism-services-may-2026',
@@ -3608,6 +4619,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
 
+
+  // 추가 한국 경제지표 (2026년 6월)
+  {
+    id: 'kr-export-jun-2026',
+    date: '2026-06-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '5월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jun-2026',
+    date: '2026-06-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '5월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jun-2026',
+    date: '2026-06-10',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '5월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jun-2026',
+    date: '2026-06-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '6월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jun-2026',
+    date: '2026-06-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '5월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q1-2026',
+    date: '2026-06-04',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 1분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2026년 6월)
   {
     id: 'us-ism-services-jun-2026',
@@ -3756,7 +4830,7 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     id: 'bok-jul-2026',
-    date: '2026-07-16',
+    date: '2026-07-09',
     title: '한국은행 금리결정',
     category: 'institution',
     countryCode: 'kr',
@@ -3795,6 +4869,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 2분기 GDP 속보치',
   },
 
+
+
+  // 추가 한국 경제지표 (2026년 7월)
+  {
+    id: 'kr-export-jul-2026',
+    date: '2026-07-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '6월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-jul-2026',
+    date: '2026-07-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '6월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-jul-2026',
+    date: '2026-07-15',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '6월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-jul-2026',
+    date: '2026-07-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '7월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-jul-2026',
+    date: '2026-07-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '6월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q2-2026',
+    date: '2026-07-23',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 2분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2026년 7월)
   {
@@ -4046,7 +5183,7 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     id: 'bok-aug-2026',
-    date: '2026-08-27',
+    date: '2026-08-20',
     title: '한국은행 금리결정',
     category: 'institution',
     countryCode: 'kr',
@@ -4066,6 +5203,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2026년 8월)
+  {
+    id: 'kr-export-aug-2026',
+    date: '2026-08-03',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '7월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-aug-2026',
+    date: '2026-08-07',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '7월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-aug-2026',
+    date: '2026-08-12',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '7월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-aug-2026',
+    date: '2026-08-25',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '8월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-aug-2026',
+    date: '2026-08-27',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '7월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2026년 8월)
   {
     id: 'us-ism-services-aug-2026',
@@ -4221,6 +5411,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '8월 개인소비지출 물가지수',
   },
 
+
+
+  // 추가 한국 경제지표 (2026년 9월)
+  {
+    id: 'kr-export-sep-2026',
+    date: '2026-09-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '8월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-sep-2026',
+    date: '2026-09-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '8월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-sep-2026',
+    date: '2026-09-09',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '8월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-sep-2026',
+    date: '2026-09-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '9월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-sep-2026',
+    date: '2026-09-28',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '8월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q2-2026',
+    date: '2026-09-03',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 2분기 GDP 성장률 잠정치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2026년 9월)
   {
@@ -4399,6 +5652,69 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 3분기 GDP 속보치',
   },
 
+
+
+  // 추가 한국 경제지표 (2026년 10월)
+  {
+    id: 'kr-export-oct-2026',
+    date: '2026-10-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '9월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-oct-2026',
+    date: '2026-10-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '9월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-oct-2026',
+    date: '2026-10-14',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '9월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-oct-2026',
+    date: '2026-10-27',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '10월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-oct-2026',
+    date: '2026-10-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '9월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-advance-q3-2026',
+    date: '2026-10-22',
+    title: '한국 GDP 속보치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 3분기 GDP 성장률 속보치 (한국은행)',
+  },
 
   // 추가 미국 경제지표 (2026년 10월)
   {
@@ -4668,6 +5984,59 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2026년 11월)
+  {
+    id: 'kr-export-nov-2026',
+    date: '2026-11-02',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '10월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-nov-2026',
+    date: '2026-11-09',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '10월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-nov-2026',
+    date: '2026-11-11',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '10월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-nov-2026',
+    date: '2026-11-24',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '11월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-nov-2026',
+    date: '2026-11-26',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '10월 광공업 생산 동향 (통계청)',
+  },
+
   // 추가 미국 경제지표 (2026년 11월)
   {
     id: 'us-ism-services-nov-2026',
@@ -4824,6 +6193,69 @@ export const calendarEvents: CalendarEvent[] = [
   },
 
   
+
+  // 추가 한국 경제지표 (2026년 12월)
+  {
+    id: 'kr-export-dec-2026',
+    date: '2026-12-01',
+    title: '한국 수출입 동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '09:00',
+    description: '11월 수출입 실적 (산업통상자원부)',
+  },
+  {
+    id: 'kr-trade-balance-dec-2026',
+    date: '2026-12-08',
+    title: '한국 무역수지',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '11월 국제수지 잠정 (한국은행)',
+  },
+  {
+    id: 'kr-employment-dec-2026',
+    date: '2026-12-09',
+    title: '한국 고용동향',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '08:00',
+    description: '11월 취업자 수 및 실업률 (통계청)',
+  },
+  {
+    id: 'kr-consumer-sentiment-dec-2026',
+    date: '2026-12-22',
+    title: '한국 소비자심리지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'medium',
+    time: '06:00',
+    description: '12월 소비자동향조사 (한국은행)',
+  },
+  {
+    id: 'kr-industrial-production-dec-2026',
+    date: '2026-12-29',
+    title: '한국 산업생산지수',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'low',
+    time: '08:00',
+    description: '11월 광공업 생산 동향 (통계청)',
+  },
+  {
+    id: 'kr-gdp-preliminary-q3-2026',
+    date: '2026-12-03',
+    title: '한국 GDP 잠정치',
+    category: 'institution',
+    countryCode: 'kr',
+    importance: 'high',
+    time: '08:00',
+    description: '2026년 3분기 GDP 성장률 잠정치 (한국은행)',
+  },
+
   // 추가 미국 경제지표 (2026년 12월)
   {
     id: 'us-ism-services-dec-2026',
