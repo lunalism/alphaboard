@@ -26,9 +26,10 @@
  */
 
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/seo-config';
 
-/** 사이트 기본 URL */
-const BASE_URL = 'https://tickerbird.vercel.app';
+/** 사이트 기본 URL (seo-config에서 중앙 관리) */
+const BASE_URL = SITE_URL;
 
 /**
  * robots.txt 생성 함수
@@ -49,6 +50,8 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',        // API 엔드포인트
           '/profile',     // 사용자 프로필
           '/onboarding',  // 온보딩 페이지
+          '/banned',      // 계정 정지 안내 페이지
+          '/not-invited', // 클로즈드 베타 비초대 안내 페이지
         ],
       },
       {
@@ -59,6 +62,8 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/api/',
           '/profile',
+          '/banned',
+          '/not-invited',
         ],
       },
     ],

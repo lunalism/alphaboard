@@ -21,19 +21,27 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider, ToastProvider, AuthProvider, PriceAlertProvider } from "@/components/providers";
 import { OfflineIndicator, BetaWelcomeModal } from "@/components/common";
+import { OrganizationSchema, WebSiteSchema } from "@/components/seo/StructuredData";
+import { SITE_URL, SITE_NAME, SITE_LOGO } from "@/lib/seo-config";
+import { createPageMetadata } from "@/lib/metadata";
 
 // ==================== 메타데이터 설정 ====================
 
+/**
+ * 루트 레이아웃 메타데이터
+ *
+ * 이 메타데이터는 홈페이지('/')에 적용되며,
+ * 하위 라우트의 layout.tsx에서 페이지별로 오버라이드됩니다.
+ * (Next.js Metadata Merging: 하위가 상위를 덮어씀)
+ */
+const homeMetadata = createPageMetadata('/');
+
 export const metadata: Metadata = {
-  // 기본 메타데이터 (Tickerbird 브랜딩)
-  title: "Tickerbird - 글로벌 투자 정보 플랫폼",
-  description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼. 주식, ETF, 암호화폐, 환율, 원자재 정보를 한눈에.",
+  // 홈 페이지 고유 메타데이터 (createPageMetadata에서 생성)
+  ...homeMetadata,
 
   // 앱 이름 (PWA)
-  applicationName: "Tickerbird",
-
-  // 키워드
-  keywords: ["투자", "주식", "ETF", "암호화폐", "환율", "원자재", "금융", "트레이딩"],
+  applicationName: SITE_NAME,
 
   // 작성자
   authors: [{ name: "Tickerbird Team" }],
@@ -67,7 +75,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Tickerbird",
+    title: SITE_NAME,
   },
 
   // 포맷 감지 비활성화
@@ -75,33 +83,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  // Open Graph (Tickerbird 브랜딩)
-  openGraph: {
-    type: "website",
-    locale: "ko_KR",
-    url: "https://tickerbird.vercel.app",
-    siteName: "Tickerbird",
-    title: "Tickerbird - 글로벌 투자 정보 플랫폼",
-    description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼",
-    images: [
-      {
-        url: "/icons/icon-512x512.png",
-        width: 512,
-        height: 512,
-        alt: "Tickerbird 로고",
-      },
-    ],
-  },
-
-  // Twitter Card (Tickerbird 브랜딩)
-  twitter: {
-    card: "summary_large_image",
-    title: "Tickerbird - 글로벌 투자 정보 플랫폼",
-    description: "실시간 글로벌 투자 정보와 분석을 제공하는 플랫폼",
-    images: ["/icons/icon-512x512.png"],
-  },
-
-  // 검색 엔진 크롤링 설정
+  // 검색 엔진 크롤링 설정 (기본: 인덱싱 허용)
   robots: {
     index: true,
     follow: true,
@@ -151,11 +133,15 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Tickerbird" />
+        <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
 
         {/* Microsoft 타일 */}
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tap-highlight" content="no" />
+
+        {/* Schema.org 구조화 데이터 (전체 사이트 공통) */}
+        <OrganizationSchema />
+        <WebSiteSchema />
       </head>
       <body className="antialiased">
         <ThemeProvider>

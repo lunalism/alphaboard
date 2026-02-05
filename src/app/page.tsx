@@ -32,6 +32,9 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="md:pl-[72px] lg:pl-60 transition-all duration-300 pt-14 md:pt-0">
+        {/* SEO용 H1 태그 (스크린 리더 전용, 시각적으로 숨김) */}
+        <h1 className="sr-only">Tickerbird - 글로벌 투자 뉴스</h1>
+
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {/* 뉴스 카테고리 탭 + 검색바 영역 */}
           <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

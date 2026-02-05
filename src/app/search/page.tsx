@@ -494,6 +494,9 @@ function SearchResultsContent() {
 
       {/* 메인 콘텐츠 */}
       <main className="md:ml-[72px] lg:ml-60 pt-14 md:pt-0 pb-20 md:pb-0">
+        {/* SEO용 H1 태그 (스크린 리더 전용, 시각적으로 숨김) */}
+        <h1 className="sr-only">종목 검색 - 한국·미국 주식, ETF</h1>
+
         <div className="max-w-3xl mx-auto px-4 py-6">
           {/* ========================================
               검색 입력창

@@ -31,9 +31,10 @@
  */
 
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/seo-config';
 
-/** 사이트 기본 URL */
-const BASE_URL = 'https://tickerbird.vercel.app';
+/** 사이트 기본 URL (seo-config에서 중앙 관리) */
+const BASE_URL = SITE_URL;
 
 /**
  * 사이트맵 생성 함수
@@ -74,18 +75,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${BASE_URL}/community`,
       lastModified: now,
       changeFrequency: 'hourly',
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/alerts`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/watchlist`,
-      lastModified: now,
-      changeFrequency: 'daily',
       priority: 0.7,
     },
 
@@ -93,16 +82,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // 보조 페이지 (중간 우선순위)
     // ========================================
     {
-      url: `${BASE_URL}/search`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.6,
-    },
-    {
       url: `${BASE_URL}/glossary`,
       lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.5,
+      priority: 0.6,
     },
     {
       url: `${BASE_URL}/announcements`,
@@ -118,29 +101,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
 
     // ========================================
-    // 정책 페이지 (낮은 우선순위)
+    // 로그인 필요 페이지 (낮은 우선순위)
+    // ========================================
+    {
+      url: `${BASE_URL}/alerts`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/watchlist`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/search`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.3,
+    },
+
+    // ========================================
+    // 정책 페이지 (최저 우선순위)
     // ========================================
     {
       url: `${BASE_URL}/privacy`,
       lastModified: now,
       changeFrequency: 'yearly',
-      priority: 0.3,
+      priority: 0.2,
     },
     {
       url: `${BASE_URL}/terms`,
       lastModified: now,
       changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-
-    // ========================================
-    // 로그인/온보딩 (낮은 우선순위)
-    // ========================================
-    {
-      url: `${BASE_URL}/login`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.4,
+      priority: 0.2,
     },
   ];
 }
