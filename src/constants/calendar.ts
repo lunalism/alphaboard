@@ -369,7 +369,110 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2024년 4분기 실적 발표',
   },
 
-  // ==================== 2025년 2월 ====================
+  
+  // 추가 실적발표 (2025년 1월)
+  {
+    id: 'nflx-4q-2024',
+    date: '2025-01-21',
+    title: 'Netflix 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'jpm-4q-2024',
+    date: '2025-01-15',
+    title: 'JPMorgan Chase 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'bac-4q-2024',
+    date: '2025-01-16',
+    title: 'Bank of America 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'v-4q-2024',
+    date: '2025-01-28',
+    title: 'Visa 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'ma-4q-2024',
+    date: '2025-01-29',
+    title: 'Mastercard 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'unh-4q-2024',
+    date: '2025-01-16',
+    title: 'UnitedHealth 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'jnj-4q-2024',
+    date: '2025-01-22',
+    title: 'Johnson & Johnson 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'xom-4q-2024',
+    date: '2025-01-31',
+    title: 'Exxon Mobil 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'hyundai-4q-2024',
+    date: '2025-01-23',
+    title: '현대차 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'kia-4q-2024',
+    date: '2025-01-23',
+    title: '기아 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+
+// ==================== 2025년 2월 ====================
   // 경제지표
   {
     id: 'us-ism-feb-2025',
@@ -675,7 +778,70 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2024년 4분기 실적 발표',
   },
 
-  // ==================== 2025년 3월 ====================
+  
+  // 추가 실적발표 (2025년 2월)
+  {
+    id: 'wmt-4q-2025',
+    date: '2025-02-20',
+    title: 'Walmart 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'brk-4q-2024',
+    date: '2025-02-24',
+    title: 'Berkshire Hathaway 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'lgensol-4q-2024',
+    date: '2025-02-05',
+    title: 'LG에너지솔루션 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-4q-2024',
+    date: '2025-02-06',
+    title: '삼성바이오로직스 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'celltrion-4q-2024',
+    date: '2025-02-07',
+    title: '셀트리온 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+  {
+    id: 'posco-4q-2024',
+    date: '2025-02-07',
+    title: 'POSCO홀딩스 4Q24 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2024년 4분기 실적 발표',
+  },
+
+// ==================== 2025년 3월 ====================
   // 경제지표
   {
     id: 'us-ism-mar-2025',
@@ -958,7 +1124,21 @@ export const calendarEvents: CalendarEvent[] = [
     description: 'EIP-7702 계정 추상화 포함',
   },
 
-  // ==================== 2025년 4월 ====================
+  
+  // 실적발표
+  // 추가 실적발표 (2025년 3월)
+  {
+    id: 'cost-2q-2025',
+    date: '2025-03-06',
+    title: 'Costco 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 2분기 실적 발표',
+  },
+
+// ==================== 2025년 4월 ====================
   // 경제지표
   {
     id: 'us-ism-apr-2025',
@@ -1302,7 +1482,100 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 1분기 실적 발표',
   },
 
-  // ==================== 2025년 5월 ====================
+  
+  // 추가 실적발표 (2025년 4월)
+  {
+    id: 'nflx-1q-2025',
+    date: '2025-04-17',
+    title: 'Netflix 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'jpm-1q-2025',
+    date: '2025-04-11',
+    title: 'JPMorgan Chase 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'bac-1q-2025',
+    date: '2025-04-15',
+    title: 'Bank of America 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'v-1q-2025',
+    date: '2025-04-22',
+    title: 'Visa 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'ma-1q-2025',
+    date: '2025-04-24',
+    title: 'Mastercard 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'unh-1q-2025',
+    date: '2025-04-15',
+    title: 'UnitedHealth 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'jnj-1q-2025',
+    date: '2025-04-15',
+    title: 'Johnson & Johnson 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'hyundai-1q-2025',
+    date: '2025-04-24',
+    title: '현대차 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'kia-1q-2025',
+    date: '2025-04-24',
+    title: '기아 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+
+// ==================== 2025년 5월 ====================
   // 경제지표
   {
     id: 'us-ism-may-2025',
@@ -1606,7 +1879,91 @@ export const calendarEvents: CalendarEvent[] = [
     description: 'Google 개발자 컨퍼런스',
   },
 
-  // ==================== 2025년 6월 ====================
+  
+  // 실적발표
+  // 추가 실적발표 (2025년 5월)
+  {
+    id: 'wmt-1q-2026',
+    date: '2025-05-15',
+    title: 'Walmart 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'cost-3q-2025',
+    date: '2025-05-29',
+    title: 'Costco 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'brk-1q-2025',
+    date: '2025-05-05',
+    title: 'Berkshire Hathaway 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'xom-1q-2025',
+    date: '2025-05-02',
+    title: 'Exxon Mobil 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'lgensol-1q-2025',
+    date: '2025-05-08',
+    title: 'LG에너지솔루션 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-1q-2025',
+    date: '2025-05-08',
+    title: '삼성바이오로직스 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'celltrion-1q-2025',
+    date: '2025-05-09',
+    title: '셀트리온 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+  {
+    id: 'posco-1q-2025',
+    date: '2025-05-09',
+    title: 'POSCO홀딩스 1Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 1분기 실적 발표',
+  },
+
+// ==================== 2025년 6월 ====================
   // 경제지표
   {
     id: 'us-ism-jun-2025',
@@ -2256,7 +2613,100 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 2분기 실적 발표',
   },
 
-  // ==================== 2025년 8월 ====================
+  
+  // 추가 실적발표 (2025년 7월)
+  {
+    id: 'nflx-2q-2025',
+    date: '2025-07-17',
+    title: 'Netflix 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'jpm-2q-2025',
+    date: '2025-07-15',
+    title: 'JPMorgan Chase 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'bac-2q-2025',
+    date: '2025-07-16',
+    title: 'Bank of America 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'v-2q-2025',
+    date: '2025-07-22',
+    title: 'Visa 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'ma-2q-2025',
+    date: '2025-07-29',
+    title: 'Mastercard 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'unh-2q-2025',
+    date: '2025-07-15',
+    title: 'UnitedHealth 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'jnj-2q-2025',
+    date: '2025-07-15',
+    title: 'Johnson & Johnson 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'hyundai-2q-2025',
+    date: '2025-07-24',
+    title: '현대차 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'kia-2q-2025',
+    date: '2025-07-24',
+    title: '기아 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
+  },
+
+// ==================== 2025년 8월 ====================
   // 경제지표
   {
     id: 'us-ism-aug-2025',
@@ -2536,6 +2986,80 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '12:30',
     description: '호주중앙은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2025년 8월)
+  {
+    id: 'wmt-2q-2026',
+    date: '2025-08-19',
+    title: 'Walmart 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'brk-2q-2025',
+    date: '2025-08-04',
+    title: 'Berkshire Hathaway 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'xom-2q-2025',
+    date: '2025-08-01',
+    title: 'Exxon Mobil 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'lgensol-2q-2025',
+    date: '2025-08-06',
+    title: 'LG에너지솔루션 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-2q-2025',
+    date: '2025-08-07',
+    title: '삼성바이오로직스 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'celltrion-2q-2025',
+    date: '2025-08-08',
+    title: '셀트리온 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
+  },
+  {
+    id: 'posco-2q-2025',
+    date: '2025-08-08',
+    title: 'POSCO홀딩스 2Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 2분기 실적 발표',
   },
 
 // ==================== 2025년 9월 ====================
@@ -2832,7 +3356,21 @@ export const calendarEvents: CalendarEvent[] = [
     description: 'iPhone 17 시리즈 공개 예상',
   },
 
-  // ==================== 2025년 10월 ====================
+  
+  // 실적발표
+  // 추가 실적발표 (2025년 9월)
+  {
+    id: 'cost-4q-2025',
+    date: '2025-09-25',
+    title: 'Costco 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 4분기 실적 발표',
+  },
+
+// ==================== 2025년 10월 ====================
   // 경제지표
   {
     id: 'us-ism-oct-2025',
@@ -3186,7 +3724,110 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 3분기 실적 발표',
   },
 
-  // ==================== 2025년 11월 ====================
+  
+  // 추가 실적발표 (2025년 10월)
+  {
+    id: 'nflx-3q-2025',
+    date: '2025-10-16',
+    title: 'Netflix 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'jpm-3q-2025',
+    date: '2025-10-14',
+    title: 'JPMorgan Chase 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'bac-3q-2025',
+    date: '2025-10-15',
+    title: 'Bank of America 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'v-3q-2025',
+    date: '2025-10-28',
+    title: 'Visa 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'ma-3q-2025',
+    date: '2025-10-29',
+    title: 'Mastercard 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'unh-3q-2025',
+    date: '2025-10-14',
+    title: 'UnitedHealth 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'jnj-3q-2025',
+    date: '2025-10-14',
+    title: 'Johnson & Johnson 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'xom-3q-2025',
+    date: '2025-10-31',
+    title: 'Exxon Mobil 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'hyundai-3q-2025',
+    date: '2025-10-23',
+    title: '현대차 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'kia-3q-2025',
+    date: '2025-10-23',
+    title: '기아 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
+  },
+
+// ==================== 2025년 11월 ====================
   // 경제지표
   {
     id: 'us-ism-nov-2025',
@@ -3456,6 +4097,70 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '12:30',
     description: '호주중앙은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2025년 11월)
+  {
+    id: 'wmt-3q-2026',
+    date: '2025-11-18',
+    title: 'Walmart 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'brk-3q-2025',
+    date: '2025-11-03',
+    title: 'Berkshire Hathaway 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'lgensol-3q-2025',
+    date: '2025-11-05',
+    title: 'LG에너지솔루션 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-3q-2025',
+    date: '2025-11-06',
+    title: '삼성바이오로직스 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'celltrion-3q-2025',
+    date: '2025-11-07',
+    title: '셀트리온 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
+  },
+  {
+    id: 'posco-3q-2025',
+    date: '2025-11-07',
+    title: 'POSCO홀딩스 3Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 3분기 실적 발표',
   },
 
 // ==================== 2025년 12월 ====================
@@ -3738,6 +4443,20 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '00:00',
     description: '캐나다은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2025년 12월)
+  {
+    id: 'cost-1q-2026',
+    date: '2025-12-11',
+    title: 'Costco 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 1분기 실적 발표',
   },
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
@@ -4100,7 +4819,110 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 4분기 실적 발표',
   },
 
-  // ==================== 2026년 2월 ====================
+  
+  // 추가 실적발표 (2026년 1월)
+  {
+    id: 'nflx-4q-2025',
+    date: '2026-01-20',
+    title: 'Netflix 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'jpm-4q-2025',
+    date: '2026-01-14',
+    title: 'JPMorgan Chase 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'bac-4q-2025',
+    date: '2026-01-15',
+    title: 'Bank of America 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'v-4q-2025',
+    date: '2026-01-27',
+    title: 'Visa 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'ma-4q-2025',
+    date: '2026-01-28',
+    title: 'Mastercard 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'unh-4q-2025',
+    date: '2026-01-15',
+    title: 'UnitedHealth 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'jnj-4q-2025',
+    date: '2026-01-21',
+    title: 'Johnson & Johnson 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'xom-4q-2025',
+    date: '2026-01-30',
+    title: 'Exxon Mobil 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'hyundai-4q-2025',
+    date: '2026-01-22',
+    title: '현대차 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'kia-4q-2025',
+    date: '2026-01-22',
+    title: '기아 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+
+// ==================== 2026년 2월 ====================
   // 경제지표
   {
     id: 'us-ism-feb-2026',
@@ -4406,7 +5228,70 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 4분기 실적 발표',
   },
 
-  // ==================== 2026년 3월 ====================
+  
+  // 추가 실적발표 (2026년 2월)
+  {
+    id: 'wmt-4q-2026',
+    date: '2026-02-19',
+    title: 'Walmart 4Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 4분기 실적 발표',
+  },
+  {
+    id: 'brk-4q-2025',
+    date: '2026-02-23',
+    title: 'Berkshire Hathaway 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'lgensol-4q-2025',
+    date: '2026-02-04',
+    title: 'LG에너지솔루션 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-4q-2025',
+    date: '2026-02-05',
+    title: '삼성바이오로직스 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'celltrion-4q-2025',
+    date: '2026-02-06',
+    title: '셀트리온 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+  {
+    id: 'posco-4q-2025',
+    date: '2026-02-06',
+    title: 'POSCO홀딩스 4Q25 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2025년 4분기 실적 발표',
+  },
+
+// ==================== 2026년 3월 ====================
   // 경제지표
   {
     id: 'us-ism-mar-2026',
@@ -4686,6 +5571,20 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '00:00',
     description: '캐나다은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2026년 3월)
+  {
+    id: 'cost-2q-2026',
+    date: '2026-03-05',
+    title: 'Costco 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 2분기 실적 발표',
   },
 
 // ==================== 2026년 4월 ====================
@@ -5022,7 +5921,100 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 1분기 실적 발표',
   },
 
-  // ==================== 2026년 5월 ====================
+  
+  // 추가 실적발표 (2026년 4월)
+  {
+    id: 'nflx-1q-2026',
+    date: '2026-04-16',
+    title: 'Netflix 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'jpm-1q-2026',
+    date: '2026-04-14',
+    title: 'JPMorgan Chase 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'bac-1q-2026',
+    date: '2026-04-15',
+    title: 'Bank of America 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'v-1q-2026',
+    date: '2026-04-21',
+    title: 'Visa 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'ma-1q-2026',
+    date: '2026-04-23',
+    title: 'Mastercard 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'unh-1q-2026',
+    date: '2026-04-14',
+    title: 'UnitedHealth 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'jnj-1q-2026',
+    date: '2026-04-14',
+    title: 'Johnson & Johnson 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'hyundai-1q-2026',
+    date: '2026-04-23',
+    title: '현대차 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'kia-1q-2026',
+    date: '2026-04-23',
+    title: '기아 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+
+// ==================== 2026년 5월 ====================
   // 경제지표
   {
     id: 'us-ism-may-2026',
@@ -5326,7 +6318,91 @@ export const calendarEvents: CalendarEvent[] = [
     description: 'Google 개발자 컨퍼런스',
   },
 
-  // ==================== 2026년 6월 ====================
+  
+  // 실적발표
+  // 추가 실적발표 (2026년 5월)
+  {
+    id: 'wmt-1q-2027',
+    date: '2026-05-14',
+    title: 'Walmart 1Q27 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2027년 1분기 실적 발표',
+  },
+  {
+    id: 'cost-3q-2026',
+    date: '2026-05-28',
+    title: 'Costco 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'brk-1q-2026',
+    date: '2026-05-04',
+    title: 'Berkshire Hathaway 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'xom-1q-2026',
+    date: '2026-05-01',
+    title: 'Exxon Mobil 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'lgensol-1q-2026',
+    date: '2026-05-07',
+    title: 'LG에너지솔루션 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-1q-2026',
+    date: '2026-05-07',
+    title: '삼성바이오로직스 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'celltrion-1q-2026',
+    date: '2026-05-08',
+    title: '셀트리온 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+  {
+    id: 'posco-1q-2026',
+    date: '2026-05-08',
+    title: 'POSCO홀딩스 1Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 1분기 실적 발표',
+  },
+
+// ==================== 2026년 6월 ====================
   // 경제지표
   {
     id: 'us-ism-jun-2026',
@@ -5996,7 +7072,110 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 2분기 실적 발표',
   },
 
-  // ==================== 2026년 8월 ====================
+  
+  // 추가 실적발표 (2026년 7월)
+  {
+    id: 'nflx-2q-2026',
+    date: '2026-07-16',
+    title: 'Netflix 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'jpm-2q-2026',
+    date: '2026-07-14',
+    title: 'JPMorgan Chase 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'bac-2q-2026',
+    date: '2026-07-15',
+    title: 'Bank of America 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'v-2q-2026',
+    date: '2026-07-21',
+    title: 'Visa 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'ma-2q-2026',
+    date: '2026-07-28',
+    title: 'Mastercard 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'unh-2q-2026',
+    date: '2026-07-14',
+    title: 'UnitedHealth 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'jnj-2q-2026',
+    date: '2026-07-14',
+    title: 'Johnson & Johnson 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'xom-2q-2026',
+    date: '2026-07-31',
+    title: 'Exxon Mobil 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'hyundai-2q-2026',
+    date: '2026-07-23',
+    title: '현대차 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'kia-2q-2026',
+    date: '2026-07-23',
+    title: '기아 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
+  },
+
+// ==================== 2026년 8월 ====================
   // 경제지표
   {
     id: 'us-ism-aug-2026',
@@ -6256,6 +7435,70 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '12:30',
     description: '호주중앙은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2026년 8월)
+  {
+    id: 'wmt-2q-2027',
+    date: '2026-08-18',
+    title: 'Walmart 2Q27 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2027년 2분기 실적 발표',
+  },
+  {
+    id: 'brk-2q-2026',
+    date: '2026-08-03',
+    title: 'Berkshire Hathaway 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'lgensol-2q-2026',
+    date: '2026-08-05',
+    title: 'LG에너지솔루션 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-2q-2026',
+    date: '2026-08-06',
+    title: '삼성바이오로직스 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'celltrion-2q-2026',
+    date: '2026-08-07',
+    title: '셀트리온 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
+  },
+  {
+    id: 'posco-2q-2026',
+    date: '2026-08-07',
+    title: 'POSCO홀딩스 2Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 2분기 실적 발표',
   },
 
 // ==================== 2026년 9월 ====================
@@ -6552,7 +7795,21 @@ export const calendarEvents: CalendarEvent[] = [
     description: 'iPhone 18 시리즈 공개 예상',
   },
 
-  // ==================== 2026년 10월 ====================
+  
+  // 실적발표
+  // 추가 실적발표 (2026년 9월)
+  {
+    id: 'cost-4q-2026',
+    date: '2026-09-24',
+    title: 'Costco 4Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 4분기 실적 발표',
+  },
+
+// ==================== 2026년 10월 ====================
   // 경제지표
   {
     id: 'us-ism-oct-2026',
@@ -6906,7 +8163,110 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 3분기 실적 발표',
   },
 
-  // ==================== 2026년 11월 ====================
+  
+  // 추가 실적발표 (2026년 10월)
+  {
+    id: 'nflx-3q-2026',
+    date: '2026-10-15',
+    title: 'Netflix 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'netflix.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'jpm-3q-2026',
+    date: '2026-10-13',
+    title: 'JPMorgan Chase 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jpmorganchase.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'bac-3q-2026',
+    date: '2026-10-14',
+    title: 'Bank of America 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'bankofamerica.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'v-3q-2026',
+    date: '2026-10-27',
+    title: 'Visa 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'visa.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'ma-3q-2026',
+    date: '2026-10-28',
+    title: 'Mastercard 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'mastercard.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'unh-3q-2026',
+    date: '2026-10-13',
+    title: 'UnitedHealth 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'unitedhealthgroup.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'jnj-3q-2026',
+    date: '2026-10-13',
+    title: 'Johnson & Johnson 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'jnj.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'xom-3q-2026',
+    date: '2026-10-30',
+    title: 'Exxon Mobil 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'exxonmobil.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'hyundai-3q-2026',
+    date: '2026-10-22',
+    title: '현대차 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'hyundai.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'kia-3q-2026',
+    date: '2026-10-22',
+    title: '기아 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'kia.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
+  },
+
+// ==================== 2026년 11월 ====================
   // 경제지표
   {
     id: 'us-ism-nov-2026',
@@ -7176,6 +8536,70 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '12:30',
     description: '호주중앙은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2026년 11월)
+  {
+    id: 'wmt-3q-2027',
+    date: '2026-11-17',
+    title: 'Walmart 3Q27 실적발표',
+    category: 'earnings',
+    companyDomain: 'walmart.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2027년 3분기 실적 발표',
+  },
+  {
+    id: 'brk-3q-2026',
+    date: '2026-11-02',
+    title: 'Berkshire Hathaway 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'berkshirehathaway.com',
+    importance: 'high',
+    time: '22:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'lgensol-3q-2026',
+    date: '2026-11-04',
+    title: 'LG에너지솔루션 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'lgensol.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'samsungbio-3q-2026',
+    date: '2026-11-05',
+    title: '삼성바이오로직스 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'samsungbiologics.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'celltrion-3q-2026',
+    date: '2026-11-06',
+    title: '셀트리온 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'celltrion.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
+  },
+  {
+    id: 'posco-3q-2026',
+    date: '2026-11-06',
+    title: 'POSCO홀딩스 3Q26 실적발표',
+    category: 'earnings',
+    companyDomain: 'posco.com',
+    importance: 'high',
+    time: '16:00',
+    description: '2026년 3분기 실적 발표',
   },
 
 // ==================== 2026년 12월 ====================
@@ -7458,6 +8882,20 @@ export const calendarEvents: CalendarEvent[] = [
     importance: 'high',
     time: '00:00',
     description: '캐나다은행 기준금리 결정',
+  },
+
+
+  // 실적발표
+  // 추가 실적발표 (2026년 12월)
+  {
+    id: 'cost-1q-2027',
+    date: '2026-12-10',
+    title: 'Costco 1Q27 실적발표',
+    category: 'earnings',
+    companyDomain: 'costco.com',
+    importance: 'high',
+    time: '06:00',
+    description: '2027년 1분기 실적 발표',
   },
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
