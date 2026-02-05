@@ -113,6 +113,8 @@ export function MonthlyCalendar({
         return 'bg-red-500';
       case 'dividend':
         return 'bg-amber-500';
+      case 'holiday':
+        return 'bg-gray-500';
     }
   };
 

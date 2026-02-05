@@ -275,7 +275,7 @@ interface SeedEvent {
   titleEn?: string;
   date: string;
   endDate?: string;
-  category: 'institution' | 'earnings' | 'corporate' | 'crypto' | 'options' | 'dividend';
+  category: 'institution' | 'earnings' | 'corporate' | 'crypto' | 'options' | 'dividend' | 'holiday';
   countryCode?: string;
   companyDomain?: string;
   importance: 'high' | 'medium' | 'low';

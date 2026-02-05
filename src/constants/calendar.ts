@@ -8,6 +8,7 @@ export const eventCategoryFilters: EventCategoryFilter[] = [
   { id: 'crypto', label: '암호화폐', emoji: '🪙' },
   { id: 'options', label: '옵션만기', emoji: '📈' },
   { id: 'dividend', label: '배당', emoji: '💰' },
+  { id: 'holiday', label: '휴장일', emoji: '🚫' },
 ];
 
 export const calendarEvents: CalendarEvent[] = [
@@ -530,6 +531,134 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 1월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-newyear-2025',
+    date: '2025-01-01',
+    title: '미국 증시 휴장 - 신년',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'New Year\'s Day (신년)',
+  },
+  {
+    id: 'us-holiday-mlk-2025',
+    date: '2025-01-20',
+    title: '미국 증시 휴장 - 마틴 루터 킹 주니어 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Martin Luther King Jr. Day',
+  },
+  {
+    id: 'kr-holiday-newyear-2025',
+    date: '2025-01-01',
+    title: '한국 증시 휴장 - 신정',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '신정 (1월 1일)',
+  },
+  {
+    id: 'kr-holiday-seollal1-2025',
+    date: '2025-01-28',
+    title: '한국 증시 휴장 - 설날 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 연휴 (1/28~1/30)',
+  },
+  {
+    id: 'kr-holiday-seollal2-2025',
+    date: '2025-01-29',
+    title: '한국 증시 휴장 - 설날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 당일',
+  },
+  {
+    id: 'kr-holiday-seollal3-2025',
+    date: '2025-01-30',
+    title: '한국 증시 휴장 - 설날 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 연휴 (1/28~1/30)',
+  },
+  {
+    id: 'jp-holiday-newyear1-2025',
+    date: '2025-01-01',
+    title: '일본 증시 휴장 - 신정',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '元日 (신정, 1월 1일)',
+  },
+  {
+    id: 'jp-holiday-newyear2-2025',
+    date: '2025-01-02',
+    title: '일본 증시 휴장 - 신정 연휴',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '신정 연휴 (1월 2일)',
+  },
+  {
+    id: 'jp-holiday-newyear3-2025',
+    date: '2025-01-03',
+    title: '일본 증시 휴장 - 신정 연휴',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '신정 연휴 (1월 3일)',
+  },
+  {
+    id: 'jp-holiday-comingofage-2025',
+    date: '2025-01-13',
+    title: '일본 증시 휴장 - 성인의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '成人の日 (성인의 날)',
+  },
+  {
+    id: 'hk-holiday-newyear-2025',
+    date: '2025-01-01',
+    title: '홍콩 증시 휴장 - 신년',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'New Year (신년)',
+  },
+  {
+    id: 'hk-holiday-cny1-2025',
+    date: '2025-01-29',
+    title: '홍콩 증시 휴장 - 설 연휴',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 연휴)',
+  },
+  {
+    id: 'hk-holiday-cny2-2025',
+    date: '2025-01-30',
+    title: '홍콩 증시 휴장 - 설 당일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 당일)',
+  },
+  {
+    id: 'hk-holiday-cny3-2025',
+    date: '2025-01-31',
+    title: '홍콩 증시 휴장 - 설 연휴',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 연휴)',
+  },
+
 // ==================== 2025년 2월 ====================
   // 경제지표
   {
@@ -937,6 +1066,44 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 2월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-presidents-2025',
+    date: '2025-02-17',
+    title: '미국 증시 휴장 - 대통령의 날',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Presidents\' Day (대통령의 날)',
+  },
+  {
+    id: 'jp-holiday-foundation-2025',
+    date: '2025-02-11',
+    title: '일본 증시 휴장 - 건국기념일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '建国記念の日 (건국기념일)',
+  },
+  {
+    id: 'jp-holiday-emperor1-2025',
+    date: '2025-02-23',
+    title: '일본 증시 휴장 - 천황탄생일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '天皇誕生日 (천황탄생일, 일요일)',
+  },
+  {
+    id: 'jp-holiday-emperor2-2025',
+    date: '2025-02-24',
+    title: '일본 증시 휴장 - 천황탄생일 대체휴일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '天皇誕生日 대체휴일 (2/23 일요일 → 2/24 월요일)',
+  },
+
 // ==================== 2025년 3월 ====================
   // 경제지표
   {
@@ -1297,6 +1464,17 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2025년 1분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'jp-holiday-vernal-2025',
+    date: '2025-03-20',
+    title: '일본 증시 휴장 - 춘분의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '春分の日 (춘분의 날)',
   },
 
 // ==================== 2025년 4월 ====================
@@ -1792,6 +1970,62 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 4월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-goodfriday-2025',
+    date: '2025-04-18',
+    title: '미국 증시 휴장 - 굿 프라이데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Good Friday (성금요일)',
+  },
+  {
+    id: 'jp-holiday-showa-2025',
+    date: '2025-04-29',
+    title: '일본 증시 휴장 - 쇼와의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '昭和の日 (쇼와의 날)',
+  },
+  {
+    id: 'hk-holiday-qingming-2025',
+    date: '2025-04-04',
+    title: '홍콩 증시 휴장 - 청명절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Ching Ming Festival (청명절)',
+  },
+  {
+    id: 'hk-holiday-goodfriday-2025',
+    date: '2025-04-18',
+    title: '홍콩 증시 휴장 - 굿 프라이데이',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Good Friday (성금요일)',
+  },
+  {
+    id: 'hk-holiday-eastersat-2025',
+    date: '2025-04-19',
+    title: '홍콩 증시 휴장 - 부활절 토요일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Easter Saturday (부활절 토요일)',
+  },
+  {
+    id: 'hk-holiday-eastermon-2025',
+    date: '2025-04-21',
+    title: '홍콩 증시 휴장 - 부활절 월요일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Easter Monday (부활절 월요일)',
+  },
+
 // ==================== 2025년 5월 ====================
   // 경제지표
   {
@@ -2218,6 +2452,98 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 5월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-memorial-2025',
+    date: '2025-05-26',
+    title: '미국 증시 휴장 - 메모리얼 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Memorial Day (현충일)',
+  },
+  {
+    id: 'kr-holiday-labor-2025',
+    date: '2025-05-01',
+    title: '한국 증시 휴장 - 근로자의 날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '근로자의 날 (5월 1일)',
+  },
+  {
+    id: 'kr-holiday-children-2025',
+    date: '2025-05-05',
+    title: '한국 증시 휴장 - 어린이날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '어린이날 (5월 5일)',
+  },
+  {
+    id: 'kr-holiday-substitute-may-2025',
+    date: '2025-05-06',
+    title: '한국 증시 휴장 - 대체공휴일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '부처님오신날 대체공휴일 (5월 6일)',
+  },
+  {
+    id: 'jp-holiday-constitution-2025',
+    date: '2025-05-03',
+    title: '일본 증시 휴장 - 헌법기념일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '憲法記念日 (헌법기념일)',
+  },
+  {
+    id: 'jp-holiday-greenery-2025',
+    date: '2025-05-04',
+    title: '일본 증시 휴장 - 녹색의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'みどりの日 (녹색의 날, 일요일)',
+  },
+  {
+    id: 'jp-holiday-children-2025',
+    date: '2025-05-05',
+    title: '일본 증시 휴장 - 어린이날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'こどもの日 (어린이날)',
+  },
+  {
+    id: 'jp-holiday-substitute-may-2025',
+    date: '2025-05-06',
+    title: '일본 증시 휴장 - 대체휴일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'みどりの日 대체휴일 (5/4 일요일 → 5/6 화요일)',
+  },
+  {
+    id: 'hk-holiday-labor-2025',
+    date: '2025-05-01',
+    title: '홍콩 증시 휴장 - 노동절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Labour Day (노동절)',
+  },
+  {
+    id: 'hk-holiday-buddha-2025',
+    date: '2025-05-05',
+    title: '홍콩 증시 휴장 - 부처님오신날',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Buddha\'s Birthday (부처님오신날)',
+  },
+
 // ==================== 2025년 6월 ====================
   // 경제지표
   {
@@ -2565,6 +2891,35 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2025년 2분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-juneteenth-2025',
+    date: '2025-06-19',
+    title: '미국 증시 휴장 - 준틴스 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Juneteenth National Independence Day',
+  },
+  {
+    id: 'kr-holiday-memorial-2025',
+    date: '2025-06-06',
+    title: '한국 증시 휴장 - 현충일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '현충일 (6월 6일)',
+  },
+  {
+    id: 'hk-holiday-dragonboat-2025',
+    date: '2025-06-02',
+    title: '홍콩 증시 휴장 - 단오절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Tuen Ng Festival (단오절, 6/2 대체)',
   },
 
   // ==================== 2025년 7월 ====================
@@ -3082,6 +3437,35 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 7월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-independence-2025',
+    date: '2025-07-04',
+    title: '미국 증시 휴장 - 독립기념일',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Independence Day (독립기념일)',
+  },
+  {
+    id: 'jp-holiday-marine-2025',
+    date: '2025-07-21',
+    title: '일본 증시 휴장 - 바다의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '海の日 (바다의 날)',
+  },
+  {
+    id: 'hk-holiday-sar-2025',
+    date: '2025-07-01',
+    title: '홍콩 증시 휴장 - 홍콩특별행정구 설립일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'HKSAR Establishment Day',
+  },
+
 // ==================== 2025년 8월 ====================
   // 경제지표
   {
@@ -3476,6 +3860,26 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 8월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'kr-holiday-liberation-2025',
+    date: '2025-08-15',
+    title: '한국 증시 휴장 - 광복절',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '광복절 (8월 15일)',
+  },
+  {
+    id: 'jp-holiday-mountain-2025',
+    date: '2025-08-11',
+    title: '일본 증시 휴장 - 산의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '山の日 (산의 날)',
+  },
+
 // ==================== 2025년 9월 ====================
   // 경제지표
   {
@@ -3847,6 +4251,35 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2025년 3분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-labor-2025',
+    date: '2025-09-01',
+    title: '미국 증시 휴장 - 노동절',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Labor Day (노동절)',
+  },
+  {
+    id: 'jp-holiday-respect-2025',
+    date: '2025-09-15',
+    title: '일본 증시 휴장 - 경로의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '敬老の日 (경로의 날)',
+  },
+  {
+    id: 'jp-holiday-autumnal-2025',
+    date: '2025-09-23',
+    title: '일본 증시 휴장 - 추분의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '秋分の日 (추분의 날)',
   },
 
 // ==================== 2025년 10월 ====================
@@ -4362,6 +4795,80 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2025년 10월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'kr-holiday-gaecheon-2025',
+    date: '2025-10-03',
+    title: '한국 증시 휴장 - 개천절',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '개천절 (10월 3일)',
+  },
+  {
+    id: 'kr-holiday-chuseok1-2025',
+    date: '2025-10-06',
+    title: '한국 증시 휴장 - 추석 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 연휴 (10/6~10/8)',
+  },
+  {
+    id: 'kr-holiday-chuseok2-2025',
+    date: '2025-10-07',
+    title: '한국 증시 휴장 - 추석',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 당일',
+  },
+  {
+    id: 'kr-holiday-chuseok3-2025',
+    date: '2025-10-08',
+    title: '한국 증시 휴장 - 추석 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 연휴 (10/6~10/8)',
+  },
+  {
+    id: 'kr-holiday-hangul-2025',
+    date: '2025-10-09',
+    title: '한국 증시 휴장 - 한글날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '한글날 (10월 9일)',
+  },
+  {
+    id: 'jp-holiday-sports-2025',
+    date: '2025-10-13',
+    title: '일본 증시 휴장 - 체육의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'スポーツの日 (체육의 날)',
+  },
+  {
+    id: 'hk-holiday-national-2025',
+    date: '2025-10-01',
+    title: '홍콩 증시 휴장 - 국경절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'National Day (중화인민공화국 국경절)',
+  },
+  {
+    id: 'hk-holiday-chungyang-2025',
+    date: '2025-10-07',
+    title: '홍콩 증시 휴장 - 중양절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chung Yeung Festival (중양절)',
+  },
+
 // ==================== 2025년 11월 ====================
   // 경제지표
   {
@@ -4734,6 +5241,44 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'realtyincome.com',
     importance: 'medium',
     description: '2025년 11월 배당락일 (월배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-thanksgiving-2025',
+    date: '2025-11-27',
+    title: '미국 증시 휴장 - 추수감사절',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Thanksgiving Day (추수감사절)',
+  },
+  {
+    id: 'jp-holiday-culture-2025',
+    date: '2025-11-03',
+    title: '일본 증시 휴장 - 문화의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '文化の日 (문화의 날)',
+  },
+  {
+    id: 'jp-holiday-laborday1-2025',
+    date: '2025-11-23',
+    title: '일본 증시 휴장 - 근로감사의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '勤労感謝の日 (근로감사의 날, 일요일)',
+  },
+  {
+    id: 'jp-holiday-laborday2-2025',
+    date: '2025-11-24',
+    title: '일본 증시 휴장 - 근로감사의 날 대체휴일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '勤労感謝の日 대체휴일 (11/23 일요일 → 11/24 월요일)',
   },
 
 // ==================== 2025년 12월 ====================
@@ -5117,6 +5662,53 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'kbfg.com',
     importance: 'medium',
     description: '2025년 연간 배당락일',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-christmas-2025',
+    date: '2025-12-25',
+    title: '미국 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Christmas Day (크리스마스)',
+  },
+  {
+    id: 'kr-holiday-christmas-2025',
+    date: '2025-12-25',
+    title: '한국 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '크리스마스 (12월 25일)',
+  },
+  {
+    id: 'jp-holiday-yearend-2025',
+    date: '2025-12-31',
+    title: '일본 증시 휴장 - 연말',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '大晦日 (연말 휴장)',
+  },
+  {
+    id: 'hk-holiday-christmas-2025',
+    date: '2025-12-25',
+    title: '홍콩 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Christmas Day (크리스마스)',
+  },
+  {
+    id: 'hk-holiday-boxing-2025',
+    date: '2025-12-26',
+    title: '홍콩 증시 휴장 - 박싱데이',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Boxing Day (크리스마스 다음날)',
   },
 
   // ==================== 2026년 1월 ====================
@@ -5634,6 +6226,80 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 1월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-newyear-2026',
+    date: '2026-01-01',
+    title: '미국 증시 휴장 - 신년',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'New Year\'s Day (신년)',
+  },
+  {
+    id: 'us-holiday-mlk-2026',
+    date: '2026-01-19',
+    title: '미국 증시 휴장 - 마틴 루터 킹 주니어 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Martin Luther King Jr. Day',
+  },
+  {
+    id: 'kr-holiday-newyear-2026',
+    date: '2026-01-01',
+    title: '한국 증시 휴장 - 신정',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '신정 (1월 1일)',
+  },
+  {
+    id: 'jp-holiday-newyear1-2026',
+    date: '2026-01-01',
+    title: '일본 증시 휴장 - 신정',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '元日 (신정, 1월 1일)',
+  },
+  {
+    id: 'jp-holiday-newyear2-2026',
+    date: '2026-01-02',
+    title: '일본 증시 휴장 - 신정 연휴',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '신정 연휴 (1월 2일)',
+  },
+  {
+    id: 'jp-holiday-newyear3-2026',
+    date: '2026-01-03',
+    title: '일본 증시 휴장 - 신정 연휴',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '신정 연휴 (1월 3일, 토요일)',
+  },
+  {
+    id: 'jp-holiday-comingofage-2026',
+    date: '2026-01-12',
+    title: '일본 증시 휴장 - 성인의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '成人の日 (성인의 날)',
+  },
+  {
+    id: 'hk-holiday-newyear-2026',
+    date: '2026-01-01',
+    title: '홍콩 증시 휴장 - 신년',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'New Year (신년)',
+  },
+
 // ==================== 2026년 2월 ====================
   // 경제지표
   {
@@ -6041,6 +6707,89 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 2월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-presidents-2026',
+    date: '2026-02-16',
+    title: '미국 증시 휴장 - 대통령의 날',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Presidents\' Day (대통령의 날)',
+  },
+  {
+    id: 'kr-holiday-seollal1-2026',
+    date: '2026-02-16',
+    title: '한국 증시 휴장 - 설날 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 연휴 (2/16~2/18)',
+  },
+  {
+    id: 'kr-holiday-seollal2-2026',
+    date: '2026-02-17',
+    title: '한국 증시 휴장 - 설날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 당일',
+  },
+  {
+    id: 'kr-holiday-seollal3-2026',
+    date: '2026-02-18',
+    title: '한국 증시 휴장 - 설날 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '설날 연휴 (2/16~2/18)',
+  },
+  {
+    id: 'jp-holiday-foundation-2026',
+    date: '2026-02-11',
+    title: '일본 증시 휴장 - 건국기념일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '建国記念の日 (건국기념일)',
+  },
+  {
+    id: 'jp-holiday-emperor-2026',
+    date: '2026-02-23',
+    title: '일본 증시 휴장 - 천황탄생일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '天皇誕生日 (천황탄생일)',
+  },
+  {
+    id: 'hk-holiday-cny1-2026',
+    date: '2026-02-17',
+    title: '홍콩 증시 휴장 - 설 당일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 당일)',
+  },
+  {
+    id: 'hk-holiday-cny2-2026',
+    date: '2026-02-18',
+    title: '홍콩 증시 휴장 - 설 연휴',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 연휴)',
+  },
+  {
+    id: 'hk-holiday-cny3-2026',
+    date: '2026-02-19',
+    title: '홍콩 증시 휴장 - 설 연휴',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chinese New Year (춘절 연휴)',
+  },
+
 // ==================== 2026년 3월 ====================
   // 경제지표
   {
@@ -6400,6 +7149,26 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2026년 1분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'kr-holiday-samil-2026',
+    date: '2026-03-02',
+    title: '한국 증시 휴장 - 삼일절 대체공휴일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '삼일절 대체공휴일 (3/1 일요일 → 3/2 월요일)',
+  },
+  {
+    id: 'jp-holiday-vernal-2026',
+    date: '2026-03-20',
+    title: '일본 증시 휴장 - 춘분의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '春分の日 (춘분의 날)',
   },
 
 // ==================== 2026년 4월 ====================
@@ -6885,6 +7654,62 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 4월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-goodfriday-2026',
+    date: '2026-04-03',
+    title: '미국 증시 휴장 - 굿 프라이데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Good Friday (성금요일)',
+  },
+  {
+    id: 'jp-holiday-showa-2026',
+    date: '2026-04-29',
+    title: '일본 증시 휴장 - 쇼와의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '昭和の日 (쇼와의 날)',
+  },
+  {
+    id: 'hk-holiday-goodfriday-2026',
+    date: '2026-04-03',
+    title: '홍콩 증시 휴장 - 굿 프라이데이',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Good Friday (성금요일)',
+  },
+  {
+    id: 'hk-holiday-eastersat-2026',
+    date: '2026-04-04',
+    title: '홍콩 증시 휴장 - 부활절 토요일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Easter Saturday (부활절 토요일)',
+  },
+  {
+    id: 'hk-holiday-qingming-2026',
+    date: '2026-04-05',
+    title: '홍콩 증시 휴장 - 청명절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Ching Ming Festival (청명절, 일요일)',
+  },
+  {
+    id: 'hk-holiday-eastermon-2026',
+    date: '2026-04-06',
+    title: '홍콩 증시 휴장 - 부활절 월요일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Easter Monday (부활절 월요일)',
+  },
+
 // ==================== 2026년 5월 ====================
   // 경제지표
   {
@@ -7311,6 +8136,98 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 5월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-memorial-2026',
+    date: '2026-05-25',
+    title: '미국 증시 휴장 - 메모리얼 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Memorial Day (현충일)',
+  },
+  {
+    id: 'kr-holiday-labor-2026',
+    date: '2026-05-01',
+    title: '한국 증시 휴장 - 근로자의 날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '근로자의 날 (5월 1일)',
+  },
+  {
+    id: 'kr-holiday-children-2026',
+    date: '2026-05-05',
+    title: '한국 증시 휴장 - 어린이날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '어린이날 (5월 5일)',
+  },
+  {
+    id: 'kr-holiday-buddha-2026',
+    date: '2026-05-25',
+    title: '한국 증시 휴장 - 부처님오신날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '부처님오신날 (음력 4월 8일)',
+  },
+  {
+    id: 'jp-holiday-constitution-2026',
+    date: '2026-05-03',
+    title: '일본 증시 휴장 - 헌법기념일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '憲法記念日 (헌법기념일, 일요일)',
+  },
+  {
+    id: 'jp-holiday-greenery-2026',
+    date: '2026-05-04',
+    title: '일본 증시 휴장 - 녹색의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'みどりの日 (녹색의 날)',
+  },
+  {
+    id: 'jp-holiday-children-2026',
+    date: '2026-05-05',
+    title: '일본 증시 휴장 - 어린이날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'こどもの日 (어린이날)',
+  },
+  {
+    id: 'jp-holiday-substitute-may-2026',
+    date: '2026-05-06',
+    title: '일본 증시 휴장 - 대체휴일',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '憲法記念日 대체휴일 (5/3 일요일 → 5/6 수요일)',
+  },
+  {
+    id: 'hk-holiday-labor-2026',
+    date: '2026-05-01',
+    title: '홍콩 증시 휴장 - 노동절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Labour Day (노동절)',
+  },
+  {
+    id: 'hk-holiday-buddha-2026',
+    date: '2026-05-25',
+    title: '홍콩 증시 휴장 - 부처님오신날',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Buddha\'s Birthday (부처님오신날)',
+  },
+
 // ==================== 2026년 6월 ====================
   // 경제지표
   {
@@ -7658,6 +8575,35 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2026년 2분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-juneteenth-2026',
+    date: '2026-06-19',
+    title: '미국 증시 휴장 - 준틴스 데이',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Juneteenth National Independence Day',
+  },
+  {
+    id: 'kr-holiday-memorial-2026',
+    date: '2026-06-08',
+    title: '한국 증시 휴장 - 현충일 대체공휴일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '현충일 대체공휴일 (6/6 토요일 → 6/8 월요일)',
+  },
+  {
+    id: 'hk-holiday-dragonboat-2026',
+    date: '2026-06-19',
+    title: '홍콩 증시 휴장 - 단오절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Tuen Ng Festival (단오절)',
   },
 
   // ==================== 2026년 7월 ====================
@@ -8205,6 +9151,35 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 7월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'us-holiday-independence-2026',
+    date: '2026-07-03',
+    title: '미국 증시 휴장 - 독립기념일',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Independence Day 대체 (7/4 토요일이라 전날 휴장)',
+  },
+  {
+    id: 'jp-holiday-marine-2026',
+    date: '2026-07-20',
+    title: '일본 증시 휴장 - 바다의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '海の日 (바다의 날)',
+  },
+  {
+    id: 'hk-holiday-sar-2026',
+    date: '2026-07-01',
+    title: '홍콩 증시 휴장 - 홍콩특별행정구 설립일',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'HKSAR Establishment Day',
+  },
+
 // ==================== 2026년 8월 ====================
   // 경제지표
   {
@@ -8567,6 +9542,26 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'realtyincome.com',
     importance: 'medium',
     description: '2026년 8월 배당락일 (월배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'kr-holiday-liberation-2026',
+    date: '2026-08-17',
+    title: '한국 증시 휴장 - 광복절 대체공휴일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '광복절 대체공휴일 (8/15 토요일 → 8/17 월요일)',
+  },
+  {
+    id: 'jp-holiday-mountain-2026',
+    date: '2026-08-11',
+    title: '일본 증시 휴장 - 산의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '山の日 (산의 날)',
   },
 
 // ==================== 2026년 9월 ====================
@@ -8940,6 +9935,62 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'ktng.com',
     importance: 'medium',
     description: '2026년 3분기 배당락일 (분기배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-labor-2026',
+    date: '2026-09-07',
+    title: '미국 증시 휴장 - 노동절',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Labor Day (노동절)',
+  },
+  {
+    id: 'kr-holiday-chuseok1-2026',
+    date: '2026-09-24',
+    title: '한국 증시 휴장 - 추석 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 연휴 (9/24~9/26)',
+  },
+  {
+    id: 'kr-holiday-chuseok2-2026',
+    date: '2026-09-25',
+    title: '한국 증시 휴장 - 추석',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 당일',
+  },
+  {
+    id: 'kr-holiday-chuseok3-2026',
+    date: '2026-09-26',
+    title: '한국 증시 휴장 - 추석 연휴',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '추석 연휴 (9/24~9/26, 토요일)',
+  },
+  {
+    id: 'jp-holiday-respect-2026',
+    date: '2026-09-21',
+    title: '일본 증시 휴장 - 경로의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '敬老の日 (경로의 날)',
+  },
+  {
+    id: 'jp-holiday-autumnal-2026',
+    date: '2026-09-23',
+    title: '일본 증시 휴장 - 추분의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '秋分の日 (추분의 날)',
   },
 
 // ==================== 2026년 10월 ====================
@@ -9455,6 +10506,53 @@ export const calendarEvents: CalendarEvent[] = [
     description: '2026년 10월 배당락일 (월배당)',
   },
 
+  // 증시 휴장일
+  {
+    id: 'kr-holiday-gaecheon-2026',
+    date: '2026-10-05',
+    title: '한국 증시 휴장 - 개천절 대체공휴일',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '개천절 대체공휴일 (10/3 토요일 → 10/5 월요일)',
+  },
+  {
+    id: 'kr-holiday-hangul-2026',
+    date: '2026-10-09',
+    title: '한국 증시 휴장 - 한글날',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '한글날 (10월 9일)',
+  },
+  {
+    id: 'jp-holiday-sports-2026',
+    date: '2026-10-12',
+    title: '일본 증시 휴장 - 체육의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: 'スポーツの日 (체육의 날)',
+  },
+  {
+    id: 'hk-holiday-national-2026',
+    date: '2026-10-01',
+    title: '홍콩 증시 휴장 - 국경절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'National Day (중화인민공화국 국경절)',
+  },
+  {
+    id: 'hk-holiday-chungyang-2026',
+    date: '2026-10-26',
+    title: '홍콩 증시 휴장 - 중양절',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Chung Yeung Festival (중양절)',
+  },
+
 // ==================== 2026년 11월 ====================
   // 경제지표
   {
@@ -9827,6 +10925,35 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'realtyincome.com',
     importance: 'medium',
     description: '2026년 11월 배당락일 (월배당)',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-thanksgiving-2026',
+    date: '2026-11-26',
+    title: '미국 증시 휴장 - 추수감사절',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Thanksgiving Day (추수감사절)',
+  },
+  {
+    id: 'jp-holiday-culture-2026',
+    date: '2026-11-03',
+    title: '일본 증시 휴장 - 문화의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '文化の日 (문화의 날)',
+  },
+  {
+    id: 'jp-holiday-laborday-2026',
+    date: '2026-11-23',
+    title: '일본 증시 휴장 - 근로감사의 날',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '勤労感謝の日 (근로감사의 날)',
   },
 
 // ==================== 2026년 12월 ====================
@@ -10254,6 +11381,53 @@ export const calendarEvents: CalendarEvent[] = [
     companyDomain: 'kbfg.com',
     importance: 'medium',
     description: '2026년 연간 배당락일',
+  },
+
+  // 증시 휴장일
+  {
+    id: 'us-holiday-christmas-2026',
+    date: '2026-12-25',
+    title: '미국 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'us',
+    importance: 'high',
+    description: 'Christmas Day (크리스마스)',
+  },
+  {
+    id: 'kr-holiday-christmas-2026',
+    date: '2026-12-25',
+    title: '한국 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'kr',
+    importance: 'high',
+    description: '크리스마스 (12월 25일)',
+  },
+  {
+    id: 'jp-holiday-yearend-2026',
+    date: '2026-12-31',
+    title: '일본 증시 휴장 - 연말',
+    category: 'holiday',
+    countryCode: 'jp',
+    importance: 'high',
+    description: '大晦日 (연말 휴장)',
+  },
+  {
+    id: 'hk-holiday-christmas-2026',
+    date: '2026-12-25',
+    title: '홍콩 증시 휴장 - 크리스마스',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Christmas Day (크리스마스)',
+  },
+  {
+    id: 'hk-holiday-boxing-2026',
+    date: '2026-12-26',
+    title: '홍콩 증시 휴장 - 박싱데이',
+    category: 'holiday',
+    countryCode: 'hk',
+    importance: 'high',
+    description: 'Boxing Day (크리스마스 다음날)',
   },
 
 ];
