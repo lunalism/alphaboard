@@ -49,8 +49,8 @@ import { useMemo, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ResponsiveTreeMap, ComputedNode } from '@nivo/treemap';
 import type { MarketRegion } from '@/types';
-import { useMarketCapRanking, useUSMarketCapRanking } from '@/hooks/useKISData';
-import type { MarketCapRankingData, OverseasMarketCapRankingData } from '@/types/kis';
+import { useMarketCapRanking, useUSStocks, type USStockPriceData } from '@/hooks/useKISData';
+import type { MarketCapRankingData } from '@/types/kis';
 
 // ==================== 타입 정의 ====================
 
@@ -204,56 +204,68 @@ function formatMarketCap(value: number, isKorean: boolean): string {
   }
 }
 
-// ==================== 미국 시장 폴백 데이터 (장 마감 시 사용) ====================
+// ==================== 미국 주식 시가총액 추정치 맵 ====================
 
 /**
- * 미국 시장 폴백 데이터
+ * 미국 주요 종목 시가총액 추정치 (백만 달러 단위)
  *
- * 장 마감 시간에 API가 빈 데이터를 반환할 경우 사용하는 폴백 데이터입니다.
- * 시가총액 상위 30개 종목의 대표 데이터를 포함합니다.
+ * /api/kis/overseas/stock/prices API는 시가총액을 반환하지 않으므로,
+ * 히트맵 박스 크기 계산을 위해 추정치를 사용합니다.
  *
- * 주의: 이 데이터는 실시간이 아닌 참고용 데이터입니다.
- * - marketCap: 백만 달러 단위 (근사치)
- * - price: 마지막 거래가 기준 (근사치)
- * - changePercent: 0으로 설정 (실시간 데이터 없음)
+ * 참고: 실제 시가총액과 다를 수 있으나, 상대적 크기 비교 목적으로 사용
  */
-const US_FALLBACK_DATA: StockData[] = [
-  // TECHNOLOGY
-  { symbol: 'AAPL', name: 'Apple', marketCap: 3000000, changePercent: 0, price: 195.50 },
-  { symbol: 'MSFT', name: 'Microsoft', marketCap: 2800000, changePercent: 0, price: 378.20 },
-  { symbol: 'NVDA', name: 'NVIDIA', marketCap: 1200000, changePercent: 0, price: 495.80 },
-  { symbol: 'GOOGL', name: 'Alphabet', marketCap: 1800000, changePercent: 0, price: 142.50 },
-  { symbol: 'META', name: 'Meta', marketCap: 1000000, changePercent: 0, price: 395.20 },
-  { symbol: 'AVGO', name: 'Broadcom', marketCap: 600000, changePercent: 0, price: 1250.30 },
-  { symbol: 'ORCL', name: 'Oracle', marketCap: 350000, changePercent: 0, price: 128.40 },
-  { symbol: 'CRM', name: 'Salesforce', marketCap: 250000, changePercent: 0, price: 265.20 },
-  { symbol: 'ADBE', name: 'Adobe', marketCap: 220000, changePercent: 0, price: 485.20 },
-  { symbol: 'AMD', name: 'AMD', marketCap: 200000, changePercent: 0, price: 125.40 },
-  // CONSUMER
-  { symbol: 'AMZN', name: 'Amazon', marketCap: 1500000, changePercent: 0, price: 145.20 },
-  { symbol: 'TSLA', name: 'Tesla', marketCap: 800000, changePercent: 0, price: 252.80 },
-  { symbol: 'WMT', name: 'Walmart', marketCap: 450000, changePercent: 0, price: 165.20 },
-  { symbol: 'COST', name: 'Costco', marketCap: 350000, changePercent: 0, price: 785.40 },
-  { symbol: 'HD', name: 'Home Depot', marketCap: 350000, changePercent: 0, price: 345.60 },
-  // HEALTHCARE
-  { symbol: 'LLY', name: 'Eli Lilly', marketCap: 700000, changePercent: 0, price: 780.50 },
-  { symbol: 'UNH', name: 'UnitedHealth', marketCap: 500000, changePercent: 0, price: 525.20 },
-  { symbol: 'JNJ', name: 'J&J', marketCap: 400000, changePercent: 0, price: 165.80 },
-  { symbol: 'MRK', name: 'Merck', marketCap: 300000, changePercent: 0, price: 118.20 },
-  { symbol: 'ABBV', name: 'AbbVie', marketCap: 280000, changePercent: 0, price: 158.40 },
-  // FINANCIAL
-  { symbol: 'JPM', name: 'JPMorgan', marketCap: 500000, changePercent: 0, price: 175.20 },
-  { symbol: 'V', name: 'Visa', marketCap: 450000, changePercent: 0, price: 265.40 },
-  { symbol: 'MA', name: 'Mastercard', marketCap: 400000, changePercent: 0, price: 428.60 },
-  { symbol: 'BAC', name: 'Bank of America', marketCap: 280000, changePercent: 0, price: 35.80 },
-  // ENERGY & OTHERS
-  { symbol: 'XOM', name: 'Exxon Mobil', marketCap: 450000, changePercent: 0, price: 108.50 },
-  { symbol: 'CVX', name: 'Chevron', marketCap: 280000, changePercent: 0, price: 148.20 },
-  { symbol: 'KO', name: 'Coca-Cola', marketCap: 280000, changePercent: 0, price: 65.40 },
-  { symbol: 'PG', name: 'P&G', marketCap: 350000, changePercent: 0, price: 148.60 },
-  { symbol: 'PEP', name: 'PepsiCo', marketCap: 250000, changePercent: 0, price: 175.20 },
-  { symbol: 'NFLX', name: 'Netflix', marketCap: 250000, changePercent: 0, price: 575.80 },
-];
+const US_MARKET_CAP_ESTIMATES: Record<string, number> = {
+  // TECHNOLOGY (시가총액 순)
+  AAPL: 3000000,   // Apple ~$3T
+  MSFT: 2800000,   // Microsoft ~$2.8T
+  GOOGL: 1800000,  // Alphabet ~$1.8T
+  AMZN: 1500000,   // Amazon ~$1.5T
+  NVDA: 1200000,   // NVIDIA ~$1.2T
+  META: 1000000,   // Meta ~$1T
+  TSLA: 800000,    // Tesla ~$800B
+  LLY: 700000,     // Eli Lilly ~$700B
+  AVGO: 600000,    // Broadcom ~$600B
+  UNH: 500000,     // UnitedHealth ~$500B
+  JPM: 500000,     // JPMorgan ~$500B
+  V: 450000,       // Visa ~$450B
+  XOM: 450000,     // Exxon ~$450B
+  WMT: 450000,     // Walmart ~$450B
+  JNJ: 400000,     // J&J ~$400B
+  MA: 400000,      // Mastercard ~$400B
+  PG: 350000,      // P&G ~$350B
+  HD: 350000,      // Home Depot ~$350B
+  COST: 350000,    // Costco ~$350B
+  ORCL: 350000,    // Oracle ~$350B
+  MRK: 300000,     // Merck ~$300B
+  CVX: 280000,     // Chevron ~$280B
+  KO: 280000,      // Coca-Cola ~$280B
+  ABBV: 280000,    // AbbVie ~$280B
+  BAC: 280000,     // Bank of America ~$280B
+  CRM: 250000,     // Salesforce ~$250B
+  PEP: 250000,     // PepsiCo ~$250B
+  NFLX: 250000,    // Netflix ~$250B
+  ADBE: 220000,    // Adobe ~$220B
+  AMD: 200000,     // AMD ~$200B
+  INTC: 180000,    // Intel ~$180B
+  CSCO: 180000,    // Cisco ~$180B
+  QCOM: 170000,    // Qualcomm ~$170B
+  NKE: 150000,     // Nike ~$150B
+  GE: 150000,      // GE ~$150B
+  CAT: 150000,     // Caterpillar ~$150B
+  HON: 140000,     // Honeywell ~$140B
+  BA: 130000,      // Boeing ~$130B
+  RTX: 130000,     // Raytheon ~$130B
+  GS: 120000,      // Goldman Sachs ~$120B
+  AXP: 120000,     // American Express ~$120B
+  TMO: 200000,     // Thermo Fisher ~$200B
+  UPS: 120000,     // UPS ~$120B
+  SBUX: 100000,    // Starbucks ~$100B
+  WFC: 180000,     // Wells Fargo ~$180B
+  VZ: 170000,      // Verizon ~$170B
+  T: 120000,       // AT&T ~$120B
+  PFE: 150000,     // Pfizer ~$150B
+  MCD: 200000,     // McDonald's ~$200B
+};
 
 // ==================== 데이터 변환 함수 ====================
 
@@ -287,53 +299,44 @@ function convertKoreanDataToSectors(data: MarketCapRankingData[]): SectorData[] 
 }
 
 /**
- * 미국 시가총액 순위 데이터를 섹터 데이터로 변환
+ * 미국 주식 데이터를 섹터 데이터로 변환
  *
- * NASDAQ + NYSE 데이터를 합쳐서 시가총액 순으로 정렬합니다.
- * API가 빈 데이터를 반환하면 (장 마감 시) 폴백 데이터를 사용합니다.
+ * /api/kis/overseas/stock/prices API 데이터를 히트맵용 섹터 구조로 변환합니다.
+ * 시가총액은 US_MARKET_CAP_ESTIMATES 맵에서 추정치를 사용합니다.
  *
- * @returns { sectors, isUsingFallback } - 섹터 데이터와 폴백 사용 여부
+ * @param stockData - useUSStocks 훅에서 받은 미국 주식 데이터
+ * @returns { sectors } - 섹터 데이터
  */
 function convertUSDataToSectors(
-  nasData: OverseasMarketCapRankingData[],
-  nysData: OverseasMarketCapRankingData[]
-): { sectors: SectorData[]; isUsingFallback: boolean } {
-  // 두 거래소 데이터 합치기
-  const allData = [...nasData, ...nysData];
-
-  // API가 빈 데이터를 반환하면 폴백 데이터 사용 (장 마감 시)
-  if (allData.length === 0) {
-    return {
-      sectors: [
-        {
-          name: 'MARKET CAP TOP 30',
-          stocks: US_FALLBACK_DATA,
-        },
-      ],
-      isUsingFallback: true,
-    };
+  stockData: USStockPriceData[]
+): { sectors: SectorData[] } {
+  // API 데이터가 없으면 빈 배열 반환
+  if (!stockData || stockData.length === 0) {
+    return { sectors: [] };
   }
 
-  // 시가총액 순으로 정렬
-  const sortedData = allData.sort((a, b) => b.marketCap - a.marketCap);
-
-  // 상위 30개 종목
-  const topStocks: StockData[] = sortedData.slice(0, 30).map((stock) => ({
+  // 시가총액 추정치와 함께 StockData로 변환
+  const stocksWithMarketCap: StockData[] = stockData.map((stock) => ({
     symbol: stock.symbol,
     name: stock.name,
-    marketCap: stock.marketCap,
+    // 시가총액 추정치 사용 (없으면 기본값 50000 = $50B)
+    marketCap: US_MARKET_CAP_ESTIMATES[stock.symbol] || 50000,
     changePercent: stock.changePercent,
     price: stock.currentPrice,
   }));
+
+  // 시가총액 순으로 정렬하여 상위 30개 선택
+  const sortedStocks = stocksWithMarketCap
+    .sort((a, b) => b.marketCap - a.marketCap)
+    .slice(0, 30);
 
   return {
     sectors: [
       {
         name: 'MARKET CAP TOP 30',
-        stocks: topStocks,
+        stocks: sortedStocks,
       },
     ],
-    isUsingFallback: false,
   };
 }
 
@@ -681,41 +684,34 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
     refetch: krRefetch,
   } = useMarketCapRanking('all', { autoRefresh: true, refreshInterval: 60000 });
 
-  // 미국 시장: NASDAQ + NYSE 시가총액 순위 API
+  // 미국 시장: 개별 주식 시세 API (시가총액 순위 API가 빈 데이터를 반환하므로 대체)
+  // /api/kis/overseas/stock/prices 사용 (모든 섹터 조회)
   const {
-    data: nasData,
-    isLoading: nasLoading,
-    error: nasError,
-    refetch: nasRefetch,
-  } = useUSMarketCapRanking('NAS', { autoRefresh: true, refreshInterval: 60000 });
-
-  const {
-    data: nysData,
-    isLoading: nysLoading,
-    error: nysError,
-    refetch: nysRefetch,
-  } = useUSMarketCapRanking('NYS', { autoRefresh: true, refreshInterval: 60000 });
+    stocks: usStocks,
+    isLoading: usLoading,
+    error: usError,
+    refetch: usRefetch,
+  } = useUSStocks('all', { autoRefresh: true, refreshInterval: 60000 });
 
   // ========================================
   // 로딩 및 에러 상태
   // ========================================
-  const isLoading = isKorean ? krLoading : (nasLoading || nysLoading);
-  const error = isKorean ? krError : (nasError || nysError);
-  const refetch = isKorean ? krRefetch : () => { nasRefetch(); nysRefetch(); };
+  const isLoading = isKorean ? krLoading : usLoading;
+  const error = isKorean ? krError : usError;
+  const refetch = isKorean ? krRefetch : usRefetch;
 
   // ========================================
   // 섹터 데이터 변환
   // ========================================
-  const { sectors, isUsingFallback } = useMemo(() => {
+  const { sectors } = useMemo(() => {
     if (isKorean) {
       return {
         sectors: convertKoreanDataToSectors(krData),
-        isUsingFallback: false,
       };
     } else {
-      return convertUSDataToSectors(nasData, nysData);
+      return convertUSDataToSectors(usStocks);
     }
-  }, [isKorean, krData, nasData, nysData]);
+  }, [isKorean, krData, usStocks]);
 
   // Treemap용 데이터 변환
   const treemapData = useMemo(
@@ -769,18 +765,11 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
           <span className="ml-2 text-sm font-normal text-gray-500">
             ({totalStocks}개 종목)
           </span>
-          {/* 실시간/장마감 표시 배지 */}
-          {isUsingFallback ? (
-            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
-              <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
-              장 마감
-            </span>
-          ) : (
-            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              실시간
-            </span>
-          )}
+          {/* 실시간 표시 배지 */}
+          <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            실시간
+          </span>
         </h2>
         {/* 색상 범례 */}
         <div className="flex items-center gap-4 text-xs">
@@ -797,16 +786,7 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
 
       {/* 설명 */}
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        {isUsingFallback ? (
-          <>
-            <span className="text-yellow-600 dark:text-yellow-400 font-medium">
-              현재 미국 시장이 마감되어 마지막 거래일 기준 데이터를 표시합니다.
-            </span>
-            {' '}박스 크기는 시가총액을 나타냅니다.
-          </>
-        ) : (
-          '박스 크기는 시가총액, 색상 강도는 등락률을 나타냅니다. 클릭하면 상세 페이지로 이동합니다.'
-        )}
+        박스 크기는 시가총액, 색상 강도는 등락률을 나타냅니다. 클릭하면 상세 페이지로 이동합니다.
       </p>
 
       {/* 데스크톱: Finviz 스타일 Treemap */}
