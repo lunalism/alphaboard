@@ -21,7 +21,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Sidebar, BottomNav } from '@/components/layout';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useAlerts } from '@/hooks';
+import { useAlerts, usePushNotification } from '@/hooks';
 import { PriceAlert } from '@/types/priceAlert';
 import { showSuccess, showError } from '@/lib/toast';
 import { EditAlertModal } from '@/components/features/alert/EditAlertModal';
@@ -39,6 +39,155 @@ const TABS: { id: AlertTab; label: string; description: string }[] = [
   { id: 'triggered', label: '발동됨', description: '목표가 도달' },
   { id: 'inactive', label: '비활성', description: '일시 중지' },
 ];
+
+/**
+ * 푸시 알림 설정 섹션 컴포넌트
+ *
+ * 프리미엄 사용자: 푸시 알림 활성화/비활성화 토글
+ * 무료 사용자: 프리미엄 잠금 표시
+ */
+function PushNotificationSection({ isPremium }: { isPremium: boolean }) {
+  const {
+    isSupported,
+    isIOSSafari,
+    isPWAInstalled,
+    permissionStatus,
+    isEnabled,
+    isLoading,
+    enablePushNotification,
+    disablePushNotification,
+  } = usePushNotification();
+
+  // 푸시 알림 토글 핸들러
+  const handleToggle = async () => {
+    if (isEnabled) {
+      await disablePushNotification();
+    } else {
+      await enablePushNotification();
+    }
+  };
+
+  // 권한 상태 텍스트
+  const getStatusText = () => {
+    if (!isSupported) {
+      return '이 브라우저는 푸시 알림을 지원하지 않습니다.';
+    }
+    if (isIOSSafari && !isPWAInstalled) {
+      return 'iOS에서 푸시 알림을 받으려면 홈 화면에 앱을 추가하세요.';
+    }
+    if (permissionStatus === 'denied') {
+      return '알림 권한이 차단되어 있습니다. 브라우저 설정에서 허용해주세요.';
+    }
+    if (isEnabled) {
+      return '푸시 알림이 활성화되어 있습니다.';
+    }
+    return '푸시 알림을 활성화하면 사이트를 닫아도 알림을 받을 수 있습니다.';
+  };
+
+  // 프리미엄 잠금 상태
+  if (!isPremium) {
+    return (
+      <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-100 dark:border-purple-800/50 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* 푸시 알림 아이콘 */}
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800/50 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 dark:text-white">푸시 알림</h3>
+                {/* 프리미엄 배지 */}
+                <span className="px-2 py-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-medium rounded-full">
+                  Premium
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                사이트를 닫아도 알림을 받을 수 있습니다
+              </p>
+            </div>
+          </div>
+          {/* 잠금 아이콘 */}
+          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 프리미엄 사용자 - 푸시 알림 설정
+  return (
+    <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* 푸시 알림 아이콘 */}
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            isEnabled
+              ? 'bg-blue-100 dark:bg-blue-800/50'
+              : 'bg-gray-100 dark:bg-gray-700'
+          }`}>
+            <svg
+              className={`w-5 h-5 ${
+                isEnabled
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white">푸시 알림</h3>
+              {isEnabled && (
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium rounded-full">
+                  활성
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {getStatusText()}
+            </p>
+          </div>
+        </div>
+        {/* 토글 스위치 */}
+        {isSupported && permissionStatus !== 'denied' && (
+          <button
+            onClick={handleToggle}
+            disabled={isLoading}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
+              isEnabled ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+            } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
+            title={isEnabled ? '푸시 알림 끄기' : '푸시 알림 켜기'}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        )}
+        {/* 권한 차단 시 설정 안내 버튼 */}
+        {permissionStatus === 'denied' && (
+          <button
+            onClick={() => window.open('https://support.google.com/chrome/answer/3220216?hl=ko', '_blank')}
+            className="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            설정 방법
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * 로딩 스피너 컴포넌트
@@ -445,7 +594,7 @@ export default function AlertsPage() {
    *
    * Sidebar도 동일하게 useAuth()를 사용하므로 일관성 유지
    */
-  const { isLoggedIn, isLoading: isAuthLoading } = useAuth();
+  const { isLoggedIn, isLoading: isAuthLoading, isPremium } = useAuth();
 
   // 디버그 로그: 인증 상태 확인
   useEffect(() => {
@@ -629,6 +778,9 @@ export default function AlertsPage() {
           {/* 알림 목록 - Auth 로딩 완료 후 로그인 상태에서만 표시 */}
           {!isLoading && isLoggedIn && !error && (
             <>
+              {/* 푸시 알림 설정 섹션 */}
+              <PushNotificationSection isPremium={isPremium} />
+
               {/* 탭 네비게이션 */}
               <div className="mb-6">
                 <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">

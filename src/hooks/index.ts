@@ -82,3 +82,6 @@ export {
 
 // 새 공지사항 확인 훅
 export { useNewAnnouncement } from './useNewAnnouncement';
+
+// 푸시 알림 관리 훅 (프리미엄 전용)
+export { usePushNotification } from './usePushNotification';

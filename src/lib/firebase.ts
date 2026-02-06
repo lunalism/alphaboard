@@ -9,15 +9,17 @@
  * - Auth 인스턴스 제공 (Google 로그인용)
  * - Firestore 인스턴스 제공 (사용자 프로필 저장용)
  * - Storage 인스턴스 제공 (이미지 업로드용)
+ * - Messaging 인스턴스 제공 (푸시 알림용)
  *
  * 사용법:
- * import { auth, db, storage } from '@/lib/firebase';
+ * import { auth, db, storage, getMessagingInstance } from '@/lib/firebase';
  */
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { getMessaging, type Messaging } from 'firebase/messaging';
 
 /**
  * Firebase 설정 객체
@@ -97,3 +99,50 @@ export const checkFirebaseConfig = () => {
     });
   }
 };
+
+/**
+ * Firebase Cloud Messaging (FCM) 인스턴스
+ *
+ * 브라우저 환경에서만 사용 가능합니다.
+ * SSR 환경에서는 null을 반환합니다.
+ *
+ * 주의: getMessaging()은 브라우저 환경에서만 호출해야 합니다.
+ * 서비스 워커에서는 별도의 firebase-messaging-sw.js를 사용합니다.
+ *
+ * @returns Messaging 인스턴스 또는 null (SSR 환경)
+ */
+let messagingInstance: Messaging | null = null;
+
+export const getMessagingInstance = (): Messaging | null => {
+  // 브라우저 환경에서만 초기화
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  // 서비스 워커 환경에서는 null 반환 (SW에서는 별도 처리)
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator === false) {
+    console.warn('[Firebase] 서비스 워커를 지원하지 않는 브라우저입니다.');
+    return null;
+  }
+
+  // 이미 초기화된 인스턴스가 있으면 반환
+  if (messagingInstance) {
+    return messagingInstance;
+  }
+
+  try {
+    messagingInstance = getMessaging(app);
+    return messagingInstance;
+  } catch (error) {
+    console.error('[Firebase] Messaging 초기화 에러:', error);
+    return null;
+  }
+};
+
+/**
+ * VAPID 키 (공개 키)
+ *
+ * Firebase Console > Project Settings > Cloud Messaging > Web Push certificates에서 생성
+ * 환경변수로 관리 (NEXT_PUBLIC_FIREBASE_VAPID_KEY)
+ */
+export const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || '';
