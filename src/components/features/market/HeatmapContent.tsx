@@ -437,16 +437,18 @@ const US_SECTORS: SectorData[] = [
  *   +3~5%:   #006400 (진한 초록)
  *   +2~3%:   #228B22 (초록)
  *   +1~2%:   #32CD32 (라임그린)
- *   +0~1%:   #90EE90 (연한 초록)
+ *   +0.5~1%: #7CCD7C (중간 연한 초록) ← 개선: 더 확실한 색상
+ *   +0.1~0.5%: #5DBB5D (확실한 연한 초록) ← 개선: 0% 근처 명확화
  *
  * 하락 (빨강 계열) - 단계별 색상:
  *   -5% 이상: #8B0000 (가장 진한 빨강)
  *   -3~5%:   #B22222 (진한 빨강)
  *   -2~3%:   #DC143C (크림슨)
  *   -1~2%:   #F08080 (연한 빨강)
- *   -0~1%:   #FFCCCB (아주 연한 빨강)
+ *   -0.5~1%: #E06060 (중간 연한 빨강) ← 개선: 더 확실한 색상
+ *   -0.1~0.5%: #D04040 (확실한 연한 빨강) ← 개선: 0% 근처 명확화
  *
- * 보합 (0%): #374151 (어두운 회색)
+ * 보합 (±0.1% 미만): #374151 (어두운 회색)
  *
  * @param changePercent - 등락률 (예: 1.5, -2.3)
  * @returns CSS 색상 문자열
@@ -465,14 +467,16 @@ function getHeatmapColor(changePercent: number): string {
     if (absChange >= 3) return '#006400';  // +3~5%: 진한 초록
     if (absChange >= 2) return '#228B22';  // +2~3%: 초록
     if (absChange >= 1) return '#32CD32';  // +1~2%: 라임그린
-    return '#90EE90';                       // +0~1%: 연한 초록
+    if (absChange >= 0.5) return '#5DBB5D'; // +0.5~1%: 확실한 연한 초록 (개선)
+    return '#4DAD4D';                        // +0.1~0.5%: 더 확실한 초록 (개선)
   } else {
     // ==================== 하락 (빨강 계열) ====================
     if (absChange >= 5) return '#8B0000';  // -5% 이상: 가장 진한 빨강
     if (absChange >= 3) return '#B22222';  // -3~5%: 진한 빨강
     if (absChange >= 2) return '#DC143C';  // -2~3%: 크림슨
     if (absChange >= 1) return '#F08080';  // -1~2%: 연한 빨강
-    return '#FFCCCB';                       // -0~1%: 아주 연한 빨강
+    if (absChange >= 0.5) return '#E05555'; // -0.5~1%: 확실한 연한 빨강 (개선)
+    return '#D04545';                        // -0.1~0.5%: 더 확실한 빨강 (개선)
   }
 }
 
@@ -514,23 +518,97 @@ function formatMarketCap(value: number, isKorean: boolean): string {
 
 // ==================== 커스텀 라벨 레이어 ====================
 
+// ==================== 한국 종목명 축약 규칙 ====================
+/**
+ * 한국 종목명 축약 맵
+ *
+ * 긴 종목명을 짧게 축약하여 히트맵 박스에 표시합니다.
+ * - "LG에너지솔루션" → "LG에너지"
+ * - "에코프로비엠" → "에코프로BM"
+ * - "한화에어로스페이스" → "한화에어로"
+ * - "포스코퓨처엠" → "포스코퓨처"
+ */
+const KOREAN_NAME_ABBREVIATIONS: Record<string, string> = {
+  'LG에너지솔루션': 'LG에너지',
+  '에코프로비엠': '에코프로BM',
+  '한화에어로스페이스': '한화에어로',
+  '포스코퓨처엠': '포스코퓨처',
+  'SK하이닉스': 'SK하이닉스',
+  '삼성바이오로직스': '삼성바이오',
+  '셀트리온헬스케어': '셀트리온HC',
+  'SK바이오사이언스': 'SK바이오사이언스',
+  '현대모비스': '현대모비스',
+  'POSCO홀딩스': 'POSCO',
+  'HD한국조선해양': 'HD조선해양',
+  'HD현대중공업': 'HD현대중공업',
+  'SK이노베이션': 'SK이노베이션',
+  '삼성중공업': '삼성중공업',
+  '한온시스템': '한온시스템',
+  '레고켐바이오': '레고켐',
+  'YG엔터테인먼트': 'YG엔터',
+  '카카오엔터테인먼트': '카카오엔터',
+};
+
+/**
+ * 한국 종목명 축약 함수
+ *
+ * @param name - 원본 종목명
+ * @param maxLength - 최대 표시 길이
+ * @returns 축약된 종목명
+ */
+function abbreviateKoreanName(name: string, maxLength: number): string {
+  // 축약 규칙이 있으면 우선 적용
+  if (KOREAN_NAME_ABBREVIATIONS[name]) {
+    const abbreviated = KOREAN_NAME_ABBREVIATIONS[name];
+    if (abbreviated.length <= maxLength) {
+      return abbreviated;
+    }
+    // 축약된 이름도 길면 추가 자르기
+    return abbreviated.slice(0, maxLength);
+  }
+  // 기본 자르기
+  return name.length > maxLength ? name.slice(0, maxLength) : name;
+}
+
 /**
  * TreeMap 커스텀 라벨 레이어
  *
  * 2줄 레이아웃으로 종목명과 등락률을 표시합니다.
  * 박스 크기에 따라 폰트 크기와 텍스트 길이를 조절합니다.
  *
+ * ============================================================
  * 레이아웃:
+ * ============================================================
  * ┌─────────────┐
  * │  삼성전자    │  ← 종목명 (볼드, 흰색)
  * │   +1.2%    │  ← 등락률 (일반, 흰색/90%)
  * └─────────────┘
  *
+ * ============================================================
  * 박스 크기별 표시:
+ * ============================================================
  * - 150px+: 전체 종목명 + 등락률 (큰 폰트)
  * - 80~150px: 축약 종목명(5자) + 등락률 (중간 폰트)
- * - 50~80px: 축약 종목명(3자) + 등락률 (작은 폰트)
+ * - 50~80px: 축약 종목명(3자) 또는 티커 + 등락률 (작은 폰트)
  * - 50px 미만: 텍스트 없음
+ *
+ * ============================================================
+ * 종목명 표시 규칙:
+ * ============================================================
+ * [한국 시장]
+ * - 긴 이름은 축약 규칙 적용 (KOREAN_NAME_ABBREVIATIONS)
+ * - "LG에너지솔루션" → "LG에너지"
+ *
+ * [미국 시장]
+ * - 큰 박스: 풀네임 ("Microsoft")
+ * - 작은 박스: 티커 ("MSFT")
+ *
+ * ============================================================
+ * 섹터 라벨 (강화):
+ * ============================================================
+ * - 폰트 크기 12px (기존 10px에서 증가)
+ * - 볼드 처리
+ * - 반투명 어두운 배경으로 가독성 향상
  */
 function CustomLabelsLayer({
   nodes,
@@ -540,7 +618,7 @@ function CustomLabelsLayer({
   return (
     <g>
       {nodes.map((node) => {
-        // ==================== 섹터 라벨 ====================
+        // ==================== 섹터 라벨 (강화) ====================
         // pathComponents: [root, sector] = length 2
         if (node.pathComponents.length === 2) {
           // 섹터 박스가 너무 작으면 라벨 숨김
@@ -548,22 +626,35 @@ function CustomLabelsLayer({
             return null;
           }
 
+          const sectorName = String(node.id);
+
           return (
-            <text
-              key={`sector-${node.id}`}
-              x={node.x + 6}
-              y={node.y + 14}
-              style={{
-                fill: '#9ca3af',
-                fontSize: '10px',
-                fontWeight: 600,
-                fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-                textTransform: 'uppercase',
-                pointerEvents: 'none',
-              }}
-            >
-              {String(node.id).toUpperCase()}
-            </text>
+            <g key={`sector-${node.id}`}>
+              {/* 반투명 어두운 배경 (가독성 향상) */}
+              <rect
+                x={node.x + 3}
+                y={node.y + 3}
+                width={Math.min(sectorName.length * 8 + 12, node.width - 6)}
+                height={18}
+                rx={3}
+                fill="rgba(0, 0, 0, 0.6)"
+              />
+              {/* 섹터명 텍스트 (폰트 크기 증가, 볼드) */}
+              <text
+                x={node.x + 9}
+                y={node.y + 15}
+                style={{
+                  fill: '#e5e7eb',
+                  fontSize: '12px',  // 기존 10px → 12px로 증가
+                  fontWeight: 700,   // 볼드 처리
+                  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                  textTransform: 'uppercase',
+                  pointerEvents: 'none',
+                }}
+              >
+                {sectorName.toUpperCase()}
+              </text>
+            </g>
           );
         }
 
@@ -583,35 +674,48 @@ function CustomLabelsLayer({
         }
 
         const fullName = node.data.name || String(node.id);
+        const symbol = node.data.symbol || String(node.id);
         const change = node.data.change ?? 0;
 
+        // 한국 종목인지 미국 종목인지 판단 (심볼이 숫자로만 이루어져 있으면 한국)
+        const isKoreanStock = /^\d+$/.test(symbol);
+
         // 박스 크기에 따른 종목명 길이 및 폰트 크기 결정
-        let maxNameLength: number;
+        let displayName: string;
         let nameFontSize: number;
         let changeFontSize: number;
 
         if (minDimension >= 150) {
           // 큰 박스: 전체 이름 또는 8자까지
-          maxNameLength = 8;
           nameFontSize = 14;
           changeFontSize = 12;
+          if (isKoreanStock) {
+            displayName = abbreviateKoreanName(fullName, 8);
+          } else {
+            // 미국: 풀네임 (최대 10자)
+            displayName = fullName.length > 10 ? fullName.slice(0, 10) : fullName;
+          }
         } else if (minDimension >= 80) {
-          // 중간 박스: 5자까지
-          maxNameLength = 5;
+          // 중간 박스: 5자까지 또는 티커
           nameFontSize = 11;
           changeFontSize = 10;
+          if (isKoreanStock) {
+            displayName = abbreviateKoreanName(fullName, 5);
+          } else {
+            // 미국: 이름이 6자 이하면 이름, 아니면 티커
+            displayName = fullName.length <= 6 ? fullName : symbol;
+          }
         } else {
-          // 작은 박스: 3자까지
-          maxNameLength = 3;
+          // 작은 박스: 3자까지 또는 티커
           nameFontSize = 10;
           changeFontSize = 9;
+          if (isKoreanStock) {
+            displayName = abbreviateKoreanName(fullName, 3);
+          } else {
+            // 미국: 무조건 티커
+            displayName = symbol;
+          }
         }
-
-        // 종목명 축약
-        const displayName =
-          fullName.length > maxNameLength
-            ? fullName.slice(0, maxNameLength) + '…'
-            : fullName;
 
         // 등락률 포맷팅
         const changeText = formatPercent(change);
@@ -960,14 +1064,14 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
             // squarify: 가장 정사각형에 가깝게 배치 (Finviz 스타일)
             tile="squarify"
             leavesOnly={false}
-            innerPadding={1}        // 종목 간 간격 (좁게)
-            outerPadding={2}        // 섹터 외부 간격
+            innerPadding={1}        // 종목 간 간격 (빽빽하게)
+            outerPadding={3}        // 섹터 외부 간격 (구분선 효과) - 2px → 3px로 증가
             // ==================== 색상 설정 ====================
             // pathComponents.length로 depth 계산: 1=root, 2=섹터, 3=종목
             colors={(node) => {
-              // root 노드: 완전 투명
+              // root 노드: 검은 배경 (섹터 구분선 역할)
               if (node.pathComponents.length === 1) {
-                return 'transparent';
+                return '#000000';
               }
               // 섹터 노드: 어두운 배경
               if (node.pathComponents.length === 2) {
@@ -977,9 +1081,17 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
               const change = node.data.change ?? 0;
               return getHeatmapColor(change);
             }}
-            // ==================== 테두리 설정 ====================
+            // ==================== 테두리 설정 (강화) ====================
+            // 개별 종목 박스에 얇은 테두리 추가 (Finviz 스타일)
             borderWidth={1}
-            borderColor="#1f2937"
+            borderColor={(node) => {
+              // 섹터 경계: 굵은 검은 테두리
+              if (node.pathComponents.length === 2) {
+                return '#000000';
+              }
+              // 종목 박스: 얇은 반투명 검은 테두리
+              return 'rgba(0, 0, 0, 0.4)';
+            }}
             // ==================== 라벨 비활성화 (커스텀 레이어 사용) ====================
             // 기본 라벨 대신 커스텀 레이어로 2줄 레이아웃 구현
             enableLabel={false}
@@ -1062,34 +1174,36 @@ export function HeatmapContent({ country }: HeatmapContentProps) {
           />
         </div>
 
-        {/* ==================== 색상 범례 ==================== */}
-        {/* Finviz 정확한 색상 범례 */}
+        {/* ==================== 색상 범례 (개선) ==================== */}
+        {/* Finviz 정확한 색상 범례 - 0% 근처 색상 명확화 */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
           {/* 상승 범례 (초록 계열) - 연한색 → 진한색 */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-gray-500 mr-1">상승</span>
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#90EE90' }} title="+0~1%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#32CD32' }} title="+1~2%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#228B22' }} title="+2~3%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#006400' }} title="+3~5%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#003D00' }} title="+5%↑" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#4DAD4D' }} title="+0.1~0.5%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#5DBB5D' }} title="+0.5~1%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#32CD32' }} title="+1~2%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#228B22' }} title="+2~3%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#006400' }} title="+3~5%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#003D00' }} title="+5%↑" />
             <span className="text-xs text-gray-500 ml-1">+5%</span>
           </div>
 
           {/* 보합 범례 (회색) */}
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#374151' }} />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#374151' }} />
             <span className="text-xs text-gray-500">0%</span>
           </div>
 
           {/* 하락 범례 (빨강 계열) - 연한색 → 진한색 */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-gray-500 mr-1">하락</span>
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#FFCCCB' }} title="-0~1%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#F08080' }} title="-1~2%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#DC143C' }} title="-2~3%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#B22222' }} title="-3~5%" />
-            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: '#8B0000' }} title="-5%↓" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#D04545' }} title="-0.1~0.5%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#E05555' }} title="-0.5~1%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#F08080' }} title="-1~2%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#DC143C' }} title="-2~3%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#B22222' }} title="-3~5%" />
+            <div className="w-5 h-5 rounded-sm border border-gray-600" style={{ backgroundColor: '#8B0000' }} title="-5%↓" />
             <span className="text-xs text-gray-500 ml-1">-5%</span>
           </div>
         </div>
